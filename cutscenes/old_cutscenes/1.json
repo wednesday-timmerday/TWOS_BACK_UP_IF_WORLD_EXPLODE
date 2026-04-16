@@ -1,0 +1,20 @@
+{
+    "cutscene_1": {
+        "events": [
+            {"type": "dialogue", "text": "* Hey, I think you're&new to the shadow world.&*I'm a shadowrock, just a shadow& rock!", "Origin": "shadowrock", "skippable": "true"},
+            {"type": "dialogue", "text": "* I will help you&through your adventure!", "Origin": "shadowrock", "skippable": "true"},
+            {"type": "dialogue_1", "text": "* You can skip my yap&with [x].", "Origin": "shadowrock", "skippable": "true"},
+            {"type": "dialogue_2", "text": "* You can't skip& my yap idiot", "Origin": "shadowrock", "skippable": "false"},
+            {"type": "dialogue_2", "text": "* Who do you think&you are?", "Origin": "shadowrock", "skippable": "false"},
+            {"type": "dialogue", "text": "* Y O U ' R E&D E P R E S S E D&A I N T  Y O U ?", "Origin": "shadowrock", "skippable": "false"},
+            {"type": "dialogue", "text": "* Im very happy&* YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY!", "Origin": "shadowrock", "skippable": "true"},
+            {"type": "dialogue", "text": "* So...&What are you waiting for?", "Origin": "shadowrock", "skippable": "true"},
+            {"type": "slide", "origin": "shadowrock", "goto": "461, -100", "speed": "250"},
+            {"type": "wait", "duration": "1.5"},
+            {"type": "slide", "origin": "shadowrock", "goto": "461, 525", "speed": "1600"},
+            {"type": "wait", "duration": "2"}, 
+            {"type": "dialogue", "text": "* O Wait& I forgot to help you", "Origin": "shadowrock", "skippable": "true"},
+            {"type": "dialogue", "text": "* To make progress you&gotta jump in that&pit over there&and go to the next level", "Origin": "shadowrock", "skippable": "true"}
+        ]
+    }
+}

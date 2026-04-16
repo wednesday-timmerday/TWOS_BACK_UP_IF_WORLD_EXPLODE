@@ -1,0 +1,31 @@
+{
+    "cutscene_2": {
+        "events": [
+            {"type": "wait", "duration": "0.7"},
+            {"type": "slide", "goto": "292,700", "origin": "shadowrock", "speed": "99999999999999999999999999999999999"},
+            {"type": "dialogue", "text": "* O hello, i guess&you're new here.", "Origin": "mr. tutorion", "skippable": "true"},
+            {"type": "dialogue", "text": "* So that means you&gotta need an tutorial", "Origin": "mr. tutorion", "skippable": "false"},
+            {"type": "dialogue", "text": "frooooom!!!&MR TUUUTORIOOOON!!!!", "Origin":"mr. tutorion", "skippable": "false"},
+            {"type": "dialogue", "text": "right?", "Origin":"mr. tutorion", "skippable": "false"},
+            {"type": "choice_mrtutor1", "choices": ["Yes!", "No!"], "origin":"mr. tutorion"},
+            {"type": "if_choice_mrtutor1", "answer": "Yes!"},
+            {"type": "dialogue", "text": "* Alright then!&Lets start", "Origin":"mr. tutorion", "skippable": "true"},
+            {"type": "if_choice_mrtutor1", "answer": "No!"},
+            {"type": "dialogue", "text": "* Well you don't have&a choice", "Origin":"mr. tutorion", "skippable": "true"},
+            {"type": "slide", "goto": "700, 525", "origin": "shadowrock", "speed": "9999999999999999999999999999"},
+            {"type": "dialogue", "text": "* You see that orb&over there?", "Origin":"mr. tutorion", "skippable": "true"},
+            {"type": "dialogue", "text": "* If you want to progress&you gotta push it into the pit", "Origin":"mr. tutorion", "skippable": "true"},
+            {"type": "dialogue", "text": "*Also it's your only&good lightsource in the adventure.", "Origin":"mr. tutorion", "skippable": "true"},
+            {"type": "slide", "goto": "292, 536", "origin": "shadowrock", "speed": "100"},
+            {"type": "wait","duration": "0.5"},
+            {"type": "dialogue", "text": "* What about&that lante-", "Origin": "shadowrock", "skippable": "false"},
+            {"type": "dialogue", "text": "* SHUT UP", "Origin": "mr. tutorion", "skippable": "false"},
+            {"type": "dialogue", "text": "* Wha-", "Origin": "shadowrock", "skippable": "false"},
+            {"type": "dialogue", "text": "* I SAID SHUT UP", "Origin": "mr. tutorion", "skippable": "false"},
+            {"type": "slide", "goto": "295, 1000", "origin": "hammer", "speed": "2000"},
+            {"type": "dialogue", "text": "* Fine....&Cya later kiddo", "Origin": "shadowrock", "skippable": "false"},
+            {"type": "doatsametimeend"},
+            {"type": "deact_invis", "name": "wall_2"}
+        ]
+    }
+}

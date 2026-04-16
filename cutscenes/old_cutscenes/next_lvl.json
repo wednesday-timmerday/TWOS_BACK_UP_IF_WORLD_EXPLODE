@@ -1,0 +1,7 @@
+{
+    "cutscene_next_lvl": {
+        "events": [
+            {"type": "next_level"}
+        ]
+    }
+}

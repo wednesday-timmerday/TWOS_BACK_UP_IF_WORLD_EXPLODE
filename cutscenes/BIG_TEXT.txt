@@ -1,0 +1,100 @@
+parent_yell =
+            []
+            {(1 0)}
+            Dad: * It's all your fault!
+            {(1 0.2)}
+            Dad: * If you had just listened—
+            [Mom]
+            {(1 0)}
+            Mom: * Don't you dare put this on me.
+            Mom: * You weren't even there!
+            [Dad]
+            Dad: * I WAS TRYING TO FIX IT!
+            [Mom]
+            Mom: * You always say that!
+            []
+            CHARA_NAME * ...
+            CHARA_NAME * Lets just go to bed
+            
+            {goto_world}
+            ENDOFCONVERSATION
+
+1 =
+    [shadowrock]
+    {(0 0.5)}
+    shadowrock: * Hey there, looks like&you're new around here^wait250, I'm a&shadowrock^wait250, just an shadowrock
+    shadowrock: * You're confused arent&'cha^wait250, well ill help you in your&adventure
+    shadowrock: * Normally, you can&skip this text animation with [x]^wait250,&and go further with [z]
+    {(1 0)}
+    shadowrock: * Go ahead!&Try it out^wait250, its really fun
+    {(0 1.0)}
+    shadowrock: * Oh no no no ^wait425, you&cant skip ^special^color(255,0,0)^shake6MY^endspecial text idiot
+    {(0 0.5)}
+    shadowrock: * Who do you think&you are?
+    shadowrock: * Geez, why the&long face?
+    (CHOICE) What will you say; Got an F+ for my math test; My grand-pa died
+    (BRANCH) Got an F+ for my math test
+    {(0 0.5)}
+    shadowrock: * I can smell the lie&from over here
+    shadowrock: * Did'ja really think&I wouldn't notice?
+    shadowrock: * Try again.
+    (REROUTE) What will you say
+    (BRANCH) My grand-pa died
+    {(0 1.5)}
+    shadowrock: * Oh dang...
+    {(0 1.0)}
+    shadowrock: * Thats really awful.&^wait1000Truly.
+    {(0 1.0)}
+    shadowrock: * It's okay to feel&empty after something&like that.
+    {(0 0.5)}
+    shadowrock: * .^wait250.^wait250.^wait250
+    shadowrock: * But in this world?
+    shadowrock: * Nobody has time to&cry
+    (ENDBRANCH)
+    {(0 0.5)}
+    shadowrock: * You have a lot to&learn about this world
+    shadowrock: * Starting with:&^wait750jumping in that pit over there
+    shadowrock: * Think you can do&that?
+    ENDOFCONVERSATION
+
+2 =
+    [mrtutor]
+    {(1 0)}
+    {step_0}
+    {move_tutor_1}
+    Mr. Tutorion: * O hello, you look&like you're new here.
+    Mr. Tutorion: * So that means you&gotta need a tutorial frooom!!!&MR TUUUTORIOOON!!!!!
+    (CHOICE) Right?; Yes!; No.
+    (BRANCH) Yes!
+    Mr. Tutorion: * Alright then!&lets start
+    (ENDBRANCH)
+    (BRANCH) No.
+    Mr Tutorion: * Well you don’t have&a choice.
+    Mr Tutorion: * I want to give a&tutorial,^wait500you get a tutorial.
+    (ENDBRANCH)
+    {(1 0)}
+    {Move_cam_1}
+    Mr Tutorion: * See that orb&over there?
+    Mr. Tutorion: * If you want to&make progress you gotta push it&into the pit
+    Mr. Tutorion: * And its also the&only good lightsource here
+    {Move_cam_2}
+    {(0 0.5)}
+    Shadowrock: * But what about&that lante-
+    {Reset_cam}
+    {(1 0)}
+    Mr. Tutorion: * SHUT UP!
+    {set_hammer}
+    {(0 0.2)}
+    Shadowrock: * Wha-
+    {release_the_hammer}
+    {(1 0)}
+    Mr. Tutorion: * Now that that's&over with, lets&continue the tutorial!
+    Mr. Tutorion: * So as I was saying,&That's the orb.
+    Mr. Tutorion: * To make progress&you need to push it in the gap.&Try to do it.
+    Mr. Tutorion: * Random guy that I&don’t know, and just&spawned in this world.
+    {release_the_baby}
+    {lock_the_baby}
+    Mr. Tutorion: * Great job!&Lets go to the next room.
+    {release_the_baby_2}
+    {follow_the_baby}
+    ENDOFCONVERSATION
