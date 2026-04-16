@@ -24,7 +24,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pygame pypresence Pillow numpy opencv-python pyglet aiohttp websockets
+        pip install pygame pypresence Pillow numpy opencv-python pyglet requests astral pytz googletrans==4.0.0rc1 pymunk aiohttp websockets
         pip install pyinstaller
 
     # ---------------- WINDOWS ----------------
