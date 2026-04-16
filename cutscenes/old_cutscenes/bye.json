@@ -1,0 +1,7 @@
+{
+    "cutscene_bye": {
+        "events": [
+            {"type": "slide", "goto": "681, -9999999", "origin": "ohgodwhathaveyoudone", "speed": "9999999"}
+        ]
+    }
+}

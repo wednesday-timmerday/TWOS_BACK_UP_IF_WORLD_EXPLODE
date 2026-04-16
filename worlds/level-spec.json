@@ -1,0 +1,402 @@
+{
+  "level_3": {
+    "coll_layers": [
+      2
+    ],
+    "spawn_point": [
+      120,
+      221
+    ],
+    "parallex": [
+      0.3
+    ],
+    "layers": 2,
+    "enemies": [
+      {
+        "type": "shadowrock",
+        "position": [
+          190,
+          151
+        ],
+        "id": "0c0b3219-d6dd-42b0-b62e-f80f5dad4af1"
+      },
+      {
+        "type": "mrtutor",
+        "position": [
+          999,
+          68
+        ],
+        "id": "034dfbb5-fb3b-4a36-990e-564be7c62001"
+      },
+      {
+        "type": "hammer",
+        "position": [
+          980,
+          96
+        ],
+        "id": "4f1a2092-a3d6-4c4c-84be-ad45c4021e75"
+      },
+      {
+        "type": "physics_obj_orb",
+        "position": [
+          865,
+          46
+        ],
+        "id": "5f1d8274-7cd8-4254-9499-6932f3cff792"
+      }
+    ],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 165,
+        "y": -60,
+        "w": 50,
+        "h": 172,
+        "name": "cutscene(1)",
+        "id": "343d870e-8311-42c7-b2c6-9b268df29adb"
+      },
+      {
+        "type": "trigger",
+        "x": 394,
+        "y": 172,
+        "w": 70,
+        "h": 10,
+        "name": "cutscene(2)",
+        "id": "fc9b7658-f46c-4582-bc0c-befe9dd2ec37"
+      },
+      {
+        "type": "trigger",
+        "x": 1072,
+        "y": -19,
+        "w": 19,
+        "h": 125,
+        "name": "goto(4)",
+        "id": "89d3e7b4-84ee-4dd4-a2f3-afe6a4b47d72"
+      }
+    ],
+    "invis_walls": [
+      [
+        2,
+        -4,
+        27,
+        172,
+        ""
+      ],
+      [
+        486,
+        -48,
+        16,
+        178,
+        "wall_2"
+      ]
+    ],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 3,
+        "pos_x": 64,
+        "pos_y": 282,
+        "id": "e842bc93-f730-4f86-b2df-24168710687b"
+      },
+      {
+        "type": "spawn",
+        "came_from": 0,
+        "pos_x": 67,
+        "pos_y": 138,
+        "id": "7ece0f7c-d8c9-4266-9cf9-5e0d767867c6"
+      },
+      {
+        "type": "spawn",
+        "came_from": 4,
+        "pos_x": 1038,
+        "pos_y": 68,
+        "id": "e894f7fa-7ddf-4fbc-b737-dd3f1c0ca199"
+      }
+    ]
+  },
+  "level_1": {
+    "coll_layers": [
+      2
+    ],
+    "enemies": [
+      {
+        "type": "mt_carp",
+        "position": [
+          1207,
+          532
+        ],
+        "id": "1a6307cd-61b7-428c-a0ba-7f8df81d1fcd"
+      }
+    ],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 28,
+        "y": 165,
+        "w": 214,
+        "h": 50,
+        "name": "goto(2)",
+        "id": "487b430f-1e9b-4839-90ae-704c795a6a49"
+      },
+      {
+        "type": "trigger",
+        "x": 539,
+        "y": 108,
+        "w": 46,
+        "h": 57,
+        "name": "interactable(q_gate_r2_1)",
+        "id": "4db3e4be-7dc4-44d4-bc21-40f176ccdc27"
+      },
+      {
+        "type": "trigger",
+        "x": 422,
+        "y": 101,
+        "w": 40,
+        "h": 65,
+        "name": "fight(test_fight)",
+        "id": "1ae49caf-ddbd-4978-8424-38f6de2c144b"
+      },
+      {
+        "type": "trigger",
+        "x": 273,
+        "y": 76,
+        "w": 53,
+        "h": 91,
+        "name": "interactable(t_gate_r2_2)",
+        "id": "31aadc03-5022-476d-91cd-981022cf29fe"
+      }
+    ],
+    "invis_walls": [
+      [
+        605,
+        -9,
+        9,
+        177,
+        ""
+      ]
+    ],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 0,
+        "pos_x": 566,
+        "pos_y": 142,
+        "id": "8a2bd41b-f75a-4337-a084-bc577671122a"
+      },
+      {
+        "type": "spawn",
+        "came_from": 2,
+        "pos_x": 242,
+        "pos_y": 145,
+        "id": "d925cb39-4760-4b31-a4b8-810bf9030e83"
+      }
+    ]
+  },
+  "level_0": {
+    "coll_layers": [
+      1
+    ],
+    "enemies": [],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 288,
+        "y": 107,
+        "w": 18,
+        "h": 51,
+        "name": "interactable(t_flowey_r1)",
+        "id": "ba1c9a86-ed78-4f1d-bc7c-6b7728236cbb"
+      },
+      {
+        "type": "trigger",
+        "x": 97,
+        "y": 118,
+        "w": 49,
+        "h": 43,
+        "name": "interactable(t_clothing_r1)",
+        "id": "ed4d124f-85d0-401f-8da4-03f71acde879"
+      },
+      {
+        "type": "trigger",
+        "x": 0,
+        "y": 124,
+        "w": 19,
+        "h": 37,
+        "name": "interactable(q_gate_r1)",
+        "id": "e1c29e80-8b5b-4b28-8191-5b7e85c16675"
+      },
+      {
+        "type": "trigger",
+        "x": 201,
+        "y": 124,
+        "w": 22,
+        "h": 39,
+        "name": "interactable(t_books_r1)",
+        "id": "9eaf3c8e-47e2-4f6c-8171-edc3224e0985"
+      },
+      {
+        "type": "trigger",
+        "x": 298,
+        "y": 148,
+        "w": 26,
+        "h": 8,
+        "name": "cutscene(Wake_up)",
+        "id": "4f95df9e-de08-47a2-a844-8fe121a59fa9"
+      }
+    ],
+    "invis_walls": [
+      [
+        319,
+        -10,
+        11,
+        476,
+        "interactable(t_books_r1)"
+      ],
+      [
+        -1,
+        0,
+        14,
+        160,
+        ""
+      ]
+    ],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 2,
+        "pos_x": 303,
+        "pos_y": 114,
+        "id": "1091d641-6587-48cb-b26e-ab9d0828af80"
+      },
+      {
+        "type": "spawn",
+        "came_from": 1,
+        "pos_x": 26,
+        "pos_y": 143,
+        "id": "7904f943-3eca-447e-9292-a2dc882ed787"
+      }
+    ]
+  },
+  "level_2": {
+    "coll_layers": [
+      2
+    ],
+    "enemies": [],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 460,
+        "y": -1,
+        "w": 106,
+        "h": 16,
+        "name": "goto(1)",
+        "id": "1c165902-ed53-4028-bc5e-70864b802e3e"
+      },
+      {
+        "type": "trigger",
+        "x": 193,
+        "y": -7,
+        "w": 18,
+        "h": 178,
+        "name": "cutscene(parent_yell)",
+        "id": "d50b6697-c750-41e8-b5ce-09baecd70a64"
+      }
+    ],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 1,
+        "pos_x": 418,
+        "pos_y": 25,
+        "id": "e7c7120d-2459-43cc-8872-18cb9dda3270"
+      }
+    ]
+  },
+  "level_unused_1": {
+    "coll_layers": [
+      2
+    ],
+    "enemies": [
+      {
+        "type": "blobtigoo",
+        "position": [
+          454,
+          153
+        ],
+        "id": "41c98574-27e6-4bb5-8f3e-237753eaf92c"
+      },
+      {
+        "type": "mrtutor",
+        "position": [
+          10,
+          42
+        ],
+        "id": "ff87d81b-9de8-4832-bba5-1b8680700d1c"
+      }
+    ],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": -3,
+        "y": -1,
+        "w": 11,
+        "h": 130,
+        "name": "goto(3)",
+        "id": "2df23e24-e284-461f-ae94-f5451021dbf8"
+      },
+      {
+        "type": "trigger",
+        "x": 20,
+        "y": 63,
+        "w": 20,
+        "h": 29,
+        "name": "cutscene(mr_tutor_tutor_2)",
+        "id": "b5627b64-b1e2-464e-89bb-0a34bfdc5bec"
+      }
+    ],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 3,
+        "pos_x": 30,
+        "pos_y": 79,
+        "id": "c3f23294-8c75-49c3-bec5-101ef8ea1282"
+      }
+    ]
+  },
+  "level_4": {
+    "coll_layers": [
+      2
+    ],
+    "enemies": [],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": -1,
+        "y": -2,
+        "w": 13,
+        "h": 173,
+        "name": "goto(3)",
+        "id": "8878c403-9682-4f86-9c45-ad573f0f96fc"
+      }
+    ],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 3,
+        "pos_x": 27,
+        "pos_y": 140,
+        "id": "3914ed24-80dd-4012-a758-aa0c8d74b3a5"
+      }
+    ]
+  }
+}

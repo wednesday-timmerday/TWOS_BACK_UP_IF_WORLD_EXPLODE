@@ -1,0 +1,14 @@
+{
+  "coyote_time": 0.18,
+
+  "jump": {
+    "jump_speed": -600,
+    "max_hold_time": 0.4
+  },
+
+  "gravity": {
+    "jump_hold": 600,
+    "jump_release": 1600,
+    "fall": 2100
+  }
+}

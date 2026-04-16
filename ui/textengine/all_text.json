@@ -1,0 +1,45 @@
+{
+    "TXT_CTSCENE_1_1_1": "shadowrock: * Hey there, looks like&you're new around here^wait250, I'm a&shadowrock^wait250, just an shadowrock",
+
+    "TXT_CTSCENE_1_1_2": "shadowrock: * You're confused arent&'cha^wait250, well ill help you in your&adventure",
+
+    "TXT_CTSCENE_1_1_3": "shadowrock: * Normally, you can&skip this text animation with [x]^wait250,&and go further with [z]",
+
+    "TXT_CTSCENE_1_1_4": "shadowrock: * Go ahead!&Try it out^wait250, its really fun",
+
+    "TXT_CTSCENE_1_1_5": "shadowrock: * Oh no no no ^wait425, you&cant skip ^special^color(255,0,0)^shake6MY^endspecial text idiot",
+
+    "TXT_CTSCENE_1_1_6": "shadowrock: * Who do you think&you are?",
+
+    "TXT_CTSCENE_1_1_7": "shadowrock: * Geez, why the&long face?",
+
+    "TXT_CTSCENE_1_LIE_1": "shadowrock: * I can smell the lie&from over here",
+
+    "TXT_CTSCENE_1_LIE_2": "shadowrock: * I can still smell the&lie from over here",
+
+    "TXT_CTSCENE_1_LIE_3": "shadowrock : * Did'ja really think&I wouldn't notice?",
+
+    "TXT_CTSCENE_1_LIE_4": "shadowrock : * Be honest.^wait500&When was the last time you&opened a book?",
+
+    "TXT_CTSCENE_1_LIE_5": "shadowrock : * Try again.",
+
+    "TXT_CTSCENE_1_TRUTH_1": "shadowrock: * Oh dang...",
+
+    "TXT_CTSCENE_1_TRUTH_2": "shadowrock : * Thats really awful.&^wait1000Truly.",
+
+    "TXT_CTSCENE_1_TRUTH_3": "shadowrock : * It’s okay to feel&empty after something&like that.",
+
+    "TXT_CTSCENE_1_TRUTH_4": "shadowrock : * .^wait250.^wait250.^wait250",
+
+    "TXT_CTSCENE_1_TRUTH_5": "shadowrock : * But in this world?",
+
+    "TXT_CTSCENE_1_TRUTH_6": "shadowrock : * Nobody has time to&cry",
+
+    "TXT_CTSCENE_1_TRUTH_7": "shadowrock : * Now now, was it&that hard?",
+
+    "TXT_CTSCENE_1_END_1": "shadowrock : * You have a lot to&learn about this word",
+
+    "TXT_CTSCENE_1_END_2": "shadowrock : * Starting with:&^wait750jumping in that pit over there",
+
+    "TXT_CTSCENE_1_END_3": "shadowrock : * Think you can do&that?"
+}

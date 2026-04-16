@@ -1,0 +1,14 @@
+# builds
+dist/
+build/
+*.exe
+*.zip
+*.pkg
+
+# python
+__pycache__/
+*.pyc
+
+# big junk
+*.log
+*.tmp

@@ -1,0 +1,7 @@
+{
+    "fullscreen": false,
+    "master_volume": 0.09999999999999969,
+    "aggressive_trim_enabled": true,
+    "aggressive_trim_interval": 5,
+    "aggressive_trim_mem_threshold_mb": 700
+}

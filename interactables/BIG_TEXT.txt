@@ -1,0 +1,41 @@
+t_flowey_r1 =
+            []
+            * The painting reminds you of a&game you used to play.
+            * Despite its age,&it is still a fun game.
+            ENDOFCONVERSATION
+
+t_clothing_r1 =
+              []
+              * You dont feel like changing&clothes right now
+              * After all,^wait250 you just woke up
+              ENDOFCONVERSATION
+
+t_books_r1 =
+           []
+           * It's just an bookshelf
+           ENDOFCONVERSATION
+
+t_gate_r2_1 =
+            []
+            * It's a large door
+            ENDOFCONVERSATION
+
+q_gate_r1 =
+          []
+          {switch_room}
+          ENDOFCONVERSATION
+
+q_gate_r1_1 =
+          []
+          {switch_room}
+          ENDOFCONVERSATION
+
+q_gate_r2_1 =
+          []
+          {switch_room}
+          ENDOFCONVERSATION
+
+t_gate_r2_2 =
+            []
+            * You heard some&music playing
+            ENDOFCONVERSATION

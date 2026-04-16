@@ -1,0 +1,21 @@
+# Simplified MTL for pywavefront
+
+newmtl material1
+Ka 1 1 1
+Kd 1 1 1
+map_Kd material1.png
+
+newmtl material153
+Ka 1 1 1
+Kd 1 1 1
+map_Kd material153.png
+
+newmtl material46
+Ka 1 1 1
+Kd 1 1 1
+map_Kd material46.png
+
+newmtl material222
+Ka 1 1 1
+Kd 1 1 1
+map_Kd material222.png

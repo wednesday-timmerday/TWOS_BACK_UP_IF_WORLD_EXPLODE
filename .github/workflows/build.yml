@@ -1,0 +1,70 @@
+name: Build Game
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        pip install pygame pypresence Pillow numpy opencv-python pyglet aiohttp websockets
+        pip install pyinstaller
+
+    # WINDOWS BUILD
+    - name: Build (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        pyinstaller --noconfirm ^
+        --add-data "cutscenes;cutscenes" ^
+        --add-data "music;music" ^
+        --add-data "sprites;sprites" ^
+        --add-data "worlds;worlds" ^
+        --add-data "icon;icon" ^
+        --add-data "ui;ui" ^
+        --add-data "interactables;interactables" ^
+        --add-data "multiplayer;multiplayer" ^
+        --collect-submodules sprites.physic_obj ^
+        --clean ^
+        --name "windows" ^
+        main.py
+
+    # LINUX BUILD
+    - name: Build (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        pyinstaller --noconfirm \
+        --add-data "cutscenes:cutscenes" \
+        --add-data "music:music" \
+        --add-data "sprites:sprites" \
+        --add-data "worlds:worlds" \
+        --add-data "icon:icon" \
+        --add-data "ui:ui" \
+        --add-data "interactables:interactables" \
+        --add-data "multiplayer:multiplayer" \
+        --collect-submodules sprites.physic_obj \
+        --clean \
+        --name "linux" \
+        main.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-${{ runner.os }}
+        path: dist/*
