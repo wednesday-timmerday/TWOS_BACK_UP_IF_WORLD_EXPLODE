@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout
+    - name: Checkout repo
       uses: actions/checkout@v4
 
     - name: Setup Python
@@ -27,9 +27,10 @@ jobs:
         pip install pygame pypresence Pillow numpy opencv-python pyglet aiohttp websockets
         pip install pyinstaller
 
-    # WINDOWS BUILD
-    - name: Build (Windows)
+    # ---------------- WINDOWS ----------------
+    - name: Build Windows
       if: runner.os == 'Windows'
+      shell: cmd
       run: |
         pyinstaller --noconfirm ^
         --add-data "cutscenes;cutscenes" ^
@@ -42,12 +43,13 @@ jobs:
         --add-data "multiplayer;multiplayer" ^
         --collect-submodules sprites.physic_obj ^
         --clean ^
-        --name "windows" ^
+        --name windows ^
         main.py
 
-    # LINUX BUILD
-    - name: Build (Linux)
+    # ---------------- LINUX ----------------
+    - name: Build Linux
       if: runner.os == 'Linux'
+      shell: bash
       run: |
         pyinstaller --noconfirm \
         --add-data "cutscenes:cutscenes" \
@@ -60,10 +62,11 @@ jobs:
         --add-data "multiplayer:multiplayer" \
         --collect-submodules sprites.physic_obj \
         --clean \
-        --name "linux" \
+        --name linux \
         main.py
 
-    - name: Upload artifact
+    # ---------------- UPLOAD ----------------
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: build-${{ runner.os }}
