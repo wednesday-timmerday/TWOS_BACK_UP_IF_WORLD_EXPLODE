@@ -78,4 +78,4 @@ jobs:
       env:
         BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
       run: |
-        butler\butler.exe push dist YOURNAME/YOURGAME:windows --userversion "${{ github.run_number }}"
+        .\butler\butler.exe push dist "twosgroup/twos-playtestig:windows" --userversion "${{ github.run_number }}"
