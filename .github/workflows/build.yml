@@ -1,4 +1,4 @@
-name: Build Game
+name: Build & Upload Game
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout repo
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Setup Python
@@ -22,12 +22,12 @@ jobs:
       with:
         python-version: "3.11"
 
-    - name: Install dependencies
+    - name: Install deps
       run: |
-        pip install pygame pypresence Pillow numpy opencv-python pyglet requests astral pytz googletrans==4.0.0rc1 pymunk aiohttp websockets
+        pip install pygame pypresence Pillow numpy opencv-python pyglet aiohttp websockets
         pip install pyinstaller
 
-    # ---------------- WINDOWS ----------------
+    # ---------------- WINDOWS BUILD ----------------
     - name: Build Windows
       if: runner.os == 'Windows'
       shell: cmd
@@ -46,7 +46,7 @@ jobs:
         --name windows ^
         main.py
 
-    # ---------------- LINUX ----------------
+    # ---------------- LINUX BUILD ----------------
     - name: Build Linux
       if: runner.os == 'Linux'
       shell: bash
@@ -65,9 +65,17 @@ jobs:
         --name linux \
         main.py
 
-    # ---------------- UPLOAD ----------------
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-${{ runner.os }}
-        path: dist/*
+    # ---------------- DOWNLOAD BUTLER ----------------
+    - name: Download Butler
+      if: runner.os == 'Windows'
+      run: |
+        curl -L -o butler.zip https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default
+        powershell Expand-Archive butler.zip -DestinationPath butler
+
+    # ---------------- UPLOAD TO ITCH ----------------
+    - name: Upload to itch (Windows)
+      if: runner.os == 'Windows'
+      env:
+        BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+      run: |
+        butler\butler.exe push dist YOURNAME/YOURGAME:windows --userversion "${{ github.run_number }}"
