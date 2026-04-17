@@ -14,68 +14,104 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install deps
-      run: |
-        pip install pygame pypresence Pillow numpy opencv-python pyglet aiohttp websockets
-        pip install pyinstaller
+      - name: Install deps
+        run: |
+          pip install pygame pypresence Pillow numpy opencv-python pyglet aiohttp websockets pyinstaller
 
-    # ---------------- WINDOWS BUILD ----------------
-    - name: Build Windows
-      if: runner.os == 'Windows'
-      shell: cmd
-      run: |
-        pyinstaller --noconfirm ^
-        --add-data "cutscenes;cutscenes" ^
-        --add-data "music;music" ^
-        --add-data "sprites;sprites" ^
-        --add-data "worlds;worlds" ^
-        --add-data "icon;icon" ^
-        --add-data "ui;ui" ^
-        --add-data "interactables;interactables" ^
-        --add-data "multiplayer;multiplayer" ^
-        --collect-submodules sprites.physic_obj ^
-        --clean ^
-        --name windows ^
-        main.py
+      # ---------------- WINDOWS BUILD ----------------
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          pyinstaller --noconfirm ^
+          --add-data "cutscenes;cutscenes" ^
+          --add-data "music;music" ^
+          --add-data "sprites;sprites" ^
+          --add-data "worlds;worlds" ^
+          --add-data "icon;icon" ^
+          --add-data "ui;ui" ^
+          --add-data "interactables;interactables" ^
+          --add-data "multiplayer;multiplayer" ^
+          --collect-submodules sprites.physic_obj ^
+          --clean ^
+          --name windows ^
+          main.py
 
-    # ---------------- LINUX BUILD ----------------
-    - name: Build Linux
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-        pyinstaller --noconfirm \
-        --add-data "cutscenes:cutscenes" \
-        --add-data "music:music" \
-        --add-data "sprites:sprites" \
-        --add-data "worlds:worlds" \
-        --add-data "icon:icon" \
-        --add-data "ui:ui" \
-        --add-data "interactables:interactables" \
-        --add-data "multiplayer:multiplayer" \
-        --collect-submodules sprites.physic_obj \
-        --clean \
-        --name linux \
-        main.py
+      # ---------------- LINUX BUILD ----------------
+      - name: Build Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          pyinstaller --noconfirm \
+          --add-data "cutscenes:cutscenes" \
+          --add-data "music:music" \
+          --add-data "sprites:sprites" \
+          --add-data "worlds:worlds" \
+          --add-data "icon:icon" \
+          --add-data "ui:ui" \
+          --add-data "interactables:interactables" \
+          --add-data "multiplayer:multiplayer" \
+          --collect-submodules sprites.physic_obj \
+          --clean \
+          --name linux \
+          main.py
 
-    # ---------------- DOWNLOAD BUTLER ----------------
-    - name: Download Butler
-      if: runner.os == 'Windows'
-      run: |
-        curl -L -o butler.zip https://itch.io/butler/windows-amd64/LATEST/archive/default
-        powershell Expand-Archive butler.zip -DestinationPath butler
+      # ---------------- PREP DIST STRUCTURE ----------------
+      - name: Prepare Windows folder
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          if (!(Test-Path "dist\windows")) {
+            Write-Error "Windows build folder not found!"
+          }
+          Get-ChildItem dist -Recurse
 
-    # ---------------- UPLOAD TO ITCH ----------------
-    - name: Upload to itch (Windows)
-      if: runner.os == 'Windows'
-      env:
-        BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-      run: |
-        .\butler\butler.exe push dist "twosgroup/twos-playtestig:windows" --userversion "${{ github.run_number }}"
+      # ---------------- DOWNLOAD BUTLER (WINDOWS) ----------------
+      - name: Download Butler (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          curl -L -o butler.zip https://itch.io/butler/windows-amd64/LATEST/archive/default
+          Expand-Archive butler.zip -DestinationPath butler -Force
+          Get-ChildItem butler
+
+      # ---------------- DOWNLOAD BUTLER (LINUX) ----------------
+      - name: Download Butler (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          curl -L -o butler.zip https://itch.io/butler/linux-amd64/LATEST/archive/default
+          unzip butler.zip -d butler
+          chmod +x butler/butler
+
+      # ---------------- UPLOAD WINDOWS ----------------
+      - name: Upload to itch (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          $butler = Join-Path $PWD "butler\butler.exe"
+
+          if (Test-Path $butler) {
+            & $butler push "dist\windows" "twosgroup/twos-playtestig:windows" --userversion "${{ github.run_number }}"
+          } else {
+            Write-Error "butler.exe not found"
+          }
+
+      # ---------------- UPLOAD LINUX ----------------
+      - name: Upload to itch (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          ./butler/butler push dist/linux "twosgroup/twos-playtestig:linux" --userversion "${{ github.run_number }}"
