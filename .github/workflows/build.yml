@@ -32,6 +32,8 @@ jobs:
         shell: cmd
         run: |
           pyinstaller --noconfirm ^
+          --clean ^
+          --distpath dist/windows ^
           --add-data "cutscenes;cutscenes" ^
           --add-data "music;music" ^
           --add-data "sprites;sprites" ^
@@ -41,8 +43,7 @@ jobs:
           --add-data "interactables;interactables" ^
           --add-data "multiplayer;multiplayer" ^
           --collect-submodules sprites.physic_obj ^
-          --clean ^
-          --name windows ^
+          --name game ^
           main.py
 
       # ---------------- LINUX BUILD ----------------
@@ -51,6 +52,8 @@ jobs:
         shell: bash
         run: |
           pyinstaller --noconfirm \
+          --clean \
+          --distpath dist/linux \
           --add-data "cutscenes:cutscenes" \
           --add-data "music:music" \
           --add-data "sprites:sprites" \
@@ -60,30 +63,37 @@ jobs:
           --add-data "interactables:interactables" \
           --add-data "multiplayer:multiplayer" \
           --collect-submodules sprites.physic_obj \
-          --clean \
-          --name linux \
+          --name game \
           main.py
 
-      # ---------------- PREP DIST STRUCTURE ----------------
-      - name: Prepare Windows folder
+      # ---------------- PREP WINDOWS ----------------
+      - name: Verify Windows Build
         if: runner.os == 'Windows'
         shell: powershell
         run: |
           if (!(Test-Path "dist\windows")) {
-            Write-Error "Windows build folder not found!"
+            Write-Error "Windows build missing!"
           }
           Get-ChildItem dist -Recurse
 
-      # ---------------- DOWNLOAD BUTLER (WINDOWS) ----------------
+      # ---------------- BUTLER DOWNLOAD (WINDOWS) ----------------
       - name: Download Butler (Windows)
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          curl -L -o butler.zip https://itch.io/butler/windows-amd64/LATEST/archive/default
+          for ($i=0; $i -lt 3; $i++) {
+            try {
+              curl -L -o butler.zip https://itch.io/butler/windows-amd64/LATEST/archive/default
+              break
+            } catch {
+              Start-Sleep -Seconds 5
+            }
+          }
+
           Expand-Archive butler.zip -DestinationPath butler -Force
           Get-ChildItem butler
 
-      # ---------------- DOWNLOAD BUTLER (LINUX) ----------------
+      # ---------------- BUTLER DOWNLOAD (LINUX) ----------------
       - name: Download Butler (Linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -102,6 +112,7 @@ jobs:
           $butler = Join-Path $PWD "butler\butler.exe"
 
           if (Test-Path $butler) {
+            & $butler login
             & $butler push "dist\windows" "twosgroup/twos-playtestig:windows" --userversion "${{ github.run_number }}"
           } else {
             Write-Error "butler.exe not found"
@@ -114,4 +125,5 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
+          ./butler/butler login
           ./butler/butler push dist/linux "twosgroup/twos-playtestig:linux" --userversion "${{ github.run_number }}"
