@@ -69,7 +69,7 @@ jobs:
     - name: Download Butler
       if: runner.os == 'Windows'
       run: |
-        curl -L -o butler.zip https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default
+        curl -L -o butler.zip https://itch.io/butler/windows-amd64/LATEST/archive/default
         powershell Expand-Archive butler.zip -DestinationPath butler
 
     # ---------------- UPLOAD TO ITCH ----------------
