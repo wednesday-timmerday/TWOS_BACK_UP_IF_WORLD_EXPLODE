@@ -81,8 +81,18 @@ class Player:
 
         sfx_loader = Loader("sprites/Player/Sfx")
 
-        self.animations = {"Idle": [], "Walking": [], "sleep": [], "Fall_ground": []}
+        self.animations = {}
         self.animations_left = {}
+
+        for folder in os.listdir(sprite_loader.load("")):
+            folder_path = os.path.join(sprite_loader.load(""), folder)
+
+            if os.path.isdir(folder_path):
+                self.animations[folder] = []
+
+                for file in os.listdir(folder_path):
+                    file_path = os.path.join(folder_path, file)
+                    self.animations[folder].append(file_path)
 
         for anim_name in list(self.animations.keys()):
             frames = []
@@ -231,8 +241,15 @@ class Player:
         else:
             sprite_loader = Loader("sprites/Player/animation_frames")
 
-        self.animations = {"Idle": [], "Walking": [], "sleep": []}
-        self.animations_left = {}
+        for folder in os.listdir(sprite_loader.load("")):
+            folder_path = os.path.join(sprite_loader.load(""), folder)
+
+            if os.path.isdir(folder_path):
+                self.animations[folder] = []
+
+                for file in os.listdir(folder_path):
+                    file_path = os.path.join(folder_path, file)
+                    self.animations[folder].append(file_path)
 
         for anim_name in list(self.animations.keys()):
             frames = []

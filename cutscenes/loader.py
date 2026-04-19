@@ -355,6 +355,7 @@ class CutsceneLoader:
                 if self.running_function:
                     func = getattr(self.module, self.running_function)
                     result = func()
+
                     if result == "YES":
                         self.running_function = None
                         self._advance_dialogue()

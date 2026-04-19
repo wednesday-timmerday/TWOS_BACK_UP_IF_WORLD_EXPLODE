@@ -98,3 +98,23 @@ parent_yell =
     {release_the_baby_2}
     {follow_the_baby}
     ENDOFCONVERSATION
+
+3 = 
+    [mrtutor]
+    {(1 0)}
+    Mr. Tutorion: * Hmmm
+    Mr. Tutorion: * This jump looks impossible
+    Mr. Tutorion: * Wait...&^wait500              * You know how to wall-jump,&              ^wait250* right?
+    ENDOFCONVERSATION
+
+4 = 
+    [mrtutor]
+    {(1 0)}
+    {jump}
+    {move_tutor}
+    {really_move_tutor}
+    Mr. Tutorion: * Hah!&              * Did you really think this&was water?
+    Mr. Tutorion: * It's just an blue block
+    Mr. Tutorion: * (I dont really know why&that's here)
+    Mr. Tutorion: * Err, ^wait250 lets continue
+    ENDOFCONVERSATION

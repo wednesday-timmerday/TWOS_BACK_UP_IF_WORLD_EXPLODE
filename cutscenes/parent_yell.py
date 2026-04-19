@@ -34,9 +34,7 @@ class cutscene:
         if current < target:
             return min(current + max_delta, target)
         return max(current - max_delta, target)
-
-    # ------------------------------------------------------------------
-    # Functions called from dialogue file via {func_name}
+    
     # ------------------------------------------------------------------
 
     def goto_world(self):

@@ -375,7 +375,16 @@
     "coll_layers": [
       2
     ],
-    "enemies": [],
+    "enemies": [
+      {
+        "type": "mrtutor",
+        "position": [
+          14,
+          81
+        ],
+        "id": "987a19ba-e0d8-46ae-87a0-93e52328f398"
+      }
+    ],
     "triggers": [
       {
         "type": "trigger",
@@ -385,9 +394,35 @@
         "h": 173,
         "name": "goto(3)",
         "id": "8878c403-9682-4f86-9c45-ad573f0f96fc"
+      },
+      {
+        "type": "trigger",
+        "x": 16,
+        "y": 129,
+        "w": 25,
+        "h": 22,
+        "name": "cutscene(3)",
+        "id": "ca41cf82-dc25-4b5b-9fdf-3e8822a36a7d"
+      },
+      {
+        "type": "trigger",
+        "x": 285,
+        "y": 11,
+        "w": 13,
+        "h": 12,
+        "name": "cutscene(4)",
+        "id": "67e88b43-c500-45b7-8ac5-10b1688038a0"
       }
     ],
-    "invis_walls": [],
+    "invis_walls": [
+      [
+        297,
+        1,
+        8,
+        16,
+        ""
+      ]
+    ],
     "platforms": [],
     "save_points": [
       {
