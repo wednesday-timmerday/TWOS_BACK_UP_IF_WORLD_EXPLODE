@@ -757,6 +757,6 @@ class Player:
                 self.hit_box.width,
                 self.hit_box.height
             )
-            pygame.draw.rect(screen, (255, 0, 0), debug_hitbox, 1)
+            # pygame.draw.rect(screen, (255, 0, 0), debug_hitbox, 1)
         except Exception:
             pass

@@ -331,13 +331,14 @@ class Interactable:
             return
 
         keys = pygame.key.get_pressed()
+
+        # --- INPUT (single source of truth) ---
         z_pressed = keys[pygame.K_z] or keys[pygame.K_y]
         x_pressed = keys[pygame.K_x]
 
         self.z_just_pressed = z_pressed and not self.prev_z
         self.x_just_pressed = x_pressed and not self.prev_x
 
-        # waiting for the player to press Z before anything starts
         if self.waiting_to_start:
             if self.z_just_pressed:
                 self.player.curr_animation = "Idle"
@@ -349,21 +350,21 @@ class Interactable:
                 if not self.old:
                     self._advance_dialogue()
 
+            # IMPORTANT: update prev state ONLY ONCE PER FRAME
             self.prev_z = z_pressed
             self.prev_x = x_pressed
             return
 
-        self.prev_z = z_pressed
-        self.prev_x = x_pressed
-
         if not self.running:
+            self.prev_z = z_pressed
+            self.prev_x = x_pressed
             return
 
         try:
             if not self.old:
                 self.module.dt = dt
 
-                # --- function hook ---
+                # --- FUNCTION HOOK ---
                 if self.running_function:
                     if not self.text_engine.text or self.z_just_pressed:
                         func = getattr(self.module, self.running_function)
@@ -371,25 +372,32 @@ class Interactable:
                         if result == "YES":
                             self.running_function = None
                             self._advance_dialogue()
+
+                    self.prev_z = z_pressed
+                    self.prev_x = x_pressed
                     return
 
-                # --- choice input ---
+                # --- CHOICE INPUT ---
                 if self.waiting_for_choice:
                     self.text_engine.update(dt)
                     if self.text_engine.showing_choices and self.text_engine.finished:
                         chosen = self.text_engine.handle_choice_input(keys)
                         if chosen:
                             self._handle_choice_made(chosen)
+
+                    self.prev_z = z_pressed
+                    self.prev_x = x_pressed
                     return
 
-                # --- text scrolling ---
+                # --- TEXT SCROLLING ---
                 if not self.text_engine.finished:
                     self.text_engine.update(dt)
+
                     if self.text_skippable and self.x_just_pressed:
                         self.text_engine.char_index = len(self.text_engine.text)
                         self.text_engine.finished = True
 
-                # --- text finished, waiting to advance ---
+                # --- TEXT FINISHED ---
                 else:
                     if self.text_auto_forward > 0:
                         self.text_auto_timer += dt
@@ -415,6 +423,9 @@ class Interactable:
 
         if not self.running:
             self.player_locked = False
+
+        self.prev_z = z_pressed
+        self.prev_x = x_pressed
     # ---------------------------------------------------------
 
     def draw(self, surface):

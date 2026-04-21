@@ -15,8 +15,8 @@
       {
         "type": "shadowrock",
         "position": [
-          190,
-          151
+          189,
+          157
         ],
         "id": "0c0b3219-d6dd-42b0-b62e-f80f5dad4af1"
       },
@@ -31,16 +31,16 @@
       {
         "type": "hammer",
         "position": [
-          980,
-          96
+          968,
+          92
         ],
         "id": "4f1a2092-a3d6-4c4c-84be-ad45c4021e75"
       },
       {
         "type": "physics_obj_orb",
         "position": [
-          865,
-          46
+          815,
+          87
         ],
         "id": "5f1d8274-7cd8-4254-9499-6932f3cff792"
       }
@@ -48,8 +48,8 @@
     "triggers": [
       {
         "type": "trigger",
-        "x": 165,
-        "y": -60,
+        "x": 164,
+        "y": -68,
         "w": 50,
         "h": 172,
         "name": "cutscene(1)",
@@ -83,8 +83,8 @@
         ""
       ],
       [
-        486,
-        -48,
+        484,
+        -12,
         16,
         178,
         "wall_2"
@@ -132,19 +132,19 @@
     "triggers": [
       {
         "type": "trigger",
-        "x": 28,
-        "y": 165,
-        "w": 214,
-        "h": 50,
+        "x": 94,
+        "y": 174,
+        "w": 106,
+        "h": 44,
         "name": "goto(2)",
         "id": "487b430f-1e9b-4839-90ae-704c795a6a49"
       },
       {
         "type": "trigger",
-        "x": 539,
-        "y": 108,
-        "w": 46,
-        "h": 57,
+        "x": 548,
+        "y": 112,
+        "w": 37,
+        "h": 53,
         "name": "interactable(q_gate_r2_1)",
         "id": "4db3e4be-7dc4-44d4-bc21-40f176ccdc27"
       },
@@ -154,13 +154,13 @@
         "y": 101,
         "w": 40,
         "h": 65,
-        "name": "fight(test_fight)",
+        "name": "interactable(q_gate_r1_idfk)",
         "id": "1ae49caf-ddbd-4978-8424-38f6de2c144b"
       },
       {
         "type": "trigger",
-        "x": 273,
-        "y": 76,
+        "x": 270,
+        "y": 78,
         "w": 53,
         "h": 91,
         "name": "interactable(t_gate_r2_2)",
@@ -212,9 +212,9 @@
       {
         "type": "trigger",
         "x": 97,
-        "y": 118,
+        "y": 121,
         "w": 49,
-        "h": 43,
+        "h": 40,
         "name": "interactable(t_clothing_r1)",
         "id": "ed4d124f-85d0-401f-8da4-03f71acde879"
       },
@@ -300,7 +300,7 @@
         "x": 193,
         "y": -7,
         "w": 18,
-        "h": 178,
+        "h": 169,
         "name": "cutscene(parent_yell)",
         "id": "d50b6697-c750-41e8-b5ce-09baecd70a64"
       }
@@ -379,8 +379,8 @@
       {
         "type": "mrtutor",
         "position": [
-          14,
-          81
+          12,
+          99
         ],
         "id": "987a19ba-e0d8-46ae-87a0-93e52328f398"
       }
@@ -397,7 +397,7 @@
       },
       {
         "type": "trigger",
-        "x": 16,
+        "x": 15,
         "y": 129,
         "w": 25,
         "h": 22,
@@ -406,20 +406,29 @@
       },
       {
         "type": "trigger",
-        "x": 285,
-        "y": 11,
-        "w": 13,
-        "h": 12,
+        "x": 238,
+        "y": 93,
+        "w": 22,
+        "h": 18,
         "name": "cutscene(4)",
+        "id": "67e88b43-c500-45b7-8ac5-10b1688038a0"
+      },
+      {
+        "type": "trigger",
+        "x": 285,
+        "y": -26,
+        "w": 123,
+        "h": 167,
+        "name": "cutscene(the_end)",
         "id": "67e88b43-c500-45b7-8ac5-10b1688038a0"
       }
     ],
     "invis_walls": [
       [
-        297,
-        1,
-        8,
-        16,
+        250,
+        55,
+        24,
+        28,
         ""
       ]
     ],
@@ -431,6 +440,51 @@
         "pos_x": 27,
         "pos_y": 140,
         "id": "3914ed24-80dd-4012-a758-aa0c8d74b3a5"
+      }
+    ]
+  },
+  "level_beh": {
+    "enemies": [],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 420,
+        "y": -6,
+        "w": 79,
+        "h": 165,
+        "name": "cutscene(the_end)",
+        "id": "67e88b43-c500-45b7-8ac5-10b1688038a0"
+      }
+    ],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": []
+  },
+  "level_5": {
+    "coll_layers": [
+      1
+    ],
+    "enemies": [],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 479,
+        "y": 71,
+        "w": 74,
+        "h": 99,
+        "name": "cutscene(luuk)",
+        "id": "67e88b43-c500-45b7-8ac5-10b1688038a0"
+      }
+    ],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 1,
+        "pos_x": 50,
+        "pos_y": 153,
+        "id": "e842bc93-f730-4f86-b2df-24168710687b"
       }
     ]
   }

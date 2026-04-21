@@ -39,3 +39,8 @@ t_gate_r2_2 =
             []
             * You heard some&music playing
             ENDOFCONVERSATION
+
+q_gate_r1_idfk =
+                []
+                {switch_room}
+                ENDOFCONVERSATION

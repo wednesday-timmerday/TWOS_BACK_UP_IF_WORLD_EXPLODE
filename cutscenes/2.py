@@ -39,6 +39,9 @@ class cutscene:
 
         self._state = {}
 
+        # NEW: hammer collision state
+        self.hammer_hit = False
+
         self._patch_camera()
 
     def _patch_camera(self):
@@ -87,6 +90,8 @@ class cutscene:
             return min(current + max_delta, target)
         else:
             return max(current - max_delta, target)
+
+    # ---------------- CUTSCENE STEPS ---------------- #
 
     def step_0(self):
         if self.shadowrock is not None:
@@ -180,23 +185,22 @@ class cutscene:
             hammer_fall_speed * self.dt
         )
 
+        # Check collision
+        if self.shadowrock is not None and not self.hammer_hit:
+            hit_x = abs(self.hammer.world_x - self.shadowrock.world_x) < 30
+            hit_y = abs(self.hammer.world_y - self.shadowrock.world_y) < 30
+            if hit_x and hit_y:
+                self.hammer_hit = True
+
+        # Once hit, drag shadowrock along with hammer at same speed
+        if self.hammer_hit and self.shadowrock is not None:
+            self.shadowrock.world_y = self.approach(
+                self.shadowrock.world_y,
+                hammer_fall_pos,
+                hammer_fall_speed * self.dt
+            )
+
         if self.hammer.world_y >= hammer_fall_pos:
-            return "YES"
-
-    def drop_shadowrock(self):
-        if self.shadowrock is None:
-            return "YES"
-
-        shadowrock_fall_speed = 120
-        shadowrock_fall_pos = 360
-
-        self.shadowrock.world_y = self.approach(
-            self.shadowrock.world_y,
-            shadowrock_fall_pos,
-            shadowrock_fall_speed * self.dt
-        )
-
-        if self.shadowrock.world_y >= shadowrock_fall_pos:
             return "YES"
 
     def release_the_baby(self):

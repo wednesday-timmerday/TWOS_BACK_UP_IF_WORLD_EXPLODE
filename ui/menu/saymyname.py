@@ -208,7 +208,9 @@ class NameScreen:
 
             self.text_engine.draw(250, 70, (255, 255, 255), size=26)
 
-            if self.dialog_index == len(self.dialog_lines) - 1:
+            print(self.text_engine.char_index)
+
+            if self.dialog_index == len(self.dialog_lines) - 1 and self.text_engine.char_index >= 23:
                 self.screen.blit(self.player_img, (700, 215))
 
             return

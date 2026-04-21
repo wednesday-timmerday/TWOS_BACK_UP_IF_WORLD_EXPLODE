@@ -14,7 +14,7 @@ parent_yell =
             Mom: * You always say that!
             []
             CHARA_NAME * ...
-            CHARA_NAME * Lets just go to bed
+            CHARA_NAME * Lets just go to bed.
             
             {goto_world}
             ENDOFCONVERSATION
@@ -81,6 +81,7 @@ parent_yell =
     {(0 0.5)}
     Shadowrock: * But what about&that lante-
     {Reset_cam}
+    {place_shadowrock}
     {(1 0)}
     Mr. Tutorion: * SHUT UP!
     {set_hammer}
@@ -117,4 +118,20 @@ parent_yell =
     Mr. Tutorion: * It's just an blue block
     Mr. Tutorion: * (I dont really know why&that's here)
     Mr. Tutorion: * Err, ^wait250 lets continue
+    ENDOFCONVERSATION
+
+the_end = 
+    Horse
+    {END}
+    ENDOFCONVERSATION
+
+luuk =
+    []
+    {(1 0)}
+    Luuk: * Apparently, soap isnt edible
+    Luuk: * It foams and tastes weird...
+    Luuk: * (I know from experience)
+    Luuk: * BTW, this is an softlock
+    Luuk: * You need to restart the game
+    Luuk: *  L
     ENDOFCONVERSATION
