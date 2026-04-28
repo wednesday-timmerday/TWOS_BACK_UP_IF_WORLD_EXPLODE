@@ -1,11 +1,29 @@
 from sprites.base_enemy import EnemyBase
+from sprites.object_state import StateSerializable
 
-class blobtigoo(EnemyBase):
+class blobtigoo(StateSerializable, EnemyBase):
     def __init__(self, scale_percentage=(100,100)):
-        super().__init__("blobtigoo", frame_count=2, scale_percentage=scale_percentage)
+        StateSerializable.__init__(self)
+        EnemyBase.__init__(self, "blobtigoo", frame_count=2, scale_percentage=scale_percentage)
+        self.object_type = "blobtigoo"
         self.world_x = 400  # Initial position
         self.world_y = 300
-        self.pos = [self.world_x, self.world_y]                                                                                          
+        self.pos = [self.world_x, self.world_y]
+    
+    def serialize_state(self):
+        """Save blobtigoo state including animation frame"""
+        return {
+            "x": int(self.world_x),
+            "y": int(self.world_y),
+            "frame": int(self.current_frame),
+        }
+    
+    def deserialize_state(self, state):
+        """Restore blobtigoo state including animation frame"""
+        self.world_x = state.get("x", 400)
+        self.world_y = state.get("y", 300)
+        self.pos = [self.world_x, self.world_y]
+        self.current_frame = state.get("frame", 0)                                                                                          
 
     def draw_in_world(self, surface, cam_x, cam_y):
         """Draw blobtigoo in world coordinates"""

@@ -1,13 +1,31 @@
 from sprites.base_enemy import EnemyBase
+from sprites.object_state import StateSerializable
 
-class lantern(EnemyBase):
+class lantern(StateSerializable, EnemyBase):
     def __init__(self, world_loader=None):
-        super().__init__("lantern", frame_count=1, scale_percentage=(400,400))
+        StateSerializable.__init__(self)
+        EnemyBase.__init__(self, "lantern", frame_count=1, scale_percentage=(400,400))
+        self.object_type = "lantern"
         self.world_x = 400  # Initial position
         self.world_y = 300
         self.pos = [self.world_x, self.world_y]
         self.world_loader = world_loader
         self.world_loader.add_light_source(self, 550)
+    
+    def serialize_state(self):
+        """Save lantern state including position and frame"""
+        return {
+            "x": int(self.world_x),
+            "y": int(self.world_y),
+            "frame": int(self.current_frame),
+        }
+    
+    def deserialize_state(self, state):
+        """Restore lantern state including position and frame"""
+        self.world_x = state.get("x", 400)
+        self.world_y = state.get("y", 300)
+        self.pos = [self.world_x, self.world_y]
+        self.current_frame = state.get("frame", 0)
 
 
     def draw_in_world(self, surface, cam_x, cam_y):

@@ -71,7 +71,7 @@ their_turn = True
 DELAY_MIN = 0.7
 DELAY_MAX = 2.5984727
 
-total_couted = 937
+total_couted = 1051
 
 
 def capture(region):
@@ -113,7 +113,7 @@ while True:
             last_seen = highest
             their_turn = True
 
-        if their_turn and (last_typed is None or highest > last_typed) and total_couted < 1013:
+        if their_turn and (last_typed is None or highest > last_typed):
             their_turn = False
             counter = highest + 1
 
@@ -122,7 +122,9 @@ while True:
             time.sleep(delay)
 
             last_typed = counter
-            pyautogui.typewrite(str(counter))
+            for char in str(counter):
+                pyautogui.typewrite(char)
+                time.sleep(random.uniform(0.1, 0.36))
             pyautogui.sleep(0.1)
             pyautogui.press("enter")
             total_couted += 1

@@ -1,13 +1,11 @@
 import pygame
 import os
 import json
-import math
 import cutscenes.loader as CutsceneLoaderModule
 import interactables.loader as InteractableModule
 from assetsLoader import Loader
 from sprites.save.save import SaveOBJ
 from ui.menu.save_menu import SaveMenu
-from config.runtime_config import RuntimeJSON
 
 
 def load_json_level_spec():
@@ -33,18 +31,11 @@ def check_collision_including_invis(world, rect, deactivated=None):
     for w in full_spec.get("invis_walls", []):
         if len(w) < 5:
             continue
-
-        wx = int(w[0])
-        wy = int(w[1])
-        ww = int(w[2])
-        wh = int(w[3])
+        wx, wy, ww, wh = int(w[0]), int(w[1]), int(w[2]), int(w[3])
         name = str(w[4])
-
         if name in deactivated:
             continue
-
-        wall_rect = pygame.Rect(wx, wy, ww, wh)
-        if rect.colliderect(wall_rect):
+        if rect.colliderect(pygame.Rect(wx, wy, ww, wh)):
             return True
 
     for p in full_spec.get("platforms", []):
@@ -52,9 +43,7 @@ def check_collision_including_invis(world, rect, deactivated=None):
         py = int(p.get("y", 0))
         pw = int(p.get("width", 0))
         ph = int(p.get("height", 0))
-
-        platform_rect = pygame.Rect(px, py, pw, ph)
-        if rect.colliderect(platform_rect):
+        if rect.colliderect(pygame.Rect(px, py, pw, ph)):
             return True
 
     return False
@@ -67,124 +56,81 @@ def check_collision_solid_only(world, rect):
         return False
 
 
+# ─── Death screen phase constants ────────────────────────────────────────────
+_DS_FADE_IN      = "fade_in"       # black overlay fades in
+_DS_HOLD         = "hold"          # fully black, brief pause
+_DS_OLD_OUT      = "old_out"       # old lives count slides/fades away
+_DS_NEW_IN       = "new_in"        # new lives count slides/bounces in
+_DS_DONE         = "done"          # animation complete, waiting for timer
+
+
 class Player:
     def __init__(self):
-        self.coyote_time = 0.18
-        self.coyote_timer = 0.0
-
+        # ── Character select ──────────────────────────────────────────────
         self.lebreah = False
 
-        if self.lebreah:
-            sprite_loader = Loader("sprites/Player/animation_frames/lebreah")
-        else:
-            sprite_loader = Loader("sprites/Player/animation_frames")
-
+        sprite_loader = Loader(
+            "sprites/Player/animation_frames/lebreah" if self.lebreah
+            else "sprites/Player/animation_frames"
+        )
         sfx_loader = Loader("sprites/Player/Sfx")
 
+        # ── Animations ────────────────────────────────────────────────────
         self.animations = {}
         self.animations_left = {}
+        self._load_animations(sprite_loader)
 
-        for folder in os.listdir(sprite_loader.load("")):
-            folder_path = os.path.join(sprite_loader.load(""), folder)
-
-            if os.path.isdir(folder_path):
-                self.animations[folder] = []
-
-                for file in os.listdir(folder_path):
-                    file_path = os.path.join(folder_path, file)
-                    self.animations[folder].append(file_path)
-
-        for anim_name in list(self.animations.keys()):
-            frames = []
-            sprite_path = sprite_loader.load(anim_name)
-            try:
-                total_frames = len(
-                    [n for n in os.listdir(sprite_path)
-                     if os.path.isfile(os.path.join(sprite_path, n))]
-                )
-            except Exception:
-                total_frames = 0
-
-            for i in range(1, total_frames):
-                try:
-                    path = sprite_loader.load(f"{anim_name}/{anim_name}_{i}.png")
-                    img = pygame.image.load(path).convert_alpha()
-                except Exception:
-                    img = pygame.Surface((40, 80), pygame.SRCALPHA)
-                    img.fill((255, 0, 255, 100))
-                frames.append(img)
-
-            self.animations[anim_name] = frames
-            self.animations_left[anim_name] = [pygame.transform.flip(f, True, False) for f in frames]
-
+        # ── Sound effects ─────────────────────────────────────────────────
         self.sound_effects = {"Walk": []}
-        for sfx_name in list(self.sound_effects.keys()):
-            sfx = []
-            sprite_path = sfx_loader.load(sfx_name)
-            try:
-                total_sfx = len(
-                    [n for n in os.listdir(sprite_path)
-                     if os.path.isfile(os.path.join(sprite_path, n))]
-                )
-            except Exception:
-                total_sfx = 0
+        self._load_sfx(sfx_loader)
 
-            for i in range(1, total_sfx):
-                try:
-                    path = sfx_loader.load(f"{sfx_name}/{sfx_name}_{i}.ogg")
-                    sound = pygame.mixer.Sound(path)
-                    sfx.append(sound)
-                except Exception:
-                    print("Pim's schuld...")
-
-            self.sound_effects[sfx_name] = sfx
-
+        # ── Animation state ───────────────────────────────────────────────
         self.curr_animation = "Idle"
         self.curr_frame = 0
         self.animation_timer = 0.0
         self.animation_speed = 0.12
+        self._prev_animation = "Idle"
+        self._prev_frame = 0
 
-        self.image = self.animations[self.curr_animation][self.curr_frame]
+        self.image = self.animations[self.curr_animation][0]
         self.image_right = self.image
         self.image_left = pygame.transform.flip(self.image, True, False)
         self.rect = self.image.get_rect()
 
+        # ── Hitbox ────────────────────────────────────────────────────────
         self.hit_box = pygame.Rect(5, 0, 6, 16)
         self.hitbox_offset_x = 0
         self.hitbox_offset_y = 0
 
+        # ── World position ────────────────────────────────────────────────
         self.world_x = 303.0
         self.world_y = 114.0
 
+        # ── Movement ──────────────────────────────────────────────────────
         self.speed = 90.0
         self.speed_y = 0.0
-        self.dir = 0
+        self.dir = 0           # 0 = right, 1 = left
         self.on_ground = False
         self.can_move = True
-
-        self._deactivated_walls = set()
-        self._in_triggers = set()
-        self._triggered_once = set()
-        self._prev_z = False
-        self._current_level = None
-
-        self.save_obj = SaveOBJ()
-        self.save_menu = SaveMenu()
-        self.level_spec = load_json_level_spec()
-        self.active_cutscene = None
-        self.active_interactive = None
-        self.active_fight = None
-
-        self.joystick = None
-        self.in_save_menu = False
-        self.mass = 1.0
-        self.event = None
-
+        self.dt = 0.0
         self.set_step_height_for_snapping = 5
 
+        # ── Jump ──────────────────────────────────────────────────────────
+        self.is_jumping = False
+        self.jump_speed = -180
+        self.max_jump_hold_time = 0.4
+        self.jump_hold_timer = 0.0
+        self.jump_buffer_time = 0.12
+        self.jump_buffer_timer = 0.0
+        self._prev_jump = False
+
+        # ── Coyote time ───────────────────────────────────────────────────
+        self.coyote_time = 0.18
+        self.coyote_timer = 0.0
+
+        # ── Wall slide / wall jump ────────────────────────────────────────
         self.touching_wall_left = False
         self.touching_wall_right = False
-
         self.wall_slide_max_fall = 55.0
         self.wall_jump_y = -180.0
         self.wall_jump_push_speed = 125.0
@@ -192,13 +138,84 @@ class Player:
         self.wall_jump_dir_lock_timer = 0.0
         self.wall_jump_push_dir = 0
 
+        # ── Trigger / level state ─────────────────────────────────────────
+        self._deactivated_walls = set()
+        self._in_triggers = set()
+        self._triggered_once = set()
+        self._current_level = None
+        self.last_level = None
+
+        # ── Save / menu ───────────────────────────────────────────────────
+        self.save_obj = SaveOBJ()
+        self.save_menu = SaveMenu()
+        self.in_save_menu = False
+        self._prev_z = False
+        self._saving = False
+
+        # ── Active scenes / fight ─────────────────────────────────────────
+        self.active_cutscene = None
+        self.active_interactive = None
+        self.active_fight = None
+        self.event = None
+
+        # ── Effects ───────────────────────────────────────────────────────
+        self.current_effect = None
+        self._shadow_triggers_active = set()
+        self.mass = 1.0
+
+        # ── Death knockback ────────────────────────────────────────────────
+        self.death_knockback_x = 0.0
+
+        # ── Level spec ────────────────────────────────────────────────────
+        self.level_spec = load_json_level_spec()
+
+        # ── Lives ─────────────────────────────────────────────────────────
+        self.lives = 6
+
+        # ── Death state ───────────────────────────────────────────────────
+        self.dead = False
+        self.dead_timer = 0.0
+        self.dead_display_time = 3.5
+
+        self.freeze_frame_duration = 0.6
+        self.freeze_frame_timer = 0.0
+        self.freeze_frame_active = False
+        self.freeze_frame_snapshot = None
+
+        self.death_walk_active = False
+        self.death_walk_timer = 0.0
+        self.death_walk_duration = 1.2
+
+        self._ds_phase = _DS_FADE_IN
+        self._ds_phase_timer = 0.0
+        self._ds_fade_in_dur  = 0.45
+        self._ds_hold_dur     = 0.20
+        self._ds_old_out_dur  = 0.45
+        self._ds_new_in_dur   = 0.55
+        self._ds_lives_before = 6
+
+        self._death_font_large = None
+        self._death_font_small = None
+
+        # Respawn protection + collision gate
+        self.respawn_protect_timer = 0.0
+        self.respawn_protect_time = 0.75
+        self.collision_enabled = True
+
+        # ── Frozen / misc ─────────────────────────────────────────────────
+        self.frozen = False
+        self.jump_down = False
+
+        # ── Joystick ──────────────────────────────────────────────────────
+        self.joystick = None
         try:
-            print(pygame.joystick.get_count())
             if pygame.joystick.get_count() > 0:
                 self.joystick = pygame.joystick.Joystick(0)
+                self.joystick.init()
         except Exception as e:
             print(e)
 
+        # ── Load save ─────────────────────────────────────────────────────
         try:
             loaded = self.save_obj.load_save()
         except Exception:
@@ -221,44 +238,36 @@ class Player:
                 except Exception:
                     pass
 
-        self.is_jumping = False
-        self.coyote_time = 0.18
-        self.jump_speed = -180
-        self.max_jump_hold_time = 0.4
-        self.last_level = None
-        self.jump_buffer_time = 0.12
-        self.jump_buffer_timer = 0.0
+    # ─────────────────────────────────────────────────────────────────────
+    # Private helpers
+    # ─────────────────────────────────────────────────────────────────────
 
-        if self.joystick:
-            self.joystick.init()
+    def _death_fonts(self):
+        """Lazily init death fonts (pygame.font must already be initialised)."""
+        if self._death_font_large is None:
+            try:
+                self._death_font_large = pygame.font.SysFont("Arial", 12, bold=True)
+                self._death_font_small = pygame.font.SysFont("Arial", 6)
+            except Exception:
+                pass
+        return self._death_font_large, self._death_font_small
 
-        self.current_effect = None
-        self._shadow_triggers_active = set()
-
-    def refresh_animation(self):
-        if self.lebreah:
-            sprite_loader = Loader("sprites/Player/animation_frames/lebreah")
-        else:
-            sprite_loader = Loader("sprites/Player/animation_frames")
-
-        for folder in os.listdir(sprite_loader.load("")):
-            folder_path = os.path.join(sprite_loader.load(""), folder)
-
-            if os.path.isdir(folder_path):
-                self.animations[folder] = []
-
-                for file in os.listdir(folder_path):
-                    file_path = os.path.join(folder_path, file)
-                    self.animations[folder].append(file_path)
+    def _load_animations(self, sprite_loader):
+        root = sprite_loader.load("")
+        for folder in os.listdir(root):
+            folder_path = os.path.join(root, folder)
+            if not os.path.isdir(folder_path):
+                continue
+            self.animations[folder] = []
 
         for anim_name in list(self.animations.keys()):
             frames = []
             sprite_path = sprite_loader.load(anim_name)
             try:
-                total_frames = len(
-                    [n for n in os.listdir(sprite_path)
-                     if os.path.isfile(os.path.join(sprite_path, n))]
-                )
+                total_frames = len([
+                    n for n in os.listdir(sprite_path)
+                    if os.path.isfile(os.path.join(sprite_path, n))
+                ])
             except Exception:
                 total_frames = 0
 
@@ -271,8 +280,69 @@ class Player:
                     img.fill((255, 0, 255, 100))
                 frames.append(img)
 
+            if not frames:
+                placeholder = pygame.Surface((40, 80), pygame.SRCALPHA)
+                placeholder.fill((255, 0, 255, 100))
+                frames = [placeholder]
+
             self.animations[anim_name] = frames
-            self.animations_left[anim_name] = [pygame.transform.flip(f, True, False) for f in frames]
+            self.animations_left[anim_name] = [
+                pygame.transform.flip(f, True, False) for f in frames
+            ]
+
+    def _load_sfx(self, sfx_loader):
+        for sfx_name in list(self.sound_effects.keys()):
+            sfx = []
+            sprite_path = sfx_loader.load(sfx_name)
+            try:
+                total_sfx = len([
+                    n for n in os.listdir(sprite_path)
+                    if os.path.isfile(os.path.join(sprite_path, n))
+                ])
+            except Exception:
+                total_sfx = 0
+
+            for i in range(1, total_sfx):
+                try:
+                    path = sfx_loader.load(f"{sfx_name}/{sfx_name}_{i}.ogg")
+                    sfx.append(pygame.mixer.Sound(path))
+                except Exception:
+                    print("SFX load failed")
+
+            self.sound_effects[sfx_name] = sfx
+
+    def _reset_after_respawn(self):
+        self.speed_y = 0.0
+        self.death_knockback_x = 0.0
+        self.is_jumping = False
+        self.jump_hold_timer = 0.0
+        self.jump_buffer_timer = 0.0
+        self.coyote_timer = 0.0
+        self._prev_jump = False
+        self.jump_down = False
+        self.on_ground = False
+        self.curr_animation = "Idle"
+        self.curr_frame = 0
+        self.animation_timer = 0.0
+        self._prev_animation = "Idle"
+        self.respawn_protect_timer = self.respawn_protect_time
+        self.freeze_frame_active = False
+        self.freeze_frame_timer = 0.0
+        self.freeze_frame_snapshot = None
+        self.death_walk_active = False
+        self.death_walk_timer = 0.0
+        self.collision_enabled = True
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Public helpers
+    # ─────────────────────────────────────────────────────────────────────
+
+    def refresh_animation(self):
+        sprite_loader = Loader(
+            "sprites/Player/animation_frames/lebreah" if self.lebreah
+            else "sprites/Player/animation_frames"
+        )
+        self._load_animations(sprite_loader)
 
     def update_hitbox(self):
         self.hit_box.topleft = (
@@ -283,10 +353,9 @@ class Player:
     def apply_spawn_point(self, level_target):
         level_key = f"level_{level_target}"
         level_data = self.level_spec.get(level_key, {})
-        save_points = level_data.get("save_points", [])
         came_from = self.last_level
 
-        for sp in save_points:
+        for sp in level_data.get("save_points", []):
             if sp.get("type") == "spawn" and sp.get("came_from") == came_from:
                 self.world_x = float(sp.get("pos_x", 160))
                 self.world_y = float(sp.get("pos_y", 400))
@@ -307,13 +376,103 @@ class Player:
     def get_deact(self):
         return set(self._deactivated_walls)
 
+    # ─────────────────────────────────────────────────────────────────────
+    # Die
+    # ─────────────────────────────────────────────────────────────────────
+
+    def die(self, world):
+        if (
+            self.dead
+            or self.freeze_frame_active
+            or self.death_walk_active
+            or self.respawn_protect_timer > 0.0
+        ):
+            return
+
+        self._ds_lives_before = self.lives
+        self.curr_animation = "Idle"
+        self.freeze_frame_active = True
+        self.freeze_frame_timer = 0.0
+        self.freeze_frame_snapshot = None
+        self.can_move = False
+        self.is_jumping = True
+        self.jump_hold_timer = 0.0
+        self.coyote_timer = 0.0
+        self.speed_y = -150.0
+        self.jump_down = True
+        self.jump_hold_timer = 999.0
+        self.on_ground = False
+        self.collision_enabled = False
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Update
+    # ─────────────────────────────────────────────────────────────────────
+
     def update(self, world, screen, dt, current_level=None, player=None, fight_loader=None):
-        if not hasattr(self, "_prev_animation"):
-            self._prev_animation = self.curr_animation
+        self.dt = dt
 
-        if not hasattr(self, "_prev_frame"):
-            self._prev_frame = self.curr_frame
+        if self.respawn_protect_timer > 0.0:
+            self.respawn_protect_timer = max(0.0, self.respawn_protect_timer - dt)
 
+        # ════════════════════════════════════════════════════════════════
+        # Phase 1 — Freeze frame
+        # ════════════════════════════════════════════════════════════════
+        if self.freeze_frame_active:
+            self.freeze_frame_timer += dt
+            if self.freeze_frame_timer >= self.freeze_frame_duration:
+                self.freeze_frame_active = False
+                self.freeze_frame_snapshot = None
+                self.death_walk_active = True
+                self.death_walk_timer = 0.0
+                self.curr_animation = "Walking"
+                self.dir = 1
+            # Physics still run below (don't return yet)
+
+        # ════════════════════════════════════════════════════════════════
+        # Phase 2 — Death walk
+        # ════════════════════════════════════════════════════════════════
+        elif self.death_walk_active:
+            self.death_walk_timer += dt
+            self.curr_animation = "Walking"
+            if self.death_walk_timer >= self.death_walk_duration:
+                self.death_walk_active = False
+                self.dead = True
+                self.dead_timer = 0.0
+                self.lives -= 1
+                self._ds_phase = _DS_FADE_IN
+                self._ds_phase_timer = 0.0
+
+        # ════════════════════════════════════════════════════════════════
+        # Phase 3 — Death screen
+        # ════════════════════════════════════════════════════════════════
+        elif self.dead:
+            self.dead_timer += dt
+            self._ds_phase_timer += dt
+
+            if self._ds_phase == _DS_FADE_IN and self._ds_phase_timer >= self._ds_fade_in_dur:
+                self._ds_phase = _DS_HOLD
+                self._ds_phase_timer = 0.0
+            elif self._ds_phase == _DS_HOLD and self._ds_phase_timer >= self._ds_hold_dur:
+                self._ds_phase = _DS_OLD_OUT
+                self._ds_phase_timer = 0.0
+            elif self._ds_phase == _DS_OLD_OUT and self._ds_phase_timer >= self._ds_old_out_dur:
+                self._ds_phase = _DS_NEW_IN
+                self._ds_phase_timer = 0.0
+            elif self._ds_phase == _DS_NEW_IN and self._ds_phase_timer >= self._ds_new_in_dur:
+                self._ds_phase = _DS_DONE
+                self._ds_phase_timer = 0.0
+
+            if self.dead_timer >= self.dead_display_time:
+                self.dead = False
+                self.dead_timer = 0.0
+                self.can_move = True
+                self.apply_spawn_point(world.current_level)
+                self._reset_after_respawn()
+            return
+
+        # ════════════════════════════════════════════════════════════════
+        # Animation frame advance
+        # ════════════════════════════════════════════════════════════════
         if self.curr_animation != self._prev_animation:
             self.curr_frame = 0
             self.animation_timer = 0.0
@@ -331,29 +490,19 @@ class Player:
             self.animation_timer -= self.animation_speed
             self.curr_frame = (self.curr_frame + 1) % len(frames)
 
-        if self.curr_animation == "Walking":
-            if (self.curr_frame in (3, 6)) and (self._prev_frame != self.curr_frame):
-                # self.sound_effects["Walk"][0].play()
-                pass
+        self._prev_frame = self.curr_frame
 
         try:
             self.image = frames[self.curr_frame]
-        except Exception as e:
-            print(
-                "Animation indexing error:", e,
-                "anim=", self.curr_animation,
-                "curr_frame=", self.curr_frame,
-                "len_frames=", len(frames)
-            )
+        except Exception:
             self.curr_frame = 0
             self.image = frames[0]
 
         try:
             self.image_right = self.animations[self.curr_animation][self.curr_frame]
         except Exception:
-            placeholder = pygame.Surface((40, 80), pygame.SRCALPHA)
-            placeholder.fill((255, 0, 255, 100))
-            self.image_right = placeholder
+            self.image_right = pygame.Surface((40, 80), pygame.SRCALPHA)
+            self.image_right.fill((255, 0, 255, 100))
 
         try:
             self.image_left = self.animations_left[self.curr_animation][self.curr_frame]
@@ -363,36 +512,48 @@ class Player:
         self.image = self.image_left if self.dir else self.image_right
         self.rect.size = self.image.get_size()
 
-        self._prev_frame = self.curr_frame
-
+        # ── Input ─────────────────────────────────────────────────────────
         keys = pygame.key.get_pressed()
-        dx = 0.0
-
-        axis_x = axis_y = 0.0
+        axis_x = 0.0
         if self.joystick:
             try:
                 axis_x = self.joystick.get_axis(0)
-                axis_y = self.joystick.get_axis(1)
-            except Exception as e:
-                print(e)
+            except Exception:
+                pass
 
-        controls_allowed = self.can_move and not self.save_menu.visible and not self.active_fight
+        controls_allowed = (
+            self.can_move
+            and not self.save_menu.visible
+            and not self.active_fight
+            and not self.freeze_frame_active
+            and not self.death_walk_active
+        )
 
-        hbx = self.hitbox_offset_x
-        hby = self.hitbox_offset_y
-        hb = self.hit_box
+        hbx   = self.hitbox_offset_x
+        hby   = self.hitbox_offset_y
+        hb    = self.hit_box
         deact = self._deactivated_walls
 
-        self.wall_jump_dir_lock_timer = max(0.0, self.wall_jump_dir_lock_timer - dt)
+        ignore_collisions = self.dead or self.death_walk_active or (not self.collision_enabled)
 
-        side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
-        left_probe = pygame.Rect(int(self.world_x + hbx - 1), int(self.world_y + hby), 1, side_probe_h)
-        right_probe = pygame.Rect(int(self.world_x + hbx + hb.width), int(self.world_y + hby), 1, side_probe_h)
+        # ── Wall touch probes ─────────────────────────────────────────────
+        if not ignore_collisions:
+            self.wall_jump_dir_lock_timer = max(0.0, self.wall_jump_dir_lock_timer - dt)
+            side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
+            left_probe  = pygame.Rect(int(self.world_x + hbx - 1),        int(self.world_y + hby), 1, side_probe_h)
+            right_probe = pygame.Rect(int(self.world_x + hbx + hb.width), int(self.world_y + hby), 1, side_probe_h)
+            self.touching_wall_left  = (not self.on_ground) and check_collision_solid_only(world, left_probe)
+            self.touching_wall_right = (not self.on_ground) and check_collision_solid_only(world, right_probe)
+        else:
+            self.touching_wall_left = False
+            self.touching_wall_right = False
 
-        self.touching_wall_left = (not self.on_ground) and check_collision_solid_only(world, left_probe)
-        self.touching_wall_right = (not self.on_ground) and check_collision_solid_only(world, right_probe)
-
-        if controls_allowed:
+        # ── Horizontal movement ───────────────────────────────────────────
+        dx = 0.0
+        if self.death_walk_active:
+            dx = -self.death_knockback_x * dt
+            self.curr_animation = "Walking"
+        elif controls_allowed:
             if self.wall_jump_dir_lock_timer > 0.0:
                 dx = self.wall_jump_push_dir * self.wall_jump_push_speed * dt
                 self.curr_animation = "Walking"
@@ -407,26 +568,24 @@ class Player:
                     self.curr_animation = "Walking"
                 else:
                     self.curr_animation = "Idle"
-                    if len(self.animations["Idle"]) > 0:
-                        self.curr_frame = min(self.curr_frame, len(self.animations["Idle"]) - 1)
-        else:
-            dx = 0.0
+                    self.curr_frame = min(self.curr_frame, len(self.animations["Idle"]) - 1)
 
         if self.current_effect == 1:
             dx *= 2.5
 
+        # ── Jump input ────────────────────────────────────────────────────
         try:
-            jump_down = (
+            self.jump_down = (
                 keys[pygame.K_SPACE]
                 or keys[pygame.K_w]
                 or keys[pygame.K_UP]
                 or (self.joystick and self.joystick.get_button(1))
             )
         except Exception:
-            jump_down = False
+            self.jump_down = False
 
-        jump_just_pressed = jump_down and not getattr(self, "_prev_jump", False)
-        self._prev_jump = jump_down
+        jump_just_pressed = self.jump_down and not self._prev_jump and not self.freeze_frame_active
+        self._prev_jump = self.jump_down
 
         if jump_just_pressed:
             self.jump_buffer_timer = self.jump_buffer_time
@@ -438,8 +597,8 @@ class Player:
         else:
             self.coyote_timer = max(0.0, self.coyote_timer - dt)
 
+        # ── Wall jump ─────────────────────────────────────────────────────
         wall_jumped = False
-
         if controls_allowed and jump_just_pressed and not self.on_ground and self.wall_jump_dir_lock_timer <= 0.0:
             if self.touching_wall_left:
                 self.speed_y = self.wall_jump_y
@@ -460,27 +619,22 @@ class Player:
                 self.jump_buffer_timer = 0.0
                 self.coyote_timer = 0.0
 
+        # ── Normal jump ───────────────────────────────────────────────────
         if controls_allowed and not wall_jumped:
-            if (
-                self.jump_buffer_timer > 0.0
-                and self.coyote_timer > 0.0
-                and not self.is_jumping
-            ):
-                if self.current_effect == 2:
-                    self.speed_y = self.jump_speed * 1.3
-                else:
-                    self.speed_y = self.jump_speed
+            if self.jump_buffer_timer > 0.0 and self.coyote_timer > 0.0 and not self.is_jumping:
+                self.speed_y = self.jump_speed * 1.3 if self.current_effect == 2 else self.jump_speed
                 self.is_jumping = True
-                self.jump_hold_timer = getattr(self, "max_jump_hold_time", 0.0)
+                self.jump_hold_timer = self.max_jump_hold_time
                 self.jump_buffer_timer = 0.0
                 self.coyote_timer = 0.0
 
-        gravity_jump_hold = 180
+        # ── Gravity ───────────────────────────────────────────────────────
+        gravity_jump_hold    = 180
         gravity_jump_release = 480
-        gravity_fall = 810
+        gravity_fall         = 810
 
         if self.speed_y < 0:
-            if getattr(self, "is_jumping", False) and jump_down and getattr(self, "jump_hold_timer", 0.0) > 0.0:
+            if self.is_jumping and self.jump_down and self.jump_hold_timer > 0.0:
                 gravity = gravity_jump_hold
                 self.jump_hold_timer -= dt
             else:
@@ -493,68 +647,49 @@ class Player:
                 self.speed_y += gravity_fall * dt
 
         if (not self.on_ground) and self.speed_y > 0:
-            holding_left = keys[pygame.K_LEFT] or keys[pygame.K_a] or axis_x < -0.5
+            holding_left  = keys[pygame.K_LEFT] or keys[pygame.K_a] or axis_x < -0.5
             holding_right = keys[pygame.K_RIGHT] or keys[pygame.K_d] or axis_x > 0.5
-
             if (self.touching_wall_left and holding_left) or (self.touching_wall_right and holding_right):
                 self.speed_y = min(self.speed_y, self.wall_slide_max_fall)
 
         dy = self.speed_y * dt
 
-        h_test = pygame.Rect(
-            int(self.world_x + dx + hbx),
-            int(self.world_y + hby),
-            hb.width,
-            hb.height
-        )
-
-        if not check_collision_including_invis(world, h_test, deactivated=deact):
+        # ── Horizontal collision + step-up ────────────────────────────────
+        if ignore_collisions:
             self.world_x += dx
-        elif dx != 0:
-            stepped = False
-            for step in range(1, 6):
-                move_test = pygame.Rect(
-                    int(self.world_x + dx + hbx),
-                    int(self.world_y + hby - step),
-                    hb.width, hb.height
-                )
-                stand_test = pygame.Rect(
-                    int(self.world_x + hbx),
-                    int(self.world_y + hby - step),
-                    hb.width, hb.height
-                )
-                if (
-                    not check_collision_including_invis(world, move_test, deactivated=deact)
-                    and not check_collision_including_invis(world, stand_test, deactivated=deact)
-                ):
-                    self.world_x += dx
-                    self.world_y -= step
-                    stepped = True
-                    break
-
-        pre_move_y = self.world_y
-
-        v_test = pygame.Rect(
-            int(self.world_x + hbx),
-            int(self.world_y + hby + dy),
-            hb.width,
-            hb.height
-        )
-
-        landed = False
-        if check_collision_including_invis(world, v_test, deactivated=deact):
-            if dy > 0:
-                self.world_y = pre_move_y
-                self.speed_y = 0.0
-                landed = True
-            else:
-                self.world_y = pre_move_y
-                self.speed_y = 0.0
-                landed = False
         else:
-            self.world_y += dy
+            h_test = pygame.Rect(int(self.world_x + dx + hbx), int(self.world_y + hby), hb.width, hb.height)
+            if not check_collision_including_invis(world, h_test, deactivated=deact):
+                self.world_x += dx
+            elif dx != 0:
+                for step in range(1, 6):
+                    move_test  = pygame.Rect(int(self.world_x + dx + hbx), int(self.world_y + hby - step), hb.width, hb.height)
+                    stand_test = pygame.Rect(int(self.world_x + hbx),      int(self.world_y + hby - step), hb.width, hb.height)
+                    if (
+                        not check_collision_including_invis(world, move_test,  deactivated=deact)
+                        and not check_collision_including_invis(world, stand_test, deactivated=deact)
+                    ):
+                        self.world_x += dx
+                        self.world_y -= step
+                        break
 
-        prev_on_ground = getattr(self, "on_ground", False)
+        # ── Vertical collision ────────────────────────────────────────────
+        if ignore_collisions:
+            self.world_y += dy
+            landed = False
+        else:
+            pre_move_y = self.world_y
+            v_test = pygame.Rect(int(self.world_x + hbx), int(self.world_y + hby + dy), hb.width, hb.height)
+
+            landed = False
+            if check_collision_including_invis(world, v_test, deactivated=deact):
+                self.world_y = pre_move_y
+                self.speed_y = 0.0
+                landed = dy > 0
+            else:
+                self.world_y += dy
+
+        prev_on_ground = self.on_ground
         self.on_ground = landed
 
         if self.on_ground and not prev_on_ground:
@@ -564,31 +699,33 @@ class Player:
 
         self.update_hitbox()
 
-        side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
-        left_probe = pygame.Rect(int(self.world_x + hbx - 1), int(self.world_y + hby), 1, side_probe_h)
-        right_probe = pygame.Rect(int(self.world_x + hbx + hb.width), int(self.world_y + hby), 1, side_probe_h)
+        # ── Re-probe walls after move ─────────────────────────────────────
+        if not ignore_collisions:
+            side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
+            left_probe  = pygame.Rect(int(self.world_x + hbx - 1),        int(self.world_y + hby), 1, side_probe_h)
+            right_probe = pygame.Rect(int(self.world_x + hbx + hb.width), int(self.world_y + hby), 1, side_probe_h)
+            self.touching_wall_left  = (not self.on_ground) and check_collision_solid_only(world, left_probe)
+            self.touching_wall_right = (not self.on_ground) and check_collision_solid_only(world, right_probe)
+        else:
+            self.touching_wall_left = False
+            self.touching_wall_right = False
 
-        self.touching_wall_left = (not self.on_ground) and check_collision_solid_only(world, left_probe)
-        self.touching_wall_right = (not self.on_ground) and check_collision_solid_only(world, right_probe)
-
+        # ── Fall off screen → die ─────────────────────────────────────────
         if self.world_y > screen.get_height():
-            self.apply_spawn_point(world.current_level)
-            self.is_jumping = False
-            self.jump_hold_timer = 0.0
-            self.coyote_timer = self.coyote_time
+            self.die(world)
+            return
 
+        # ── Save menu (Z key) ─────────────────────────────────────────────
         z_pressed = keys[pygame.K_z]
-        z_just_pressed = z_pressed and not getattr(self, "_prev_z", False)
-
-        if z_just_pressed and not self.save_menu.visible:
+        z_just_pressed = z_pressed and not self._prev_z
+        if z_just_pressed and not self.save_menu.visible and not self.freeze_frame_active:
             self.save_menu.show()
-
         self._prev_z = z_pressed
 
-        if self.save_menu.visible:
+        if self.save_menu.visible and not self.freeze_frame_active:
             self.in_save_menu = True
             action = self.save_menu.handle_input(keys)
-            if action == "Save" and not getattr(self, "_saving", False):
+            if action == "Save" and not self._saving:
                 self._saving = True
             if action is None:
                 self._saving = False
@@ -596,138 +733,217 @@ class Player:
         else:
             self.in_save_menu = False
 
-        level_key = f"level_{getattr(world, 'current_level', current_level or 0)}"
-        current_level_num = getattr(world, 'current_level', current_level or 0)
+        # ── Triggers ──────────────────────────────────────────────────────
+        if not self.freeze_frame_active and not self.death_walk_active:
+            level_key = f"level_{getattr(world, 'current_level', current_level or 0)}"
+            current_level_num = getattr(world, "current_level", current_level or 0)
 
-        if self._current_level != current_level_num:
-            self._current_level = current_level_num
-            self._in_triggers = set()
+            if self._current_level != current_level_num:
+                self._current_level = current_level_num
+                self._in_triggers = set()
 
-        triggers = self.level_spec.get(level_key, {}).get("triggers", [])
+            triggers = self.level_spec.get(level_key, {}).get("triggers", [])
+            player_rect = pygame.Rect(hb.x, hb.y, hb.width, hb.height)
+            current_collisions = set()
 
-        player_rect = pygame.Rect(hb.x, hb.y, hb.width, hb.height)
-        current_collisions = set()
+            for idx, trigger in enumerate(triggers):
+                trigger_id  = trigger.get("id")
+                trigger_key = trigger_id if trigger_id else f"_idx_{idx}"
 
-        for idx, trigger in enumerate(triggers):
-            trigger_id = trigger.get("id")
-            trigger_key = trigger_id if trigger_id else f"_idx_{idx}"
+                if trigger_key in self._triggered_once:
+                    continue
 
-            if trigger_key in self._triggered_once:
-                continue
+                trect = pygame.Rect(trigger["x"], trigger["y"], trigger["w"], trigger["h"])
+                name  = trigger.get("name", "").strip()
 
-            trect = pygame.Rect(trigger["x"], trigger["y"], trigger["w"], trigger["h"])
-            name = trigger.get("name", "").strip()
+                if not player_rect.colliderect(trect):
+                    continue
 
-            if not player_rect.colliderect(trect):
-                continue
+                current_collisions.add(trigger_key)
 
-            current_collisions.add(trigger_key)
+                if trigger_key not in self._in_triggers:
+                    self._in_triggers.add(trigger_key)
 
-            if trigger_key not in self._in_triggers:
-                self._in_triggers.add(trigger_key)
+                    if name == "print":
+                        print("Trigger COLLIDE!")
+                        self._triggered_once.add(trigger_key)
 
-                if name == "print":
-                    print("Trigger COLLIDE!")
-                    self._triggered_once.add(trigger_key)
+                    if name == "shadow_platform":
+                        for data in world.boxEngine.shadow_data:
+                            if data["rect"] == trect:
+                                self.current_effect = data["curr_power"]
+                                self._shadow_triggers_active.add(trigger_key)
 
+                    if self.active_cutscene and not getattr(self.active_cutscene, "running", False):
+                        self.active_cutscene = None
+                    if self.active_interactive and not getattr(self.active_interactive, "running", False):
+                        self.active_interactive = None
+
+                    if name.startswith("cutscene("):
+                        cut_id = name[9:-1]
+                        if not self.active_cutscene:
+                            try:
+                                self.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
+                                self.curr_animation = "Idle"
+                                self.active_cutscene.world = world
+                                self.active_cutscene.event = self.event
+                                self.active_cutscene.player = self
+                                self.active_cutscene.load(cut_id, self.joystick)
+                                self.active_cutscene.trigger_idx = trigger_key
+                            except Exception as e:
+                                print("Error loading cutscene:", e)
+                                self.active_cutscene = None
+
+                    if name.startswith("interactable("):
+                        inter_id = name[13:-1]
+                        if not self.active_cutscene:
+                            try:
+                                self.active_interactive = InteractableModule.Interactable()
+                                self.curr_animation = "Idle"
+                                self.active_interactive.world = world
+                                self.active_interactive.event = self.event
+                                self.active_interactive.player = self
+                                self.active_interactive.load(inter_id, self.joystick)
+                                self.active_interactive.trigger_idx = trigger_key
+                            except Exception as e:
+                                print("Error loading interactable:", e)
+                                self.active_interactive = None
+
+                    elif name.startswith("deact_invis("):
+                        self._deactivated_walls.add(name[13:-1])
+                        self._triggered_once.add(trigger_key)
+
+                    elif name.startswith("goto("):
+                        level_target = int(name[5:-1])
+                        print("GO TO LEVEL:", level_target)
+                        self.last_level = getattr(world, "current_level", None)
+                        world.change_level(level_target, self)
+                        self.apply_spawn_point(level_target)
+                        if self.active_cutscene:
+                            self.active_cutscene = None
+
+                    elif name.startswith("fight("):
+                        fight_name = name[6:-1]
+                        self.active_fight = fight_loader.load_fight(fight_name)
+                        print(self.active_fight)
+                        self.can_move = False
+
+            self._in_triggers.intersection_update(current_collisions)
+
+            # ── Shadow trigger exit ───────────────────────────────────────
+            shadow_triggers_in_range = set()
+            for idx, trigger in enumerate(triggers):
+                trigger_id  = trigger.get("id")
+                trigger_key = trigger_id if trigger_id else f"_idx_{idx}"
+                name = trigger.get("name", "").strip()
                 if name == "shadow_platform":
-                    for data in world.boxEngine.shadow_data:
-                        if data["rect"] == trect:
-                            self.current_effect = data["curr_power"]
-                            self._shadow_triggers_active.add(trigger_key)
+                    trect = pygame.Rect(trigger["x"], trigger["y"], trigger["w"], trigger["h"])
+                    if player_rect.colliderect(trect):
+                        shadow_triggers_in_range.add(trigger_key)
 
-                if self.active_cutscene and not getattr(self.active_cutscene, "running", False):
-                    self.active_cutscene = None
+            exited_shadow = self._shadow_triggers_active - shadow_triggers_in_range
+            if exited_shadow:
+                self._shadow_triggers_active -= exited_shadow
+                if not self._shadow_triggers_active:
+                    self.current_effect = None
 
-                if self.active_interactive and not getattr(self.active_interactive, "running", False):
+            # ── Active interactive cleanup ────────────────────────────────
+            if self.active_interactive:
+                trig = getattr(self.active_interactive, "trigger_idx", None)
+                if trig not in self._in_triggers:
                     self.active_interactive = None
 
-                if name.startswith("cutscene("):
-                    cut_id = name[9:-1]
-                    if not self.active_cutscene:
-                        try:
-                            self.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
-                            self.curr_animation = "Idle"
-                            self.active_cutscene.world = world
-                            self.active_cutscene.event = self.event
-                            self.active_cutscene.player = self
-                            self.active_cutscene.load(cut_id, self.joystick)
-                            self.active_cutscene.trigger_idx = trigger_key
-                        except Exception as e:
-                            print("Error loading cutscene:", e)
-                            self.active_cutscene = None
+            # ── Update active scenes ──────────────────────────────────────
+            if self.active_cutscene:
+                self.active_cutscene.update(dt, self)
+            if self.active_interactive:
+                self.active_interactive.update(dt)
+        else:
+            pass   # pause triggers during freeze / death walk
 
-                if name.startswith("interactable("):
-                    inter_id = name[13:-1]
-                    if not self.active_cutscene:
-                        try:
-                            self.active_interactive = InteractableModule.Interactable()
-                            self.curr_animation = "Idle"
-                            self.active_interactive.world = world
-                            self.active_interactive.event = self.event
-                            self.active_interactive.player = self
-                            self.active_interactive.load(inter_id, self.joystick)
-                            self.active_interactive.trigger_idx = trigger_key
-                        except Exception as e:
-                            print("Error loading cutscene:", e)
-                            self.active_cutscene = None
+    # ─────────────────────────────────────────────────────────────────────
+    # Draw
+    # ─────────────────────────────────────────────────────────────────────
 
-                elif name.startswith("deact_invis("):
-                    self._deactivated_walls.add(name[13:-1])
-                    self._triggered_once.add(trigger_key)
+    def _ease_out_back(self, t):
+        """Overshoot-bounce easing (t in 0..1)."""
+        c1 = 1.70158
+        c3 = c1 + 1.0
+        return 1.0 + c3 * pow(t - 1.0, 3) + c1 * pow(t - 1.0, 2)
 
-                elif name.startswith("goto("):
-                    level_target = int(name[5:-1])
-                    print("GO TO LEVEL:", level_target)
-                    self.last_level = getattr(world, "current_level", None)
-                    world.change_level(level_target, self)
-                    self.apply_spawn_point(level_target)
-                    if self.active_cutscene:
-                        self.active_cutscene = None
-
-                elif name.startswith("fight("):
-                    fight_name = name[6:-1]
-                    self.active_fight = fight_loader.load_fight(fight_name)
-                    print(self.active_fight)
-                    self.can_move = False
-
-        self._in_triggers.intersection_update(current_collisions)
-
-        shadow_triggers_in_range = set()
-        for idx, trigger in enumerate(triggers):
-            trigger_id = trigger.get("id")
-            trigger_key = trigger_id if trigger_id else f"_idx_{idx}"
-            name = trigger.get("name", "").strip()
-            if name == "shadow_platform":
-                trect = pygame.Rect(trigger["x"], trigger["y"], trigger["w"], trigger["h"])
-                if player_rect.colliderect(trect):
-                    shadow_triggers_in_range.add(trigger_key)
-
-        exited_shadow = self._shadow_triggers_active - shadow_triggers_in_range
-        if exited_shadow:
-            self._shadow_triggers_active -= exited_shadow
-            if not self._shadow_triggers_active:
-                self.current_effect = None
-
-        if self.active_interactive:
-            trig = getattr(self.active_interactive, "trigger_idx", None)
-            if trig not in self._in_triggers:
-                self.active_interactive = None
-
-        if self.active_cutscene:
-            self.active_cutscene.update(dt, self)
-
-        if self.active_interactive:
-            self.active_interactive.update(dt)
+    def _ease_in_quad(self, t):
+        return t * t
 
     def draw(self, screen, world, true_screen):
+        font_large, font_small = self._death_fonts()
+        sw, sh = screen.get_size()
+
+        # ════════════════════════════════════════════════════════════════
+        # Death screen
+        # ════════════════════════════════════════════════════════════════
+        if self.dead:
+            screen.fill((0, 0, 0))
+            if not font_large:
+                return
+
+            phase     = self._ds_phase
+            t_raw     = self._ds_phase_timer
+            cx        = sw // 2
+            cy        = sh // 2
+
+            old_lives = self._ds_lives_before
+            new_lives = self.lives
+
+            if phase == _DS_FADE_IN:
+                return
+
+            if phase == _DS_HOLD:
+                return
+
+            if phase == _DS_OLD_OUT:
+                t = min(t_raw / self._ds_old_out_dur, 1.0)
+                ease_t = self._ease_in_quad(t)
+
+                slide_y = cy - int(ease_t * 12)
+                alpha   = int(255 * (1.0 - ease_t))
+
+                label = font_large.render(f"X  {old_lives}", False, (255, 255, 255))
+                surf  = pygame.Surface(label.get_size(), pygame.SRCALPHA)
+                surf.blit(label, (0, 0))
+                surf.set_alpha(alpha)
+                screen.blit(surf, (cx - label.get_width() // 2, slide_y - label.get_height() // 2))
+                return
+
+            if phase == _DS_NEW_IN:
+                t = min(t_raw / self._ds_new_in_dur, 1.0)
+                ease_t = self._ease_out_back(t)
+
+                start_y = cy + 16
+                slide_y = int(start_y + (cy - start_y) * ease_t)
+                alpha   = min(255, int(255 * (t * 3.0)))
+
+                label = font_large.render(f"X  {new_lives}", False, (255, 255, 255))
+                surf  = pygame.Surface(label.get_size(), pygame.SRCALPHA)
+                surf.blit(label, (0, 0))
+                surf.set_alpha(alpha)
+                screen.blit(surf, (cx - label.get_width() // 2, slide_y - label.get_height() // 2))
+                return
+
+            if phase == _DS_DONE:
+                label = font_large.render(f"X  {new_lives}", False, (255, 255, 255))
+                screen.blit(label, (cx - label.get_width() // 2, cy - label.get_height() // 2))
+                return
+
+        # ════════════════════════════════════════════════════════════════
+        # Normal player draw
+        # ════════════════════════════════════════════════════════════════
         cam_x = getattr(world, "cam_x", 0)
         cam_y = getattr(world, "cam_y", 0)
 
         self.rect.size = self.image.get_size()
         draw_rect = self.rect.copy()
 
-        float_center_x = self.world_x + self.hitbox_offset_x + self.hit_box.width / 2.0
+        float_center_x = self.world_x + self.hitbox_offset_x + self.hit_box.width  / 2.0
         float_bottom_y = self.world_y + self.hitbox_offset_y + self.hit_box.height
 
         draw_rect.midbottom = (
@@ -749,14 +965,3 @@ class Player:
                 self.save_menu.draw(screen)
             except Exception:
                 pass
-
-        try:
-            debug_hitbox = pygame.Rect(
-                round(self.world_x + self.hitbox_offset_x - cam_x),
-                round(self.world_y + self.hitbox_offset_y - cam_y),
-                self.hit_box.width,
-                self.hit_box.height
-            )
-            # pygame.draw.rect(screen, (255, 0, 0), debug_hitbox, 1)
-        except Exception:
-            pass

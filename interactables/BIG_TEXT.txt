@@ -1,5 +1,5 @@
 t_flowey_r1 =
-            []
+            [potato]
             * The painting reminds you of a&game you used to play.
             * Despite its age,&it is still a fun game.
             ENDOFCONVERSATION

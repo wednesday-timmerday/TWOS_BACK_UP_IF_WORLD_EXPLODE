@@ -29,7 +29,6 @@ except Exception:
 # Without it: still connects + sends, but never draws/receives others.
 import sys
 MP_JOIN_MODE = "--join" in sys.argv
-# MP_JOIN_MODE = True
 
 # -----------------------
 # Config / Globals
@@ -39,18 +38,17 @@ rpc = Presence(client_id)
 rpc_connected = False
 
 SCREEN_RESOLUTION = (1280, 720)   # actual window size
-MINI_RESOLUTION = (320, 180)      # low-res renderer to draw game to
-FPS = 240                         # set to 0 for uncapped
-OPTIONS_FILE = "options.json"
+MINI_RESOLUTION   = (320, 180)    # low-res renderer
+FPS               = 240           # set to 0 for uncapped
+OPTIONS_FILE      = "options.json"
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR  = Path(__file__).parent
 CACHE_DIR = BASE_DIR / "cache"
 
 LOADING_SCALE = 10
-loading_font = None
+loading_font  = None
 
-# Debug helpers
-DEBUG_FORCE_RED_SQUARE = False  # set True to verify renderer->screen pipeline
+DEBUG_FORCE_RED_SQUARE = False
 
 # -----------------------
 # Background RPC connect
@@ -66,7 +64,7 @@ def rpc_background_connect():
 threading.Thread(target=rpc_background_connect, daemon=True).start()
 
 # -----------------------
-# Simple cache helpers
+# Cache helpers
 # -----------------------
 def save_json_cache(filename, data):
     CACHE_DIR.mkdir(exist_ok=True)
@@ -94,7 +92,7 @@ def load_surface_cache(filename):
 # Options
 # -----------------------
 options_loader = Loader("ui/menu")
-options_path = options_loader.load(OPTIONS_FILE)
+options_path   = options_loader.load(OPTIONS_FILE)
 
 def load_options():
     if options_path and os.path.exists(options_path):
@@ -109,7 +107,7 @@ def load_options():
 # Init pygame
 # -----------------------
 def init_pygame(options):
-    os.environ["SDL_RENDER_VSYNC"] = "0"
+    os.environ["SDL_RENDER_VSYNC"]       = "0"
     os.environ["SDL_VIDEO_X11_FORCE_EGL"] = "0"
     pygame.init()
     try:
@@ -131,7 +129,7 @@ def init_pygame(options):
 
     try:
         icon_loader = Loader("icon")
-        icon_path = icon_loader.load("lantern.png")
+        icon_path   = icon_loader.load("lantern.png")
         if icon_path and os.path.exists(icon_path):
             icon_surface = pygame.image.load(icon_path).convert_alpha()
             pygame.display.set_icon(icon_surface)
@@ -142,11 +140,11 @@ def init_pygame(options):
     return screen, fps_font, renderer
 
 # -----------------------
-# Loading / UI drawing (draw DIRECTLY to screen)
+# Loading screen
 # -----------------------
 def draw_loading_screen_old(surface, progress, text="Loading..."):
     surface.fill((30, 30, 30))
-    font = pygame.font.SysFont("Arial", 32, bold=True)
+    font  = pygame.font.SysFont("Arial", 32, bold=True)
     label = font.render(text, True, (255, 200, 50))
     surface.blit(label, (surface.get_width() // 2 - label.get_width() // 2, 140))
     bar_w, bar_h = 500, 40
@@ -156,7 +154,7 @@ def draw_loading_screen_old(surface, progress, text="Loading..."):
     fill_w = max(0, int(bar_w * max(0.0, min(1.0, progress))))
     if fill_w > 4:
         pygame.draw.rect(surface, (255, 200, 50), (x + 2, y + 2, fill_w - 4, bar_h - 4), border_radius=10)
-    dot_font = pygame.font.SysFont("Arial", 28)
+    dot_font  = pygame.font.SysFont("Arial", 28)
     dot_label = dot_font.render("." * (int(time.time() * 2) % 4), True, (255, 200, 50))
     surface.blit(dot_label, (surface.get_width() // 2 + label.get_width() // 2 + 10, 140))
 
@@ -184,9 +182,9 @@ def draw_loading_screen(surface, progress, text="LOADING...", inside_img=None, o
         return
 
     bar_w, bar_h = inside_img.get_size()
-    bar_x = surface.get_width() // 2 - bar_w // 2
-    bar_y = surface.get_height() // 2 - bar_h // 2
-    fill_w = int(bar_w * progress)
+    bar_x   = surface.get_width()  // 2 - bar_w // 2
+    bar_y   = surface.get_height() // 2 - bar_h // 2
+    fill_w  = int(bar_w * progress)
     surface.blit(outline_img, (bar_x, bar_y))
     if fill_w > 0:
         source_rect = pygame.Rect(0, 0, fill_w, bar_h)
@@ -210,8 +208,8 @@ def play_error_gif(error_text):
     screen = _pg.display.set_mode((1080, 720))
     _pg.display.set_caption("Dog is sleepy")
 
-    loader = Loader("ui/error")
-    gif_path = loader.load("eepy.gif")
+    loader     = Loader("ui/error")
+    gif_path   = loader.load("eepy.gif")
     music_path = loader.load("thatstoobad.mp3")
 
     try:
@@ -221,22 +219,20 @@ def play_error_gif(error_text):
     except Exception:
         pass
 
-    gif = Image.open(gif_path)
+    gif    = Image.open(gif_path)
     frames = []
     durations = []
     for frame in ImageSequence.Iterator(gif):
         frame = frame.convert("RGBA")
-        mode = frame.mode
-        size = frame.size
-        data = frame.tobytes()
-        py_frame = _pg.image.fromstring(data, size, mode)
+        data  = frame.tobytes()
+        py_frame = _pg.image.fromstring(data, frame.size, frame.mode)
         frames.append(py_frame)
         durations.append(frame.info.get("duration", 100))
 
-    clock = _pg.time.Clock()
+    clock       = _pg.time.Clock()
     frame_index = 0
-    running = True
-    timer = 0
+    running     = True
+    timer       = 0
 
     while running:
         dt = clock.tick(60)
@@ -250,9 +246,7 @@ def play_error_gif(error_text):
             frame_index = (frame_index + 1) % len(frames)
 
         screen.fill((0, 0, 0))
-        img = frames[frame_index]
-        rect = img.get_rect()
-        screen.blit(img, rect)
+        screen.blit(frames[frame_index], frames[frame_index].get_rect())
         _pg.display.flip()
 
     try:
@@ -273,38 +267,45 @@ def show_error_window(error_text):
         style.theme_use("clam")
     except Exception:
         pass
-    style.configure("TFrame", background="#1e1e1e")
-    style.configure("TLabel", background="#1e1e1e", foreground="#ffffff", font=("Segoe UI", 11))
+    style.configure("TFrame",        background="#1e1e1e")
+    style.configure("TLabel",        background="#1e1e1e", foreground="#ffffff", font=("Segoe UI", 11))
     style.configure("Header.TLabel", font=("Segoe UI", 15, "bold"))
-    style.configure("TButton", background="#3c3c3c", foreground="#ffffff", font=("Segoe UI", 10), padding=6)
+    style.configure("TButton",       background="#3c3c3c", foreground="#ffffff", font=("Segoe UI", 10), padding=6)
     style.map("TButton", background=[("active", "#505050")])
-    frame = ttk.Frame(root)
+
+    frame  = ttk.Frame(root)
     frame.pack(fill="both", expand=True, padx=15, pady=15)
     header = ttk.Label(frame, text=f"{ERROR_ICON} I AM BAD AT CODING", style="Header.TLabel")
     header.pack(anchor="w", pady=(0, 10))
-    text_box = scrolledtext.ScrolledText(frame, wrap=tk.WORD, font=("Consolas", 11),
-                                         background="#252526", foreground="#d4d4d4", insertbackground="white")
+
+    text_box = scrolledtext.ScrolledText(
+        frame, wrap=tk.WORD, font=("Consolas", 11),
+        background="#252526", foreground="#d4d4d4", insertbackground="white"
+    )
     text_box.insert(tk.END, error_text)
     text_box.config(state=tk.DISABLED)
     text_box.pack(fill="both", expand=True)
+
     button_frame = ttk.Frame(frame)
     button_frame.pack(fill="x", pady=10)
+
     def copy_to_clipboard():
         root.clipboard_clear()
         root.clipboard_append(error_text)
         messagebox.showinfo("Copied", "The full traceback has been copied!")
+
     def save_error():
-        filename = filedialog.asksaveasfilename(initialfile="error_log.txt",
-                                                defaultextension=".txt",
-                                                filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")])
+        filename = filedialog.asksaveasfilename(
+            initialfile="error_log.txt", defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
+        )
         if filename:
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(error_text)
             messagebox.showinfo("Saved", f"Error log saved to:\n{filename}")
-    copy_btn = ttk.Button(button_frame, text="Copy", command=copy_to_clipboard)
-    copy_btn.pack(side="left", padx=5)
-    save_btn = ttk.Button(button_frame, text="Save", command=save_error)
-    save_btn.pack(side="left", padx=5)
+
+    ttk.Button(button_frame, text="Copy", command=copy_to_clipboard).pack(side="left", padx=5)
+    ttk.Button(button_frame, text="Save", command=save_error).pack(side="left", padx=5)
     root.mainloop()
 
 # -----------------------
@@ -329,7 +330,6 @@ def safe_load_image(path):
 def blit_renderer_to_screen(screen, renderer):
     pygame.transform.scale(renderer, SCREEN_RESOLUTION, screen)
 
-
 def get_cam_target(player):
     cx = player.world_x + player.hitbox_offset_x + player.hit_box.width  / 2.0
     cy = player.world_y + player.hitbox_offset_y + player.hit_box.height / 2.0
@@ -344,26 +344,26 @@ def main():
     options = load_options()
     screen, fps_font, renderer = init_pygame(options)
 
+    # ── Loading bar assets ────────────────────────────────────────────────
     loader = Loader("ui/menu/images_for_load_img_i_guess_idk")
-    loading_path = None
-    bar_path = None
+    loading_path = bar_path = None
     try:
         loading_path = loader.load("loadthingy.png")
     except Exception:
-        loading_path = None
+        pass
     try:
         bar_path = loader.load("outlining.png")
     except Exception:
-        bar_path = None
+        pass
 
     loading_image = safe_load_image(loading_path)
-    bar_image = safe_load_image(bar_path)
+    bar_image     = safe_load_image(bar_path)
 
     if loading_image:
         try:
             loading_image = pygame.transform.scale(
                 loading_image,
-                (int(loading_image.get_width() * LOADING_SCALE),
+                (int(loading_image.get_width()  * LOADING_SCALE),
                  int(loading_image.get_height() * LOADING_SCALE))
             )
         except Exception:
@@ -372,7 +372,7 @@ def main():
         try:
             bar_image = pygame.transform.scale(
                 bar_image,
-                (int(bar_image.get_width() * LOADING_SCALE),
+                (int(bar_image.get_width()  * LOADING_SCALE),
                  int(bar_image.get_height() * LOADING_SCALE))
             )
         except Exception:
@@ -409,16 +409,16 @@ def main():
         pass
 
     clock = pygame.time.Clock()
-    dt = clock.tick(FPS) / 1000.0
-    dt = min(dt, 0.125)
+    dt    = clock.tick(FPS) / 1000.0
+    dt    = min(dt, 0.125)
 
     try:
         from ui.menu.menu import Menu, save_options
         from ui.menu import saymyname
     except Exception:
-        Menu = None
+        Menu         = None
         save_options = lambda x: None
-        saymyname = None
+        saymyname    = None
 
     menu_obj = Menu(options) if Menu else None
     name_obj = saymyname.NameScreen(screen) if saymyname else None
@@ -448,12 +448,6 @@ def main():
     except Exception:
         pass
 
-    # try:
-    #     from ui.fight.fight import Fight
-    #     fight_loader = Fight(renderer, screen)
-    # except Exception as e:
-    #     raise RuntimeError(f"Failed to initialize fight loader: {e}")
-
     try:
         draw_loading_screen(screen, 0.75, "LOADING...", loading_image, bar_image)
         pygame.display.flip()
@@ -465,7 +459,7 @@ def main():
     except Exception:
         WorldModule = None
 
-    world_data = load_json_cache("world.json")
+    world_data   = load_json_cache("world.json")
     world_loader = WorldModule(MINI_RESOLUTION, player) if WorldModule else None
     if not world_data:
         save_json_cache("world.json", {"dummy": True})
@@ -478,6 +472,7 @@ def main():
 
     pygame.time.delay(300)
 
+    # ── Menu ──────────────────────────────────────────────────────────────
     menu_result = None
     if menu_obj:
         try:
@@ -495,22 +490,19 @@ def main():
     except Exception:
         pass
 
-
-
+    # ── Name screen ───────────────────────────────────────────────────────
     if name_obj:
         try:
             name_obj.draw(dt)
             if getattr(name_obj, "chara_name", "") == "LEBREAH" and player:
                 player.lebreah = True
                 player.refresh_animation()
-            player.name = name_obj.chara_name
+            player.name       = name_obj.chara_name
             player.maker_name = name_obj.creator_name
         except Exception:
             pass
 
-    # -----------------------
-    # Multiplayer init
-    # -----------------------
+    # ── Multiplayer init ──────────────────────────────────────────────────
     mp = None
     if MULTIPLAYER_AVAILABLE and _MP is not None:
         try:
@@ -532,11 +524,12 @@ def main():
         show_error_window(error_msg)
         return
 
-    running = True
-    last_fps_value = -1
-    last_fps_text = None
+    # ── Main loop ─────────────────────────────────────────────────────────
+    running             = True
+    last_fps_value      = -1
+    last_fps_text       = None
     physics_accumulator = 0.0
-    physics_step = 1.0 / 60.0
+    physics_step        = 1.0 / 60.0
 
     while running:
         dt = clock.tick(FPS) / 1000.0
@@ -551,7 +544,7 @@ def main():
         # Clear renderer
         renderer.fill((0, 0, 0))
 
-        # Multiplayer tick (always sends; only receives when --join)
+        # Multiplayer tick
         if mp:
             try:
                 mp.tick(dt)
@@ -560,7 +553,7 @@ def main():
 
         # Update player
         try:
-            player.update(world_loader, renderer, dt, 1.0, player, fight_loader=None) # None = fight_loader
+            player.update(world_loader, renderer, dt, 1.0, player, fight_loader=None)
         except Exception:
             traceback.print_exc()
 
@@ -581,18 +574,22 @@ def main():
             except Exception:
                 pass
             globals()["last_rpc_update"] = now
-            
-        # ALL game drawing goes to renderer (320x180)
+
+        # ── All game drawing to renderer (320x180) ────────────────────────
         try:
             cam_x, cam_y = get_cam_target(player)
-
             world_loader.draw_world(renderer, cam_x, cam_y)
             world_loader.draw_physic_objects(renderer, dt)
             world_loader.draw_black_layer(renderer, cam_x, cam_y)
             world_loader.draw_shadow(renderer)
+            # player.draw writes sprite to renderer; death screen to screen
             player.draw(renderer, world_loader, screen)
         except Exception:
             traceback.print_exc()
+
+        # Always blit the live renderer — player.py owns the death animation
+        # during freeze_frame_active, and the black death screen once self.dead
+        blit_renderer_to_screen(screen, renderer)
 
         # Draw remote players (only when --join)
         if mp and MP_JOIN_MODE:
@@ -601,16 +598,7 @@ def main():
             except Exception:
                 pass
 
-        # # Fight updates/draws
-        # if fight_loader:
-        #     try:
-        #         fight_loader.update(dt, player)
-        #         #print(player.active_fight)
-        #         if getattr(player, "active_fight", None) != None:
-        #             fight_loader.draw(renderer)
-        #     except Exception:
-        #         traceback.print_exc()
-
+        # Fight updates/draws
         if getattr(player, "active_fight", None) and getattr(player.active_fight, "running", False):
             try:
                 player.active_fight.update(dt)
@@ -630,12 +618,7 @@ def main():
         if DEBUG_FORCE_RED_SQUARE:
             pygame.draw.rect(renderer, (255, 0, 0), (10, 10, 50, 50))
 
-        # Scale renderer -> screen (single upscale; pixel truncation happens here once)
-        blit_renderer_to_screen(screen, renderer)
-
-        # fight_loader.draw_text(screen)
-
-        # These draw on top of the upscaled screen at full res
+        # ── Full-res overlays drawn on top of upscaled screen ─────────────
         if last_fps_text:
             try:
                 screen.blit(last_fps_text, (10, 10))
@@ -656,6 +639,7 @@ def main():
 
         pygame.display.flip()
 
+    # ── Cleanup ───────────────────────────────────────────────────────────
     if mp:
         try:
             mp.stop()

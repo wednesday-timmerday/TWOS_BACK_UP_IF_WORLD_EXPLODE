@@ -199,14 +199,14 @@ class Editor:
         self.toolbar_scroll = max(0, min(self.toolbar_scroll, max_s))
 
     def screen_to_world(self, sx, sy):
-        return sx // SCALE + self.world.cam_x, sy // SCALE + self.world.cam_y
+        return (sx - self.toolbar_w()) // SCALE + self.world.cam_x, sy // SCALE + self.world.cam_y
 
     def world_to_screen(self, wx, wy):
         return wx - self.world.cam_x, wy - self.world.cam_y
 
     def world_to_big(self, wx, wy):
         sx, sy = self.world_to_screen(wx, wy)
-        return sx * SCALE, sy * SCALE
+        return sx * SCALE + self.toolbar_w(), sy * SCALE
 
     # ── Persistence ─────────────────────────────────────────────────────
     def mark_dirty(self):
@@ -295,13 +295,10 @@ class Editor:
 
         if kind == "enemy":
             obj = {
-                "type": "enemy",
+                "type": enemy_name or "enemy",
                 "position": [int(wx), int(wy)],
-                "name": enemy_name or "enemy",
                 "id": uid,
             }
-            ld.setdefault("enemies", []).append(obj)
-            return obj
 
         if kind == "trigger":
             obj = {"type": "trigger", "x": int(wx), "y": int(wy), "w": 96, "h": 56, "name": "", "id": uid}
@@ -696,8 +693,8 @@ class Editor:
                     except ValueError:
                         pass
             elif t == "enemy":
-                self.naming_text = obj.get("name", "enemy")
-                def commit(txt): obj["name"] = txt or "enemy"
+                self.naming_text = obj.get("type", "enemy")
+                def commit(txt): obj["type"] = txt or "enemy"
             elif "position" in obj:
                 self.naming_text = obj.get("name", "")
                 def commit(txt): obj["name"] = txt
@@ -931,7 +928,9 @@ class Editor:
                 fy = self._insp_field(surf, ix, fy, "came_from", lambda: str(obj.get("came_from", 0)),
                                       lambda v: obj.update({"came_from": int(v) if v.isdigit() else 0}))
             elif t == "enemy":
-                fy = self._insp_field(surf, ix, fy, "name", lambda: obj.get("name", "enemy"), lambda v: obj.update({"name": v or "enemy"}))
+                fy = self._insp_field(surf, ix, fy, "type",
+                    lambda: obj.get("type", "enemy"), 
+                    lambda v: obj.update({"type": v or "enemy"}))
 
         elif isinstance(obj, list):
             badge = BIG_SMALL.render("wall", True, C_WALL)

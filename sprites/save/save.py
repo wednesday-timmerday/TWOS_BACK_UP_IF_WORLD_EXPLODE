@@ -1,4 +1,5 @@
 from sprites.base_enemy import EnemyBase
+from sprites.object_state import StateSerializable
 from assetsLoader import Loader
 import json
 import os
@@ -19,15 +20,30 @@ def read_save_file(path):
         return None
 
 
-class SaveOBJ(EnemyBase):
+class SaveOBJ(StateSerializable, EnemyBase):
     def __init__(self):
-        super().__init__("Save", frame_count=1, scale_percentage=(400,400))
+        StateSerializable.__init__(self)
+        EnemyBase.__init__(self, "Save", frame_count=1, scale_percentage=(400,400))
+        self.object_type = "save"
         self.world_x = 400
         self.world_y = 300
         self.pos = [self.world_x, self.world_y]
         self.save_loader = Loader("sprites/save")
         self.save_path = self.save_loader.load("savedgame.TWOSSAVE")
         self.currchap = 1
+    
+    def serialize_state(self):
+        """Save save point state"""
+        return {
+            "x": int(self.world_x),
+            "y": int(self.world_y),
+        }
+    
+    def deserialize_state(self, state):
+        """Restore save point state"""
+        self.world_x = state.get("x", 400)
+        self.world_y = state.get("y", 300)
+        self.pos = [self.world_x, self.world_y]
 
     def draw_in_world(self, surface, cam_x, cam_y):
         frame = self.frames[self.current_frame]
@@ -37,15 +53,52 @@ class SaveOBJ(EnemyBase):
         surface.blit(frame, rect)
 
     def save_game(self, world, player, triggered_once):
-        data = {
-            "player_x": int(player.world_x),
-            "player_y": int(player.world_y),
-            "current_level": int(getattr(world, "current_level", 0)),
-            "triggered_once": list(triggered_once) if triggered_once is not None else [],
-            "deactivated_walls": list(player.get_deact()) if hasattr(player, "get_deact") else [],
-            "levels": {},
-            "current_light_source": int(world.current_light_source),
-        }
+        # Load existing save to preserve other levels' object states
+        existing_save = read_save_file(self.save_path)
+        if existing_save:
+            data = existing_save
+        else:
+            data = {
+                "player_x": 0,
+                "player_y": 0,
+                "current_level": 0,
+                "triggered_once": [],
+                "deactivated_walls": [],
+                "levels": {},
+                "current_light_source": 1,
+                "object_states": {},
+            }
+        
+        # Update current game state
+        data["player_x"] = int(player.world_x)
+        data["player_y"] = int(player.world_y)
+        data["current_level"] = int(getattr(world, "current_level", 0))
+        data["triggered_once"] = list(triggered_once) if triggered_once is not None else []
+        data["deactivated_walls"] = list(player.get_deact()) if hasattr(player, "get_deact") else []
+        data["current_light_source"] = int(world.current_light_source)
+
+        # =====================================
+        # Save object states organized by level
+        # =====================================
+        try:
+            state_manager = getattr(world, "object_state_manager", None)
+            if state_manager:
+                current_level = int(getattr(world, "current_level", 0))
+                level_key = f"level_{current_level}"
+                
+                # Initialize object_states if needed
+                if "object_states" not in data:
+                    data["object_states"] = {}
+                
+                # Save current level's object states
+                level_states = state_manager.save_all_states()
+                data["object_states"][level_key] = level_states
+                print(f"[SaveOBJ.save_game] ✓ Saved state for {len(level_states)} objects in {level_key}")
+                for obj_id, state_data in level_states.items():
+                    obj_type = state_data.get("type", "unknown")
+                    print(f"  - {obj_type} (ID: {obj_id}): {state_data.get('state', {})}")
+        except Exception as e:
+            print(f"[SaveOBJ.save_game] ✗ Failed to save object states: {e}")
 
         try:
             level_spec_path = Loader("worlds").load("level-spec.json")
@@ -76,6 +129,7 @@ class SaveOBJ(EnemyBase):
                         "type": getattr(e, "name", "enemy"),
                         "x": int(getattr(e, "world_x", 0)),
                         "y": int(getattr(e, "world_y", 0)),
+                        "id": getattr(e, "object_id", None),
                     })
                 except Exception:
                     continue
@@ -89,6 +143,7 @@ class SaveOBJ(EnemyBase):
                         "type": f"physics_obj_{phys_type}",
                         "x": int(p.object.world_x),
                         "y": int(p.object.world_y),
+                        "id": getattr(p.object, "object_id", None),
                     })
                 except Exception:
                     continue
@@ -98,6 +153,9 @@ class SaveOBJ(EnemyBase):
             pass
 
         write_save_file(data, self.save_path)
+        
+        # Reload save data so _full_save is up-to-date
+        self.load_save()
 
     def load_save(self):
         data = read_save_file(self.save_path)
@@ -123,3 +181,41 @@ class SaveOBJ(EnemyBase):
             True,
             int(current_light_source),
         )
+
+    def apply_object_states(self, world):
+        """
+        Apply saved object states to the world for the current level.
+        Call this after enemies have been loaded.
+        
+        Args:
+            world: The World_loader instance
+        """
+        if not hasattr(self, "_full_save") or not self._full_save:
+            print(f"[SaveOBJ.apply_object_states] ✗ No save data loaded")
+            return
+        
+        # Get object states for the current level
+        object_states = self._full_save.get("object_states", {})
+        if not object_states:
+            print(f"[SaveOBJ.apply_object_states] ✗ No object_states in save file")
+            return
+        
+        current_level = int(getattr(world, "current_level", 0))
+        level_key = f"level_{current_level}"
+        
+        # Get states for this specific level
+        level_object_states = object_states.get(level_key, {})
+        if not level_object_states:
+            print(f"[SaveOBJ.apply_object_states] ✗ No states for {level_key}")
+            return
+        
+        state_manager = getattr(world, "object_state_manager", None)
+        if not state_manager:
+            print(f"[SaveOBJ.apply_object_states] ✗ No state_manager in world")
+            return
+        
+        try:
+            print(f"[SaveOBJ.apply_object_states] → Applying {len(level_object_states)} saved states to {level_key}")
+            state_manager.load_all_states(level_object_states)
+        except Exception as e:
+            print(f"[SaveOBJ.apply_object_states] ✗ Failed to apply object states: {e}")

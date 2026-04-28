@@ -128,7 +128,9 @@ class TextEngine:
     # Start text / choices
     # -----------------------------
     def start_text(self, text, origin="ui"):
+        print(f"[TextEngine.start_text] Starting text: '{text}' from origin '{origin}'")
         self.parsed_text, self.char_effects = self.parse_effects(text)
+        print(f"[TextEngine.start_text] After parse - parsed_text: '{self.parsed_text}', effects: {self.char_effects}")
         self.text = text
         self.char_index = 0
         self.timer = 0.0
@@ -201,6 +203,7 @@ class TextEngine:
     # Update (typing + clones)
     # -----------------------------
     def update(self, dt):
+        print(f"[TextEngine.update] dt={dt}, char_index={self.char_index}, parsed_text_len={len(self.parsed_text)}, finished={self.finished}")
         self.time += dt
 
         # -----------------------------
@@ -360,13 +363,17 @@ class TextEngine:
         """
         Draw text to `surface` if provided, otherwise fall back to display surface.
         """
+        print(f"[TextEngine.draw] Called with x={x}, y={y}, surface={type(surface)}, char_index={self.char_index}, parsed_text='{self.parsed_text}'")
         if surface is None:
             surf = pygame.display.get_surface()
         else:
             surf = surface
 
         if surf is None:
+            print(f"[TextEngine.draw] WARNING: surf is None!")
             return
+        
+        print(f"[TextEngine.draw] Using surface {type(surf)}")
         # Update font size if changed
         if self.font.get_height() != size:
             self.font = pygame.font.Font(self.font_path, size)

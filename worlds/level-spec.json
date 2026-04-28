@@ -198,7 +198,16 @@
     "coll_layers": [
       1
     ],
-    "enemies": [],
+    "enemies": [
+      {
+        "type": "spike",
+        "position": [
+          64,
+          159
+        ],
+        "id": "26d3a9e1-eb4f-40ac-bea2-79de479125d7"
+      }
+    ],
     "triggers": [
       {
         "type": "trigger",
@@ -383,6 +392,14 @@
           99
         ],
         "id": "987a19ba-e0d8-46ae-87a0-93e52328f398"
+      },
+      {
+        "type": "spike",
+        "position": [
+          393,
+          159
+        ],
+        "id": "26d3a9e1-eb4f-40ac-bea2-79de479125d7"
       }
     ],
     "triggers": [
@@ -415,10 +432,10 @@
       },
       {
         "type": "trigger",
-        "x": 285,
-        "y": -26,
-        "w": 123,
-        "h": 167,
+        "x": 250,
+        "y": -5,
+        "w": 42,
+        "h": 27,
         "name": "cutscene(the_end)",
         "id": "67e88b43-c500-45b7-8ac5-10b1688038a0"
       }
@@ -487,5 +504,421 @@
         "id": "e842bc93-f730-4f86-b2df-24168710687b"
       }
     ]
+  },
+  "level_6": {
+    "enemies": [
+      {
+        "type": "spike",
+        "position": [
+          200,
+          172
+        ],
+        "id": "b0b2724f-10c9-446d-a90f-ce04270ec051"
+      },
+      {
+        "type": "spike",
+        "position": [
+          208,
+          172
+        ],
+        "id": "8f756c2b-c8c1-4b86-81bf-5f3a2b1d2c68"
+      },
+      {
+        "type": "spike",
+        "position": [
+          216,
+          172
+        ],
+        "id": "c0bfb44d-b418-4bcd-adaf-b7c870796b06"
+      },
+      {
+        "type": "spike",
+        "position": [
+          224,
+          172
+        ],
+        "id": "8a7c20ff-da22-4054-b880-85a69e14242f"
+      },
+      {
+        "type": "spike",
+        "position": [
+          232,
+          172
+        ],
+        "id": "bb7daaca-19d0-4b3b-a943-686f95117c7e"
+      },
+      {
+        "type": "spike",
+        "position": [
+          240,
+          172
+        ],
+        "id": "f5117a0d-20f3-4c6e-9fe5-125ccbc6ecf1"
+      },
+      {
+        "type": "spike",
+        "position": [
+          248,
+          172
+        ],
+        "id": "770f9304-f0b7-424d-ad69-f411a48fa1b9"
+      },
+      {
+        "type": "spike",
+        "position": [
+          256,
+          172
+        ],
+        "id": "8c30a5c6-eae2-42a7-9a6b-51cf5c8b775b"
+      },
+      {
+        "type": "spike",
+        "position": [
+          264,
+          172
+        ],
+        "id": "6d454fb9-0db4-4e7a-9548-52bb588a35a1"
+      },
+      {
+        "type": "spike",
+        "position": [
+          272,
+          172
+        ],
+        "id": "207aff4e-bea9-47a8-ae0c-a5311eadfad2"
+      },
+      {
+        "type": "spike",
+        "position": [
+          280,
+          172
+        ],
+        "id": "61732fd8-2e15-4c6e-833d-02bf7278c269"
+      },
+      {
+        "type": "spike",
+        "position": [
+          288,
+          172
+        ],
+        "id": "264add7e-09c1-4124-b723-301cde5c30b2"
+      },
+      {
+        "type": "spike",
+        "position": [
+          296,
+          172
+        ],
+        "id": "93fc7f13-bdc4-4080-bf0f-db0bdabf6dcf"
+      },
+      {
+        "type": "spike",
+        "position": [
+          304,
+          172
+        ],
+        "id": "8c2c1e87-7e5a-46a7-b3b6-1172cd0893b1"
+      },
+      {
+        "type": "spike",
+        "position": [
+          312,
+          172
+        ],
+        "id": "d548f2d9-a587-484f-b357-ba6385dfbe31"
+      },
+      {
+        "type": "spike",
+        "position": [
+          320,
+          172
+        ],
+        "id": "a0758bf9-86f5-416f-b9dd-c3d69310ffa4"
+      },
+      {
+        "type": "spike",
+        "position": [
+          328,
+          172
+        ],
+        "id": "20584438-d643-49cb-ac43-a1e9139651ba"
+      },
+      {
+        "type": "spike",
+        "position": [
+          336,
+          172
+        ],
+        "id": "ed752c65-df55-4813-94d0-745447f43d49"
+      },
+      {
+        "type": "spike",
+        "position": [
+          344,
+          172
+        ],
+        "id": "4ee2e7dd-35bf-42ff-b8fa-bb2052d89f38"
+      },
+      {
+        "type": "spike",
+        "position": [
+          352,
+          172
+        ],
+        "id": "350d00d1-0e18-478f-9de3-ac2f330bab17"
+      },
+      {
+        "type": "spike",
+        "position": [
+          360,
+          172
+        ],
+        "id": "91d04900-9737-476a-9491-79e2f94a0020"
+      },
+      {
+        "type": "spike",
+        "position": [
+          368,
+          172
+        ],
+        "id": "9f6145d5-3834-47f6-b21f-0a6b30c19fb7"
+      },
+      {
+        "type": "spike",
+        "position": [
+          376,
+          172
+        ],
+        "id": "eda067cb-7440-420e-aff2-4abd5b6b1865"
+      },
+      {
+        "type": "spike",
+        "position": [
+          384,
+          172
+        ],
+        "id": "bdc95bc3-899f-4fa2-8ce6-ab4278a169f8"
+      },
+      {
+        "type": "spike",
+        "position": [
+          392,
+          172
+        ],
+        "id": "c1e1d5ae-d787-407d-9e4d-58428c5c24ee"
+      },
+      {
+        "type": "spike",
+        "position": [
+          400,
+          172
+        ],
+        "id": "e37764ff-6f8e-4114-8bb2-4e46c194e0a8"
+      },
+      {
+        "type": "spike",
+        "position": [
+          408,
+          172
+        ],
+        "id": "cf2cb0e9-97a7-47f9-974b-81fff3f366bb"
+      },
+      {
+        "type": "spike",
+        "position": [
+          416,
+          172
+        ],
+        "id": "ef85c2d1-1abb-4662-9f8c-10ca7a9d39a7"
+      },
+      {
+        "type": "spike",
+        "position": [
+          424,
+          172
+        ],
+        "id": "f597f9ac-7496-4f9b-9a11-da1ec6e27fd7"
+      },
+      {
+        "type": "spike",
+        "position": [
+          432,
+          172
+        ],
+        "id": "96768ff8-7248-4001-871b-6b78c8db41f0"
+      },
+      {
+        "type": "spike",
+        "position": [
+          440,
+          172
+        ],
+        "id": "d5b5c12f-bd98-4350-8c25-42d3fbc29703"
+      },
+      {
+        "type": "spike",
+        "position": [
+          448,
+          172
+        ],
+        "id": "86ce5393-7869-48fe-807a-e44ac3844aea"
+      },
+      {
+        "type": "spike",
+        "position": [
+          456,
+          172
+        ],
+        "id": "696e6fcb-6970-408a-b266-6f920010dd2c"
+      },
+      {
+        "type": "spike",
+        "position": [
+          464,
+          172
+        ],
+        "id": "71cfc69b-87b2-4fd2-a409-8a10f33f11c1"
+      },
+      {
+        "type": "spike",
+        "position": [
+          472,
+          172
+        ],
+        "id": "4064d646-3e63-48ef-9a11-1760ab8c466e"
+      },
+      {
+        "type": "spike",
+        "position": [
+          480,
+          172
+        ],
+        "id": "a8b6cd2e-cc89-4b1a-9336-097ec8b848c6"
+      },
+      {
+        "type": "spike",
+        "position": [
+          488,
+          172
+        ],
+        "id": "b8ef5bff-5a4f-4565-8df0-fa3e45d78e03"
+      },
+      {
+        "type": "spike",
+        "position": [
+          496,
+          172
+        ],
+        "id": "4ffc05c8-e6f2-4562-933b-0892ea2fa61d"
+      },
+      {
+        "type": "spike",
+        "position": [
+          504,
+          172
+        ],
+        "id": "fd13a440-76c6-4445-ba26-61b9cfc93a40"
+      },
+      {
+        "type": "spike",
+        "position": [
+          512,
+          172
+        ],
+        "id": "143e95c2-3bb2-44dd-9f1e-972e3259ae6c"
+      },
+      {
+        "type": "spike",
+        "position": [
+          520,
+          172
+        ],
+        "id": "90974fca-56d6-4205-af18-81ff38fe829a"
+      },
+      {
+        "type": "spike",
+        "position": [
+          528,
+          172
+        ],
+        "id": "9b2c7be3-e0fb-4b71-93c6-db22ccc23d47"
+      },
+      {
+        "type": "spike",
+        "position": [
+          536,
+          172
+        ],
+        "id": "6951d2a7-510d-4dd8-9299-decab12f8de6"
+      },
+      {
+        "type": "spike",
+        "position": [
+          544,
+          172
+        ],
+        "id": "69123f67-3fdd-4f85-aa02-a69e7e3555f5"
+      },
+      {
+        "type": "spike",
+        "position": [
+          552,
+          172
+        ],
+        "id": "6685734e-7aa7-47e7-b8d3-cdf7ef814465"
+      },
+      {
+        "type": "spike",
+        "position": [
+          560,
+          172
+        ],
+        "id": "f95f0c89-b004-4cc1-a991-f5470afb28ed"
+      },
+      {
+        "type": "spike",
+        "position": [
+          568,
+          172
+        ],
+        "id": "1105e6ee-17bc-4fd6-8e72-9c80af9af2ee"
+      },
+      {
+        "type": "spike",
+        "position": [
+          576,
+          172
+        ],
+        "id": "790ad8e0-86e8-433b-af67-3941a89f509c"
+      },
+      {
+        "type": "spike",
+        "position": [
+          584,
+          172
+        ],
+        "id": "c755615c-c819-4d85-91ac-507ee4403876"
+      },
+      {
+        "type": "spike",
+        "position": [
+          592,
+          172
+        ],
+        "id": "2fcd8ce6-a159-4049-975c-35e41a32ea6f"
+      }
+    ],
+    "triggers": [],
+    "invis_walls": [
+      [
+        -146,
+        150,
+        485,
+        8,
+        ""
+      ]
+    ],
+    "platforms": [],
+    "save_points": []
   }
 }

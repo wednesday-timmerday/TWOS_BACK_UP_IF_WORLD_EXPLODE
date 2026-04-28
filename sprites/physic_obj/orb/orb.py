@@ -1,6 +1,7 @@
 import pygame
 import math
 from assetsLoader import Loader
+from sprites.object_state import StateSerializable
 import json
 import os
 
@@ -13,9 +14,11 @@ def load_json_level_spec():
     return {}
 
 
-class PhysicObject:
+class PhysicObject(StateSerializable):
     def __init__(self, world_loader):
+        StateSerializable.__init__(self)
         self.world_loader = world_loader
+        self.object_type = "orb"  # For state management
 
         # Image — load first so width/height come from actual sprite
         self.image_loader = Loader("sprites/physic_obj/orb/frames")
@@ -48,6 +51,20 @@ class PhysicObject:
         # Cache trigger rects
         self.cutscene_triggers = []
         self._load_cutscene_triggers()
+    
+    def serialize_state(self):
+        """Save orb state including position and angle"""
+        return {
+            "x": int(self.world_x),
+            "y": int(self.world_y),
+            "angle": float(self.angle),
+        }
+    
+    def deserialize_state(self, state):
+        """Restore orb state including position and angle"""
+        self.world_x = state.get("x", 0)
+        self.world_y = state.get("y", 0)
+        self.angle = state.get("angle", 0)
 
         # Light (can still be expensive depending on implementation)
         world_loader.add_light_source(self, 150)

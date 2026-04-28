@@ -1,10 +1,14 @@
 import pygame
 import math
+from sprites.object_state import StateSerializable
 
 
 
-class PhysicObject:
+class PhysicObject(StateSerializable):
     def __init__(self):
+        StateSerializable.__init__(self)
+        self.object_type = "test_object"  # For state management
+        
         # Create a simple colored rectangle as image
         self.width = 40
         self.height = 40
@@ -22,6 +26,20 @@ class PhysicObject:
         self.world_x = self.start_x
         self.world_y = self.start_y
         self.angle = 0
+    
+    def serialize_state(self):
+        """Save test object state"""
+        return {
+            "x": int(self.world_x),
+            "y": int(self.world_y),
+            "angle": float(self.angle),
+        }
+    
+    def deserialize_state(self, state):
+        """Restore test object state"""
+        self.world_x = state.get("x", 300)
+        self.world_y = state.get("y", 400)
+        self.angle = state.get("angle", 0)
 
     def get_forces(self, player):
 

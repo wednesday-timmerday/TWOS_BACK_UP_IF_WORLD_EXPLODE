@@ -7,6 +7,7 @@ import json
 import sprites.base_enemy as BaseEnemyModule
 import sprites.physic_obj.physic_engine as PhysicEngineModule
 from sprites.save.save import SaveOBJ
+from sprites.object_state import ObjectStateManager
 from collections import OrderedDict, deque
 import math
 import numpy as np
@@ -66,6 +67,11 @@ class World_loader:
         # -------------------------
         self.enemies = []
         self.all_physic_objects = []
+        
+        # -------------------------
+        # Object state management
+        # -------------------------
+        self.object_state_manager = ObjectStateManager()
 
         # Player reference
         self.player = player
@@ -480,6 +486,8 @@ class World_loader:
         """Laadt alle enemies en physics-objecten voor de huidige level_data."""
         self.enemies.clear()
         self.all_physic_objects.clear()
+        self.object_state_manager.clear()  # Clear previous state
+        
         self.level_data = self.world_data.get(f"level_{self.current_level}", {})
         level_enemies = self.level_data.get("enemies", [])
         level_platform = self.level_data.get("platforms", [])
@@ -514,6 +522,7 @@ class World_loader:
 
             x = enemy_data.get("x", enemy_data.get("position", [0, 0])[0])
             y = enemy_data.get("y", enemy_data.get("position", [0, 0])[1])
+            object_id = enemy_data.get("id", None)  # Get UUID from level spec
 
             # -------------------------
             # Physics objects (orb, hammer, etc.)
@@ -539,6 +548,9 @@ class World_loader:
                     engine.object.world_y = y
 
                     engine.object.phys_type = phys_name
+                    
+                    # Register object with state manager
+                    self.object_state_manager.register_object(engine.object, object_id)
 
                     self.all_physic_objects.append(engine)
 
@@ -575,6 +587,10 @@ class World_loader:
                     elif enemy_type == "hammer":
                         from sprites.hammer.hammer import hammer
                         enemy = hammer(self)
+                    elif enemy_type == "spike":
+                        from sprites.spike.spike import spike
+                        enemy = spike(self.player, self)
+
 
                     else:
                         # fallback naar base enemy
@@ -587,9 +603,17 @@ class World_loader:
                 enemy.world_x = x
                 enemy.world_y = y
                 enemy.pos = [x, y]
+                
+                # Register object with state manager
+                self.object_state_manager.register_object(enemy, object_id)
 
                 # Voeg toe aan lijst
                 self.enemies.append(enemy)
+        
+        # =====================================
+        # Apply saved object states
+        # =====================================
+        self.save_obj.apply_object_states(self)
 
 
     # -------------------------
@@ -907,6 +931,12 @@ class World_loader:
                 print("Physic draw error:", e)
 
     def change_level(self, level_id, player):
+        # Save current level state before switching
+        try:
+            self.save_obj.save_game(self, player, False)
+        except Exception as e:
+            print(f"Warning: Failed to save state when switching levels: {e}")
+        
         self.current_level = level_id
         self.light_sources = []  # Clear light sources from previous level
         self.load_layers()

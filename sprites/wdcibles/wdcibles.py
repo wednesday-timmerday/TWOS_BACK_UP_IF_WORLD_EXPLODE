@@ -1,12 +1,30 @@
 from sprites.base_enemy import EnemyBase
+from sprites.object_state import StateSerializable
 import pygame   
 
-class wdcibles(EnemyBase):
+class wdcibles(StateSerializable, EnemyBase):
     def __init__(self):
-        super().__init__("wdcibles", frame_count=1, scale_percentage=(325, 325))
+        StateSerializable.__init__(self)
+        EnemyBase.__init__(self, "wdcibles", frame_count=1, scale_percentage=(325, 325))
+        self.object_type = "wdcibles"
         self.world_x = 400  # Initial position
         self.world_y = 300
-        self.pos = [self.world_x, self.world_y]                                                                                          
+        self.pos = [self.world_x, self.world_y]
+    
+    def serialize_state(self):
+        """Save wdcibles state including position and frame"""
+        return {
+            "x": int(self.world_x),
+            "y": int(self.world_y),
+            "frame": int(self.current_frame),
+        }
+    
+    def deserialize_state(self, state):
+        """Restore wdcibles state including position and frame"""
+        self.world_x = state.get("x", 400)
+        self.world_y = state.get("y", 300)
+        self.pos = [self.world_x, self.world_y]
+        self.current_frame = state.get("frame", 0)                                                                                          
 
     def draw_in_world(self, surface, cam_x, cam_y):
         """Draw HammerOBJ in world coordinates"""
