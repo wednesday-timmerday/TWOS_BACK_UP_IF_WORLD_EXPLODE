@@ -1,17 +1,21 @@
-import os
-import time
-import sys
-import shutil
+import pygame
+from ui.textengine.textengine import TextEngine
 
-time.sleep(1)  # wait for game to fully close
+class Toofar:
+    def __init__(self, screen, player):
+        self.screen = screen
+        self.player = player
+        self.text_engine = TextEngine()
+        self.running = True
+        self.text_engine.start_text("It seems like you have reached^wait500 an end", "potato")
 
-game_path = sys.argv[1]
-
-try:
-    if os.path.isdir(game_path):
-        shutil.rmtree(game_path)
-    else:
-        os.remove(game_path)
-    print("Deleted:", game_path)
-except Exception as e:
-    print("Failed to delete:", e)
+    def draw(self):
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+            
+            self.screen.fill((0, 0, 0))
+            self.text_engine.draw(150, 180, (255,255,255), surface=self.screen)
+            self.text_engine.update(self.player.dt)
+            pygame.display.flip()

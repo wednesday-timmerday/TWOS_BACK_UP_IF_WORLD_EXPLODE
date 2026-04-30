@@ -437,10 +437,15 @@ def main():
 
     try:
         import sprites.Player.Player as PlayerModule
-    except Exception:
+    except Exception as e:
+        print(f"Error importing Player module: {e}")
         PlayerModule = None
 
-    player = PlayerModule.Player() if PlayerModule else None
+    
+    try:
+        player = PlayerModule.Player(screen=screen) # if PlayerModule else None
+    except Exception as e:
+        print(f"Error initializing player: {e}")
 
     try:
         draw_loading_screen(screen, 0.55, "LOADING...", loading_image, bar_image)
@@ -482,7 +487,7 @@ def main():
             menu_result = None
 
     if menu_result == "reset" and PlayerModule:
-        player = PlayerModule.Player()
+        player = PlayerModule.Player(screen)
 
     options = menu_obj.settings if menu_obj else options
     try:

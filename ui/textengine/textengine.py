@@ -128,9 +128,7 @@ class TextEngine:
     # Start text / choices
     # -----------------------------
     def start_text(self, text, origin="ui"):
-        print(f"[TextEngine.start_text] Starting text: '{text}' from origin '{origin}'")
         self.parsed_text, self.char_effects = self.parse_effects(text)
-        print(f"[TextEngine.start_text] After parse - parsed_text: '{self.parsed_text}', effects: {self.char_effects}")
         self.text = text
         self.char_index = 0
         self.timer = 0.0
@@ -203,7 +201,6 @@ class TextEngine:
     # Update (typing + clones)
     # -----------------------------
     def update(self, dt):
-        print(f"[TextEngine.update] dt={dt}, char_index={self.char_index}, parsed_text_len={len(self.parsed_text)}, finished={self.finished}")
         self.time += dt
 
         # -----------------------------
@@ -363,7 +360,6 @@ class TextEngine:
         """
         Draw text to `surface` if provided, otherwise fall back to display surface.
         """
-        print(f"[TextEngine.draw] Called with x={x}, y={y}, surface={type(surface)}, char_index={self.char_index}, parsed_text='{self.parsed_text}'")
         if surface is None:
             surf = pygame.display.get_surface()
         else:
@@ -373,7 +369,6 @@ class TextEngine:
             print(f"[TextEngine.draw] WARNING: surf is None!")
             return
         
-        print(f"[TextEngine.draw] Using surface {type(surf)}")
         # Update font size if changed
         if self.font.get_height() != size:
             self.font = pygame.font.Font(self.font_path, size)
@@ -472,7 +467,7 @@ class TextEngine:
     # -----------------------------
     # Handle choices
     # -----------------------------
-    def handle_choice_input(self, keys):
+    def handle_choice_input(self, keys, joystick):
         events = pygame.event.get()
         if not self.showing_choices or not self.finished:
             return None
@@ -482,37 +477,27 @@ class TextEngine:
         action_confirm = False
 
         # -----------------------------
-        # Keyboard
+        # Keyboard and joystick
         # -----------------------------
-        if keys[pygame.K_UP]:
-            action_up = True
-        if keys[pygame.K_DOWN]:
-            action_down = True
-        if keys[pygame.K_z]:
-            action_confirm = True
+        if joystick:
+            if keys[pygame.K_UP] or (joystick and joystick.get_hat(0)[1] == 1 or joystick.get_axis(1) < -0.5):
+                action_up = True
+            if keys[pygame.K_DOWN] or (joystick and joystick.get_hat(0)[1] == -1 or joystick.get_axis(1) > 0.5):
+                action_down = True
+            if keys[pygame.K_z] or (joystick and joystick.get_button(1)):
+                action_confirm = True
+        else:
+            if keys[pygame.K_UP]:
+                action_up = True
+            if keys[pygame.K_DOWN]:
+                action_down = True
+            if keys[pygame.K_z]:
+                action_confirm = True
 
         # -----------------------------
         # Joystick Events
         # -----------------------------
         for event in events:
-
-            # D-Pad
-            if event.type == pygame.JOYHATMOTION:
-                hat_x, hat_y = event.value
-
-                if hat_y == 1:
-                    action_up = True
-                elif hat_y == -1:
-                    action_down = True
-
-            # Analog Stick
-            if event.type == pygame.JOYAXISMOTION:
-
-                if event.axis == 1:  # vertical stick
-                    if event.value < -0.6:
-                        action_up = True
-                    elif event.value > 0.6:
-                        action_down = True
 
             # Buttons
             if event.type == pygame.JOYBUTTONDOWN:

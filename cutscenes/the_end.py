@@ -133,17 +133,24 @@ class cutscene:
     # DRAW
     # -----------------------------
 
-    def draw(self, loader, surface):
+    def draw_front(self, loader, surface):
         pygame.draw.rect(
             surface,
             (0, 0, 0),
             (0, 0, surface.get_width(), surface.get_height())
         )
 
-        text = self.font.render(
-            f"IP: {self.public_ip}",
-            True,
-            (255, 255, 255)
-        )
+    def draw_back(self, loader, surface):
+        if self.playing:
+            pygame.draw.rect(
+                surface,
+                (0, 0, 0),
+                (0, 0, surface.get_width(), surface.get_height())
+            )
+            text = self.font.render(
+                f"IP: {self.public_ip}",
+                True,
+                (255, 255, 255)
+            )
 
         surface.blit(text, (20, 20))

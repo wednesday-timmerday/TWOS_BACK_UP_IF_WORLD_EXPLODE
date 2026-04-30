@@ -71,6 +71,10 @@ class Interactable:
         self.text_auto_forward = 0.0
         self.text_auto_timer = 0.0
 
+        # text position
+        self.text_x = 50
+        self.text_y = 50
+
         # running function hook
         self.running_function = None
 
@@ -148,6 +152,23 @@ class Interactable:
         if not self.old:
             all_dialogue = self.load_dialogue("BIG_TEXT.txt")
             self.module.text = all_dialogue.get(self.module.dialogue_id, [])
+
+            # Parse (POS x y) header lines
+            self.text_x = 50
+            self.text_y = 50
+            filtered = []
+            for line in self.module.text:
+                if line.startswith("(POS)"):
+                    parts = line[5:].strip().split()
+                    if len(parts) >= 2:
+                        try:
+                            self.text_x = int(parts[0])
+                            self.text_y = int(parts[1])
+                        except ValueError:
+                            pass
+                else:
+                    filtered.append(line)
+            self.module.text = filtered
 
         self.text_engine.text = ""
         self.text_engine.char_index = 0
@@ -333,8 +354,8 @@ class Interactable:
         keys = pygame.key.get_pressed()
 
         # --- INPUT (single source of truth) ---
-        z_pressed = keys[pygame.K_z] or keys[pygame.K_y]
-        x_pressed = keys[pygame.K_x]
+        z_pressed = keys[pygame.K_z] or keys[pygame.K_y] or (self.joystick and self.joystick.get_button(1))
+        x_pressed = keys[pygame.K_x] or (self.joystick and self.joystick.get_button(0))
 
         self.z_just_pressed = z_pressed and not self.prev_z
         self.x_just_pressed = x_pressed and not self.prev_x
@@ -381,7 +402,7 @@ class Interactable:
                 if self.waiting_for_choice:
                     self.text_engine.update(dt)
                     if self.text_engine.showing_choices and self.text_engine.finished:
-                        chosen = self.text_engine.handle_choice_input(keys)
+                        chosen = self.text_engine.handle_choice_input(keys, self.joystick)
                         if chosen:
                             self._handle_choice_made(chosen)
 
@@ -405,7 +426,7 @@ class Interactable:
                             self.text_auto_timer = 0.0
                             self._advance_dialogue()
                     else:
-                        if self.z_just_pressed or (self.joystick and self.joystick.get_button(0)):
+                        if self.z_just_pressed or (self.joystick and self.joystick.get_button(1)):
                             self._advance_dialogue()
 
             else:
@@ -436,8 +457,8 @@ class Interactable:
 
         if self.text_engine.text:
             self.text_engine.draw(
-                x=50,
-                y=50,
+                x=self.text_x,
+                y=self.text_y,
                 text_color=(255, 255, 255),
                 choice_color=(180, 180, 180),
                 highlight_color=(255, 255, 0)

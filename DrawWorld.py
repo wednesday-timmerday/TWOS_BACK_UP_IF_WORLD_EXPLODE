@@ -109,7 +109,7 @@ def make_icon(color):
 
 class Editor:
     def __init__(self):
-        player = sprites.Player.Player.Player()
+        player = sprites.Player.Player.Player(None)
         self.world = World_loader((WORLD_W, WORLD_H), player)
         self.current_level = self.world.current_level
 

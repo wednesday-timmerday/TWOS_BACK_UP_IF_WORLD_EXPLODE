@@ -9,7 +9,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('cutscenes', 'cutscenes'), ('music', 'music'), ('sprites', 'sprites'), ('worlds', 'worlds'), ('icon', 'icon'), ('ui', 'ui'), ('interactables', 'interactables'), ('multiplayer', 'multiplayer')],
+    datas=[('cutscenes', 'cutscenes'), ('music', 'music'), ('sprites', 'sprites'), ('worlds', 'worlds'), ('icon', 'icon'), ('ui', 'ui'), ('interactables', 'interactables'), ('multiplayer', 'multiplayer'), ('songs', 'songs')],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},

@@ -39,7 +39,6 @@ class cutscene:
 
     def goto_world(self):
         s = self.goto_world_stage
-
         if s == 0:
             self.loader.text_engine.start_text("", "")
             self.player.last_level = getattr(self.world, "current_level", None)
@@ -94,7 +93,7 @@ class cutscene:
 
     # ------------------------------------------------------------------
 
-    def draw(self, loader, surface):
+    def draw_back(self, loader, surface):
         if self.show_black_screen:
             pygame.draw.rect(
                 surface, (0, 0, 0),

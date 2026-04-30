@@ -70,6 +70,10 @@ class CutsceneLoader:
         self.text_auto_forward = 0.0
         self.text_auto_timer = 0.0
 
+        # text position
+        self.text_x = 50
+        self.text_y = 50
+
         # running function hook
         self.running_function = None
 
@@ -77,6 +81,7 @@ class CutsceneLoader:
         self.waiting_for_choice = False
         self.pending_choice_label = None
         self.selected_choice = None
+        self.add_idx = True
 
     # ---------------------------------------------------------
 
@@ -137,6 +142,23 @@ class CutsceneLoader:
         if not self.old:
             all_dialogue = self.load_dialogue("BIG_TEXT.txt")
             self.module.text = all_dialogue.get(self.module.dialogue_id, [])
+
+            # Parse (POS x y) header lines
+            self.text_x = 50
+            self.text_y = 50
+            filtered = []
+            for line in self.module.text:
+                if line.startswith("(POS)"):
+                    parts = line[5:].strip().split()
+                    if len(parts) >= 2:
+                        try:
+                            self.text_x = int(parts[0])
+                            self.text_y = int(parts[1])
+                        except ValueError:
+                            pass
+                else:
+                    filtered.append(line)
+            self.module.text = filtered
 
         self.text_engine.text = ""
         self.text_engine.char_index = 0
@@ -251,6 +273,11 @@ class CutsceneLoader:
                 self.player.can_move = True
                 return
 
+            elif line == "DONTADDIDX":
+                self.line_index += 1
+                self.add_idx = False
+                continue
+
             # (ENDBRANCH)
             elif line == "(ENDBRANCH)":
                 self.line_index += 1
@@ -340,8 +367,8 @@ class CutsceneLoader:
             return
 
         keys = pygame.key.get_pressed()
-        z_pressed = keys[pygame.K_z] or keys[pygame.K_y]
-        x_pressed = keys[pygame.K_x]
+        z_pressed = keys[pygame.K_z] or keys[pygame.K_y] or (self.joystick and self.joystick.get_button(1))
+        x_pressed = keys[pygame.K_x] or (self.joystick and self.joystick.get_button(0))
 
         self.z_just_pressed = z_pressed and not self.prev_z
         self.x_just_pressed = x_pressed and not self.prev_x
@@ -364,7 +391,7 @@ class CutsceneLoader:
                 if self.waiting_for_choice:
                     self.text_engine.update(dt)
                     if self.text_engine.showing_choices and self.text_engine.finished:
-                        chosen = self.text_engine.handle_choice_input(keys)
+                        chosen = self.text_engine.handle_choice_input(keys, self.joystick)
                         if chosen:
                             self._handle_choice_made(chosen)
                     return
@@ -381,7 +408,7 @@ class CutsceneLoader:
                             self.text_auto_timer = 0.0
                             self._advance_dialogue()
                     else:
-                        if self.z_just_pressed or (self.joystick and self.joystick.get_button(0)):
+                        if self.z_just_pressed or (self.joystick and self.joystick.get_button(1)):
                             self._advance_dialogue()
 
             else:
@@ -398,22 +425,27 @@ class CutsceneLoader:
 
         if not self.running:
             self.player_locked = False
-            self.player._triggered_once.add(self.trigger_idx)
+            if self.add_idx:
+                self.player._triggered_once.add(self.trigger_idx)
 
     # ---------------------------------------------------------
 
     def draw(self, surface):
+        if self.module and hasattr(self.module, "draw_front"):
+            try:
+                self.module.draw_front(self, surface)
+            except Exception as e:
+                print(f"[CutsceneLoader] Error in cutscene draw: {e}")
         if self.text_engine.text:
             self.text_engine.draw(
-                x=50,
-                y=50,
+                x=self.text_x,
+                y=self.text_y,
                 text_color=(255, 255, 255),
                 choice_color=(180, 180, 180),
                 highlight_color=(255, 255, 0)
             )
-
-        if self.module and hasattr(self.module, "draw"):
+        if self.module and hasattr(self.module, "draw_back"):
             try:
-                self.module.draw(self, surface)
+                self.module.draw_back(self, surface)
             except Exception as e:
                 print(f"[CutsceneLoader] Error in cutscene draw: {e}")

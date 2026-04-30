@@ -6,7 +6,8 @@ import interactables.loader as InteractableModule
 from assetsLoader import Loader
 from sprites.save.save import SaveOBJ
 from ui.menu.save_menu import SaveMenu
-
+from ui.menu.youwenttoofar import Toofar
+import random
 
 def load_json_level_spec():
     level_spec_path = Loader("worlds").load("level-spec.json")
@@ -65,9 +66,10 @@ _DS_DONE         = "done"          # animation complete, waiting for timer
 
 
 class Player:
-    def __init__(self):
+    def __init__(self, screen):
         # ── Character select ──────────────────────────────────────────────
         self.lebreah = False
+        self.screen = screen
 
         sprite_loader = Loader(
             "sprites/Player/animation_frames/lebreah" if self.lebreah
@@ -237,6 +239,10 @@ class Player:
                     self._deactivated_walls = set(str(w) for w in loaded[3])
                 except Exception:
                     pass
+        
+        self.you_too_far = Toofar(self.screen, self)
+        self.offset_x = 0
+        self.offset_y = 0
 
     # ─────────────────────────────────────────────────────────────────────
     # Private helpers
@@ -391,6 +397,8 @@ class Player:
 
         self._ds_lives_before = self.lives
         self.curr_animation = "Idle"
+        self.curr_frame = 0
+        self.animation_timer = 0.0
         self.freeze_frame_active = True
         self.freeze_frame_timer = 0.0
         self.freeze_frame_snapshot = None
@@ -424,8 +432,6 @@ class Player:
                 self.freeze_frame_snapshot = None
                 self.death_walk_active = True
                 self.death_walk_timer = 0.0
-                self.curr_animation = "Walking"
-                self.dir = 1
             # Physics still run below (don't return yet)
 
         # ════════════════════════════════════════════════════════════════
@@ -433,7 +439,6 @@ class Player:
         # ════════════════════════════════════════════════════════════════
         elif self.death_walk_active:
             self.death_walk_timer += dt
-            self.curr_animation = "Walking"
             if self.death_walk_timer >= self.death_walk_duration:
                 self.death_walk_active = False
                 self.dead = True
@@ -461,8 +466,14 @@ class Player:
             elif self._ds_phase == _DS_NEW_IN and self._ds_phase_timer >= self._ds_new_in_dur:
                 self._ds_phase = _DS_DONE
                 self._ds_phase_timer = 0.0
+            elif self._ds_phase == _DS_DONE and self._ds_phase_timer >= self.dead_display_time:
+                self.dead = False
 
-            if self.dead_timer >= self.dead_display_time:
+            # Update the death cutscene (lives == 0) while dead
+            if self.active_cutscene:
+                self.active_cutscene.update(dt, self)
+
+            if self.dead_timer >= self.dead_display_time and not self.active_cutscene:
                 self.dead = False
                 self.dead_timer = 0.0
                 self.can_move = True
@@ -550,10 +561,7 @@ class Player:
 
         # ── Horizontal movement ───────────────────────────────────────────
         dx = 0.0
-        if self.death_walk_active:
-            dx = -self.death_knockback_x * dt
-            self.curr_animation = "Walking"
-        elif controls_allowed:
+        if controls_allowed:
             if self.wall_jump_dir_lock_timer > 0.0:
                 dx = self.wall_jump_push_dir * self.wall_jump_push_speed * dt
                 self.curr_animation = "Walking"
@@ -579,7 +587,7 @@ class Player:
                 keys[pygame.K_SPACE]
                 or keys[pygame.K_w]
                 or keys[pygame.K_UP]
-                or (self.joystick and self.joystick.get_button(1))
+                or (self.joystick and self.joystick.get_button(0))
             )
         except Exception:
             self.jump_down = False
@@ -712,8 +720,10 @@ class Player:
 
         # ── Fall off screen → die ─────────────────────────────────────────
         if self.world_y > screen.get_height():
-            self.die(world)
-            return
+            if not self.freeze_frame_active and not self.death_walk_active:
+                self.can_move = True
+                self.apply_spawn_point(world.current_level)
+                self._reset_after_respawn()
 
         # ── Save menu (Z key) ─────────────────────────────────────────────
         z_pressed = keys[pygame.K_z]
@@ -883,6 +893,34 @@ class Player:
         # ════════════════════════════════════════════════════════════════
         if self.dead:
             screen.fill((0, 0, 0))
+            # Force death animation
+            self.curr_animation = "dead"
+            if self.curr_animation != self._prev_animation:
+                self.curr_frame = 0
+                self.animation_timer = 0.0
+                self._prev_animation = self.curr_animation
+            frames = self.animations.get("dead", [])
+            if frames:
+                self.animation_timer += self.dt
+                while self.animation_timer >= self.animation_speed:
+                    self.animation_timer -= self.animation_speed
+                    self.curr_frame = min(self.curr_frame + 1, len(frames) - 1)  # clamp, don't loop
+                img = frames[self.curr_frame]
+                cx = screen.get_width() // 2 - 50 + self.offset_x
+                cy = screen.get_height() // 2 + self.offset_y
+                screen.blit(img, (cx - img.get_width() // 2, cy - img.get_height() // 2))
+            if self.lives <= 0 and not self.active_cutscene:
+                try:
+                    self.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
+                    self.curr_animation = "Idle"
+                    self.active_cutscene.world = world
+                    self.active_cutscene.event = self.event
+                    self.active_cutscene.player = self
+                    self.active_cutscene.load("death", self.joystick)
+                    self.active_cutscene.trigger_idx = 999999999999999999999999
+                except Exception as e:
+                    print("Error loading cutscene:", e)
+                    self.active_cutscene = None
             if not font_large:
                 return
 
@@ -907,14 +945,18 @@ class Player:
                 slide_y = cy - int(ease_t * 12)
                 alpha   = int(255 * (1.0 - ease_t))
 
-                label = font_large.render(f"X  {old_lives}", False, (255, 255, 255))
+                label = font_large.render(f"   {old_lives}", False, (255, 255, 255))
+                Xlabel = font_large.render("X", False, (255,255,255))
                 surf  = pygame.Surface(label.get_size(), pygame.SRCALPHA)
                 surf.blit(label, (0, 0))
+                screen.blit(Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2))
                 surf.set_alpha(alpha)
                 screen.blit(surf, (cx - label.get_width() // 2, slide_y - label.get_height() // 2))
-                return
 
             if phase == _DS_NEW_IN:
+                self.offset_x = random.randint(-2, 2)
+                self.offset_y = random.randint(-2, 2)
+
                 t = min(t_raw / self._ds_new_in_dur, 1.0)
                 ease_t = self._ease_out_back(t)
 
@@ -922,21 +964,33 @@ class Player:
                 slide_y = int(start_y + (cy - start_y) * ease_t)
                 alpha   = min(255, int(255 * (t * 3.0)))
 
-                label = font_large.render(f"X  {new_lives}", False, (255, 255, 255))
+                label = font_large.render(f"   {new_lives}", False, (255, 255, 255))
+                Xlabel = font_large.render("X", False, (255,255,255))
                 surf  = pygame.Surface(label.get_size(), pygame.SRCALPHA)
                 surf.blit(label, (0, 0))
+                screen.blit(Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2))
                 surf.set_alpha(alpha)
                 screen.blit(surf, (cx - label.get_width() // 2, slide_y - label.get_height() // 2))
-                return
 
             if phase == _DS_DONE:
-                label = font_large.render(f"X  {new_lives}", False, (255, 255, 255))
+                self.offset_x = random.randint(-2, 2)
+                self.offset_y = random.randint(-2, 2)
+
+                label = font_large.render(f"   {new_lives}", False, (255, 255, 255))
+                Xlabel = font_large.render("X", False, (255,255,255))
+                screen.blit(Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2))
                 screen.blit(label, (cx - label.get_width() // 2, cy - label.get_height() // 2))
-                return
+                
+
 
         # ════════════════════════════════════════════════════════════════
         # Normal player draw
         # ════════════════════════════════════════════════════════════════
+        if self.dead:
+            return
+
+        self.offset_x = 0
+        self.offset_y = 0
         cam_x = getattr(world, "cam_x", 0)
         cam_y = getattr(world, "cam_y", 0)
 

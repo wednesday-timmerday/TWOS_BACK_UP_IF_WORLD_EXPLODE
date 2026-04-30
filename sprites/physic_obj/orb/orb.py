@@ -51,6 +51,7 @@ class PhysicObject(StateSerializable):
         # Cache trigger rects
         self.cutscene_triggers = []
         self._load_cutscene_triggers()
+        world_loader.add_light_source(self, 150)
     
     def serialize_state(self):
         """Save orb state including position and angle"""
@@ -66,11 +67,9 @@ class PhysicObject(StateSerializable):
         self.world_y = state.get("y", 0)
         self.angle = state.get("angle", 0)
 
-        # Light (can still be expensive depending on implementation)
-        world_loader.add_light_source(self, 150)
 
     # -----------------------------
-    # TRIGGER SETUP (RUNS ONCE)
+    # TRIGGER SETUP
     # -----------------------------
     def _load_cutscene_triggers(self):
         level_key = f"level_{self.world_loader.current_level}"

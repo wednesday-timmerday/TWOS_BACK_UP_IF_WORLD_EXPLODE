@@ -121,7 +121,8 @@ parent_yell =
     ENDOFCONVERSATION
 
 the_end = 
-    Horse
+    You fool
+    you have doomed us all
     {END}
     ENDOFCONVERSATION
 
@@ -135,3 +136,21 @@ luuk =
     Luuk: * You need to restart the game
     Luuk: *  L
     ENDOFCONVERSATION
+
+death =
+    [GASTER]
+    {(0 1)}
+    (POS) 50 350
+    It seems like you have ^wait500^special^color(255,0,0)^shake4FAILED^endspecial
+    (CHOICE) Will you give it a another chance?; yes; no; maybe; fuck you
+    (BRANCH) yes
+    You shall wake up then,^wait250 CHARA_NAME
+    {respawn}
+    (ENDBRANCH)
+    (BRANCH) no
+    You may rest then,^wait250 CHARA_NAME
+    {kill_game}
+    (ENDBRANCH)
+    DONTADDIDX
+    ENDOFCONVERSATION
+
