@@ -19,7 +19,7 @@ if "enemies" not in level:
     level["enemies"] = []
 
 # add 75 chained spikes
-for i in range(50):
+for i in range(23):
     spike = {
         "type": "spike",
         "position": [

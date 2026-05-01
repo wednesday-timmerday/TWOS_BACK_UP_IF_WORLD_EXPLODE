@@ -577,7 +577,7 @@ class Player:
                 if keys[pygame.K_LEFT] or keys[pygame.K_a] or axis_x < -0.5:
                     dx = -self.speed * dt
                     self.dir = 1
-                    self.curr_animation = "Walking"
+                    self.curr_animation = "Dash_cooldown"
                 elif keys[pygame.K_RIGHT] or keys[pygame.K_d] or axis_x > 0.5:
                     dx = self.speed * dt
                     self.dir = 0
@@ -1038,7 +1038,7 @@ class Player:
 
         try:
             img = self.image_left if self.dir else self.image_right
-            screen.blit(img, draw_rect)
+            #screen.blit(img, draw_rect)
         except Exception:
             try:
                 screen.blit(self.image, draw_rect)
@@ -1050,7 +1050,7 @@ class Player:
             image = self.animations["Dash_cooldown"][1]
 
             # --- progress ---
-            progress = 0.0 + (self.dash_cooldown_timer * self.dash_cooldown_time)
+            progress = 1.0 - (self.dash_cooldown_timer / self.dash_cooldown_time)
             progress = max(0.0, min(progress, 1.0))
 
             w, h = image.get_size()
@@ -1106,10 +1106,7 @@ class Player:
             result.blit(combined, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
             # --- draw centered on player ---
-            screen.blit(self.animations["Dash_cooldown"][0], result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
-            screen.blit(result, result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
-
-            
+            screen.blit(result, result.get_rect(center=draw_rect.center))
         if self.save_menu.visible:
             try:
                 self.save_menu.draw(screen)

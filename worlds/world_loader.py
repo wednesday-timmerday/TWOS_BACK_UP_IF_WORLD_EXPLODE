@@ -97,7 +97,7 @@ class World_loader:
         # -------------------------
         self.level_spec_loader = Loader("worlds")
         self.level_spec_path = self.level_spec_loader.load("level-spec.json")
-        self.current_level = 0
+        self.current_level = 4
 
         if self.level_spec_path and os.path.exists(self.level_spec_path):
             with open(self.level_spec_path, "r", encoding="utf-8") as f:
