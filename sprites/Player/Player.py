@@ -1098,18 +1098,26 @@ class Player:
             combined = wedge.copy()
             combined.blit(pixel_mask, (0,0), special_flags=pygame.BLEND_RGBA_MULT)
 
-            # --- apply to image ---
-            result = image.copy()
-            result.fill((0, 0, 0, 0))
+            # base sprite
+            result = image.copy().convert_alpha()
 
-            result.blit(image, (0, 0))
-            result.blit(combined, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+            # --- build a single alpha mask surface ---
+            mask = pygame.Surface((w, h), pygame.SRCALPHA)
+
+            # wedge already drawn as white shape with alpha
+            mask.blit(wedge, (0, 0))
+
+            # convert pixel mask into alpha contribution
+            mask.blit(pixel_mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+
+            # apply ONLY alpha channel, not RGB multiplication
+            result.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
 
             # --- draw centered on player ---
             screen.blit(self.animations["Dash_cooldown"][0], result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
             screen.blit(result, result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
 
-            
+
         if self.save_menu.visible:
             try:
                 self.save_menu.draw(screen)
