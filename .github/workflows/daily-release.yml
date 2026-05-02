@@ -14,11 +14,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Get today's date (Amsterdam time)
-        id: date
-        run: |
-          echo "DATE=$(TZ=Europe/Amsterdam date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
       - name: Check if release already exists
         id: check
         run: |
