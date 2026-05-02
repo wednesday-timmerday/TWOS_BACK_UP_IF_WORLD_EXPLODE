@@ -1,9 +1,7 @@
 name: Daily Auto Release
 
 on:
-  schedule:
-    - cron: "* * * * *"   # every minute
-  workflow_dispatch:       # manual trigger button
+  workflow_dispatch:
 
 permissions:
   contents: write   #
