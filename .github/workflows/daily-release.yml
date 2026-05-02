@@ -1,48 +1,46 @@
-name: Daily Release (Safe Minute Runner)
+name: Daily Auto Release
 
 on:
   schedule:
-    - cron: "* * * * *"  # every minute
-  workflow_dispatch:     # manual run button
+    - cron: "* * * * *"   # every minute
+  workflow_dispatch:       # manual trigger button
+
+permissions:
+  contents: write   #
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Get today's date (Amsterdam-safe)
+      - name: Get today's date (Amsterdam time)
         id: date
         run: |
           echo "DATE=$(TZ=Europe/Amsterdam date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
-      - name: Check if already released today
+      - name: Check if release already exists
         id: check
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.date.outputs.DATE }}"
 
-          echo "Checking if tag exists: $TAG"
-
           if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
-            echo "ALREADY_RELEASED=true" >> $GITHUB_OUTPUT
+            echo "ALREADY=true" >> $GITHUB_OUTPUT
           else
-            echo "ALREADY_RELEASED=false" >> $GITHUB_OUTPUT
+            echo "ALREADY=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create zip
-        if: steps.check.outputs.ALREADY_RELEASED == 'false'
+      - name: Create zip archive
+        if: steps.check.outputs.ALREADY == 'false'
         run: zip -r source.zip . -x "*.git*"
 
-      - name: Create Release
-        if: steps.check.outputs.ALREADY_RELEASED == 'false'
+      - name: Create GitHub Release
+        if: steps.check.outputs.ALREADY == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.date.outputs.DATE }}
           name: Release ${{ steps.date.outputs.DATE }}
           files: source.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
