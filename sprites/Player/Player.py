@@ -248,7 +248,7 @@ class Player:
         self.dash_timer = 0.0
         self.dash_duration = 0.3
         self.dash_cooldown_timer = 0.0
-        self.dash_cooldown_time = 1.0
+        self.dash_cooldown_time = 2.0
         self.dash_cooldown_timer_time = False
 
     # ─────────────────────────────────────────────────────────────────────
@@ -1049,8 +1049,7 @@ class Player:
         if self.dash_cooldown_timer_time:
             image = self.animations["Dash_cooldown"][1]
 
-            # --- progress ---
-            progress = 0.0 + (self.dash_cooldown_timer * self.dash_cooldown_time)
+            progress = self.dash_cooldown_timer / self.dash_cooldown_time
             progress = max(0.0, min(progress, 1.0))
 
             w, h = image.get_size()
@@ -1060,60 +1059,39 @@ class Player:
             start_angle = math.radians(90)
             end_angle   = start_angle + (2 * math.pi * progress)
 
-            # --- cache pixel mask ONCE ---
             if not hasattr(self, "_cooldown_pixel_mask"):
                 m = pygame.mask.from_surface(image)
                 self._cooldown_pixel_mask = m.to_surface(
-                    setcolor=(255,255,255,255),
-                    unsetcolor=(0,0,0,0)
+                    setcolor=(255, 255, 255, 255),
+                    unsetcolor=(0, 0, 0, 0)
                 )
 
             pixel_mask = self._cooldown_pixel_mask
 
-            # --- build soft wedge ---
+            # --- build solid wedge (no feather) ---
             wedge = pygame.Surface((w, h), pygame.SRCALPHA)
+            steps  = 180
+            points = [(cx, cy)]
+            for i in range(steps + 1):
+                t     = i / steps
+                angle = start_angle + t * (end_angle - start_angle)
+                x     = cx + math.cos(angle) * (radius + 1)
+                y     = cy - math.sin(angle) * (radius + 1)
+                points.append((x, y))
+            pygame.draw.polygon(wedge, (255, 255, 255, 255), points)
 
-            steps   = 180
-            feather = 6
-
-            for f in range(feather):
-                alpha = int(255 * (1 - f / feather))
-
-                points = [(cx, cy)]
-
-                for i in range(steps + 1):
-                    t = i / steps
-                    angle = start_angle + t * (end_angle - start_angle)
-
-                    r = radius + f
-
-                    x = cx + math.cos(angle) * r
-                    y = cy - math.sin(angle) * r
-
-                    points.append((x, y))
-
-                pygame.draw.polygon(wedge, (255, 255, 255, alpha), points)
-
-            # --- combine wedge + pixel mask ---
-            combined = wedge.copy()
-            combined.blit(pixel_mask, (0,0), special_flags=pygame.BLEND_RGBA_MULT)
-
-            # base sprite
-            result = image.copy().convert_alpha()
-
-            # --- build a single alpha mask surface ---
+            # --- build alpha mask from wedge + pixel mask ---
             mask = pygame.Surface((w, h), pygame.SRCALPHA)
-
-            # wedge already drawn as white shape with alpha
             mask.blit(wedge, (0, 0))
-
-            # convert pixel mask into alpha contribution
             mask.blit(pixel_mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
-            # apply ONLY alpha channel, not RGB multiplication
-            result.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            # --- apply ONLY alpha channel to result, leave RGB untouched ---
+            result = image.copy().convert_alpha()
+            alpha_arr = pygame.surfarray.pixels_alpha(result)
+            mask_arr  = pygame.surfarray.pixels_alpha(mask)
+            alpha_arr[:] = mask_arr
+            del alpha_arr, mask_arr
 
-            # --- draw centered on player ---
             screen.blit(self.animations["Dash_cooldown"][0], result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
             screen.blit(result, result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
 
