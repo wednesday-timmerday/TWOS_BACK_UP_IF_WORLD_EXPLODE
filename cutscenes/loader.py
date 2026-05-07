@@ -265,19 +265,7 @@ class CutsceneLoader:
                 self.text_engine.start_text(text, "")
                 self.line_index += 1
                 return
-
-            # ENDOFCONVERSATION
-            elif line == "ENDOFCONVERSATION":
-                self.line_index += 1
-                self.running = False
-                self.player.can_move = True
-                return
-
-            elif line == "DONTADDIDX":
-                self.line_index += 1
-                self.add_idx = False
-                continue
-
+            
             # (ENDBRANCH)
             elif line == "(ENDBRANCH)":
                 self.line_index += 1
@@ -329,6 +317,18 @@ class CutsceneLoader:
                     self.line_index += 1
                     continue
 
+            elif line == "ENDOFCONVERSATION":
+                self.line_index += 1
+                self.running = False
+                self.player.can_move = True
+                return
+
+            elif line == "DONTADDIDX":
+                self.line_index += 1
+                self.add_idx = False
+                continue
+
+
             # regular dialogue line
             else:
                 break
@@ -363,7 +363,13 @@ class CutsceneLoader:
     # ---------------------------------------------------------
 
     def update(self, dt, player):
-        if not self.running or not self.module:
+        if not self.running:
+            self.player_locked = False
+            if self.add_idx:
+                self.player._triggered_once.add(self.trigger_idx)
+            return
+
+        if not self.module:
             return
 
         keys = pygame.key.get_pressed()
@@ -422,11 +428,6 @@ class CutsceneLoader:
             traceback.print_exc()
             self.running = False
             self.player_locked = False
-
-        if not self.running:
-            self.player_locked = False
-            if self.add_idx:
-                self.player._triggered_once.add(self.trigger_idx)
 
     # ---------------------------------------------------------
 

@@ -48,8 +48,8 @@
     "triggers": [
       {
         "type": "trigger",
-        "x": 166,
-        "y": -11,
+        "x": 163,
+        "y": -8,
         "w": 50,
         "h": 172,
         "name": "cutscene(1)",
@@ -83,8 +83,8 @@
         ""
       ],
       [
-        485,
-        -79,
+        477,
+        -17,
         16,
         178,
         "wall_2"
@@ -198,16 +198,7 @@
     "coll_layers": [
       1
     ],
-    "enemies": [
-      {
-        "type": "spike",
-        "position": [
-          64,
-          159
-        ],
-        "id": "26d3a9e1-eb4f-40ac-bea2-79de479125d7"
-      }
-    ],
+    "enemies": [],
     "triggers": [
       {
         "type": "trigger",
@@ -238,11 +229,11 @@
       },
       {
         "type": "trigger",
-        "x": 201,
-        "y": 124,
+        "x": 202,
+        "y": 127,
         "w": 22,
-        "h": 39,
-        "name": "cutscene(death)",
+        "h": 36,
+        "name": "interactable(t_books_r1)",
         "id": "9eaf3c8e-47e2-4f6c-8171-edc3224e0985"
       },
       {
@@ -439,6 +430,15 @@
         "h": 160,
         "name": "goto(6)",
         "id": "41fe3844-9792-4df7-bc5d-e93c695796aa"
+      },
+      {
+        "type": "trigger",
+        "x": 95,
+        "y": 141,
+        "w": 34,
+        "h": 15,
+        "name": "interactable(arrow_r1_1)",
+        "id": "fbd15220-8701-4b2b-b167-c8644b260811"
       }
     ],
     "invis_walls": [
@@ -657,10 +657,26 @@
       {
         "type": "spike",
         "position": [
-          336,
-          180
+          9999,
+          178
         ],
         "id": "2e204c68-bfdd-435c-af4d-10da352c2cea"
+      },
+      {
+        "type": "mrtutor",
+        "position": [
+          27,
+          101
+        ],
+        "id": "52ece941-1ffd-4871-9e48-a642f0a302ea"
+      },
+      {
+        "type": "btn_e",
+        "position": [
+          188,
+          134
+        ],
+        "id": "23125491-84d6-4a3c-ad5a-04f1f5e9afb3"
       }
     ],
     "triggers": [
@@ -672,6 +688,33 @@
         "h": 173,
         "name": "goto(4)",
         "id": "d2829896-b9a1-46d0-b315-37cfc2dcab3c"
+      },
+      {
+        "type": "trigger",
+        "x": 50,
+        "y": 124,
+        "w": 37,
+        "h": 20,
+        "name": "cutscene(room_idfkanymore_tutor_shit_i_forgot)",
+        "id": "d70681d5-edf7-4200-a91a-703468eef0f3"
+      },
+      {
+        "type": "trigger",
+        "x": 183,
+        "y": 150,
+        "w": 140,
+        "h": 9,
+        "name": "cutscene(show_the_dashbtn_thingy)",
+        "id": "ffb966a3-8c07-4288-8a25-be1ec5935e1d"
+      },
+      {
+        "type": "trigger",
+        "x": 353,
+        "y": -4,
+        "w": 9,
+        "h": 161,
+        "name": "cutscene(tutor_dash_done)",
+        "id": "ca3b1c2b-862f-44ee-9101-7f201647b75f"
       }
     ],
     "invis_walls": [],

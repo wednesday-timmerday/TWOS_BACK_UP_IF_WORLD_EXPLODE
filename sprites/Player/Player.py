@@ -923,6 +923,8 @@ class Player:
         # Death screen
         # ════════════════════════════════════════════════════════════════
         if self.dead:
+            self.dash_timer = 0.0
+            self.dash_active = False
             screen.fill((0, 0, 0))
             # Force death animation
             self.curr_animation = "dead"

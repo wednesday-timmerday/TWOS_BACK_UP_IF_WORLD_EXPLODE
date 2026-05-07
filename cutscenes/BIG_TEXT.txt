@@ -118,6 +118,7 @@ parent_yell =
     Mr. Tutorion: * It's just an blue block
     Mr. Tutorion: * (I dont really know why&that's here)
     Mr. Tutorion: * Err, ^wait250 lets continue
+    DONTADDIDX
     ENDOFCONVERSATION
 
 the_end = 
@@ -135,6 +136,29 @@ luuk =
     Luuk: * BTW, this is an softlock
     Luuk: * You need to restart the game
     Luuk: *  L
+    ENDOFCONVERSATION
+
+room_idfkanymore_tutor_shit_i_forgot =
+    [mrtutor]
+    {(1 0)}
+    Mr. Tutorion: * This jump looks&wayyy too big
+    Mr. Tutorion: * But luckily for me,^wait250&i can just fly over It
+    Mr. Tutorion: * Cya later,^wait250 Kiddo
+    {Move_to_end}
+    ENDOFCONVERSATION
+
+show_the_dashbtn_thingy =
+    []
+    {(1 0)}
+    {Tetoris}
+    ENDOFCONVERSATION
+
+
+tutor_dash_done =
+    [mrtutor]
+    {(1 0)}
+    Mr. Tutorion: * Goooooood job!
+    Mr. Tutorion: * You are almost done&with the tutorial
     ENDOFCONVERSATION
 
 death =

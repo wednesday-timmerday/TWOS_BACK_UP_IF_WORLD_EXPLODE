@@ -461,11 +461,15 @@ def main():
 
     try:
         from worlds.world_loader import World_loader as WorldModule
-    except Exception:
+    except Exception as e:
+        print(e)
         WorldModule = None
 
     world_data   = load_json_cache("world.json")
-    world_loader = WorldModule(MINI_RESOLUTION, player) if WorldModule else None
+    try:
+        world_loader = WorldModule(MINI_RESOLUTION, player)
+    except Exception as e:
+        print(e)
     if not world_data:
         save_json_cache("world.json", {"dummy": True})
 
@@ -508,20 +512,20 @@ def main():
             pass
 
     # ── Multiplayer init ──────────────────────────────────────────────────
-    mp = None
-    if MULTIPLAYER_AVAILABLE and _MP is not None:
-        try:
-            mp = _MP(
-                player,
-                room_id="main_world",
-                name=getattr(player, "name", "???") or "???",
-                join_mode=MP_JOIN_MODE,
-            )
-            mp.start()
-            print(f"[MP] Multiplayer started! join_mode={MP_JOIN_MODE}")
-        except Exception:
-            traceback.print_exc()
-            mp = None
+    # mp = None
+    # if MULTIPLAYER_AVAILABLE and _MP is not None:
+    #     try:
+    #         mp = _MP(
+    #             player,
+    #             room_id="main_world",
+    #             name=getattr(player, "name", "???") or "???",
+    #             join_mode=MP_JOIN_MODE,
+    #         )
+    #         mp.start()
+    #         print(f"[MP] Multiplayer started! join_mode={MP_JOIN_MODE}")
+    #     except Exception:
+    #         traceback.print_exc()
+    #         mp = None
 
     if player is None or world_loader is None:
         error_msg = "Critical modules failed to load (player or world). Check imports."
@@ -550,11 +554,11 @@ def main():
         renderer.fill((0, 0, 0))
 
         # Multiplayer tick
-        if mp:
-            try:
-                mp.tick(dt)
-            except Exception:
-                pass
+        # if mp:
+        #     try:
+        #         mp.tick(dt)
+        #     except Exception:
+        #         pass
 
         # Update player
         try:
@@ -575,7 +579,7 @@ def main():
         now = time.time()
         if rpc_connected and now - globals().get("last_rpc_update", 0) >= 1.0:
             try:
-                rpc.update(state="In the darkness (placeholder)")
+                rpc.update(state="In the darkness")
             except Exception:
                 pass
             globals()["last_rpc_update"] = now
@@ -597,11 +601,11 @@ def main():
         blit_renderer_to_screen(screen, renderer)
 
         # Draw remote players (only when --join)
-        if mp and MP_JOIN_MODE:
-            try:
-                mp.draw(renderer, world_loader)
-            except Exception:
-                pass
+        # if mp and MP_JOIN_MODE:
+        #     try:
+        #         mp.draw(renderer, world_loader)
+        #     except Exception:
+        #         pass
 
         # Fight updates/draws
         if getattr(player, "active_fight", None) and getattr(player.active_fight, "running", False):
@@ -645,11 +649,11 @@ def main():
         pygame.display.flip()
 
     # ── Cleanup ───────────────────────────────────────────────────────────
-    if mp:
-        try:
-            mp.stop()
-        except Exception:
-            pass
+    # if mp:
+    #     try:
+    #         mp.stop()
+    #     except Exception:
+    #         pass
 
     pygame.quit()
     try:

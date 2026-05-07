@@ -9,6 +9,17 @@ Fixes:
   - Selection/rename/drag/resize behavior preserved
   - Level switch prompt accepts letters/numbers/underscore/hyphen
   - Backspace works in the level switch prompt
+
+  v2 fixes (toolbar drag overhaul):
+  - drag_state now keeps toolbar_item separate from the created world object
+    via a dedicated "toolbar_item" key, so kind/enemy_name are never lost
+  - start_world is captured at MOUSEDOWN (converted to world coords) so the
+    rubber-band origin is always the pixel where you pressed, not where you
+    first moved enough to trigger DRAG_THRESH
+  - _apply_new_drag is called every motion frame from that fixed origin, so
+    the box grows naturally under the cursor
+  - Single-click release (phase still "pending") creates a default-sized
+    object centred on the click, matching the old behaviour
 """
 
 import json
@@ -299,6 +310,8 @@ class Editor:
                 "position": [int(wx), int(wy)],
                 "id": uid,
             }
+            ld.setdefault("enemies", []).append(obj)
+            return obj
 
         if kind == "trigger":
             obj = {"type": "trigger", "x": int(wx), "y": int(wy), "w": 96, "h": 56, "name": "", "id": uid}
@@ -484,22 +497,33 @@ class Editor:
             return
 
         if tw and mx < tw:
+            # ── Toolbar click/drag start ──────────────────────────────
             y0 = 30 - self.toolbar_scroll
             for it in self.toolbar_items:
                 r = pygame.Rect(8, y0, tw - 16, ICON_SIZE + 4)
                 if r.collidepoint(mx, my):
+                    # Convert the click position to world coords so we have a
+                    # fixed drag origin even before the cursor enters the canvas.
+                    # screen_to_world clamps correctly once mx >= tw, but during
+                    # the toolbar phase we store the raw mouse pos and convert
+                    # on first entry to the world area (see handle_mouse_motion).
                     self.drag_state = {
                         "phase": "pending",
                         "mode": "toolbar_new",
-                        "obj": it,
+                        # Keep the toolbar item separate so kind/enemy_name are
+                        # never overwritten when we create the world object.
+                        "toolbar_item": it,
+                        # Screen-space origin for DRAG_THRESH testing.
                         "start_mouse": (mx, my),
-                        "created": False,
+                        # World object created lazily on first motion into canvas.
+                        "world_obj": None,
                     }
                     self.tool = it.name
                     return
                 y0 += ICON_SIZE + 20
             return
 
+        # ── World area click ─────────────────────────────────────────
         wx, wy = self.screen_to_world(mx, my)
         hit = self.pick_at(wx, wy)
         now = pygame.time.get_ticks()
@@ -538,16 +562,18 @@ class Editor:
         ds = self.drag_state
 
         if ds["phase"] == "pending" and ds.get("mode") == "toolbar_new":
-            if not ds.get("created", False) and (mx >= self.toolbar_w() or not self.toolbar_visible):
-                # Create on release in the world area.
-                it = ds["obj"]
-                new_obj = self._new_obj(it.kind, wx, wy, getattr(it, "enemy_name", None))
+            # ── Single click (no drag): place a default-sized object ──
+            # Only act if the cursor ended up in the world area.
+            if mx >= self.toolbar_w():
+                it = ds["toolbar_item"]
+                new_obj = self._new_obj(it.kind, wx, wy, it.enemy_name)
                 if new_obj is not None:
                     self.selected = new_obj
                     self._load_enemies_safe()
                     self.mark_dirty()
 
         elif ds["phase"] in ("pending", "active"):
+            # Finalise an in-progress drag on an existing object.
             if ds.get("mode") == "new":
                 self._load_enemies_safe()
             self.mark_dirty()
@@ -570,49 +596,69 @@ class Editor:
 
         ds = self.drag_state
 
-        if ds["phase"] == "pending":
+        # ── Toolbar-new pending: wait for DRAG_THRESH then enter world ──
+        if ds["phase"] == "pending" and ds.get("mode") == "toolbar_new":
             smx, smy = ds["start_mouse"]
             moved = abs(mx - smx) > DRAG_THRESH or abs(my - smy) > DRAG_THRESH
-            if moved:
-                if ds["mode"] == "toolbar_new":
-                    # Keep dragging from the menu, but only create once we enter the world area.
-                    if self.toolbar_visible and mx < self.toolbar_w():
-                        return
-                    it = ds["obj"]
-                    new_obj = self._new_obj(it.kind, wx, wy, getattr(it, "enemy_name", None))
-                    if new_obj is None:
-                        self.drag_state = {"phase": "idle"}
-                        return
-                    self.selected = new_obj
-                    ds["obj"] = new_obj
-                    ds["kind"] = it.kind
-                    ds["mode"] = "new"
-                    ds["phase"] = "active"
-                    ds["created"] = True
-                    ds["start_world"] = (wx, wy)
-                    ds["offset"] = (0, 0)
-                    self.tool = it.name
-                else:
-                    ds["phase"] = "active"
+            if not moved:
+                return
 
+            # Don't create anything until the cursor has left the toolbar.
+            if self.toolbar_visible and mx < self.toolbar_w():
+                return
+
+            it = ds["toolbar_item"]
+            # wx/wy is already in world space at the current cursor position.
+            # This becomes both the object's initial position AND the rubber-band
+            # origin, so the box grows away from where you first entered the canvas.
+            new_obj = self._new_obj(it.kind, wx, wy, it.enemy_name)
+            if new_obj is None:
+                self.drag_state = {"phase": "idle"}
+                return
+
+            self.selected = new_obj
+            # Transition to the active drag state with a clean structure.
+            self.drag_state = {
+                "phase": "active",
+                "mode": "new",
+                "toolbar_item": it,       # kept for reference
+                "world_obj": new_obj,
+                "obj": new_obj,           # alias used by existing code paths
+                "kind": it.kind,
+                # Anchor in world space: the point where dragging started.
+                "start_world": (wx, wy),
+            }
+            return
+
+        # ── Active drag ──────────────────────────────────────────────
         if ds["phase"] == "active":
             obj = ds["obj"]
             if ds["mode"] == "existing":
                 offx, offy = ds.get("offset", (0, 0))
                 self._apply_drag(obj, wx, wy, offx, offy)
             else:
+                # New object being sized by dragging.
                 kind = ds.get("kind", "")
                 is_point = kind in ("enemy", "spawn") or (
                     isinstance(obj, dict) and "position" in obj) or (
                     isinstance(obj, dict) and obj.get("type") == "spawn")
 
                 if is_point:
+                    # Point objects just follow the cursor.
                     self._apply_drag(obj, wx, wy, 0, 0)
                 else:
                     swx, swy = ds["start_world"]
                     self._apply_new_drag(obj, swx, swy, wx, wy)
             self.mark_dirty()
 
+        # ── Pending existing-object drag ─────────────────────────────
+        if ds["phase"] == "pending" and ds.get("mode") == "existing":
+            smx, smy = ds["start_mouse"]
+            moved = abs(mx - smx) > DRAG_THRESH or abs(my - smy) > DRAG_THRESH
+            if moved:
+                ds["phase"] = "active"
+
+        # ── Resize ───────────────────────────────────────────────────
         if self.resizing:
             obj = self.resizing["obj"]
             corner = self.resizing["corner"]
@@ -929,7 +975,7 @@ class Editor:
                                       lambda v: obj.update({"came_from": int(v) if v.isdigit() else 0}))
             elif t == "enemy":
                 fy = self._insp_field(surf, ix, fy, "type",
-                    lambda: obj.get("type", "enemy"), 
+                    lambda: obj.get("type", "enemy"),
                     lambda v: obj.update({"type": v or "enemy"}))
 
         elif isinstance(obj, list):
@@ -952,9 +998,9 @@ class Editor:
         pygame.draw.rect(surf, C_INPUT_BG, d_btn, border_radius=4)
         pygame.draw.rect(surf, (80, 30, 30), d_btn, 1, border_radius=4)
         rs = TINY.render("Rename (F2)", True, C_ACCENT)
-        ds = TINY.render("Delete (Del)", True, C_ENEMY)
+        ds_s = TINY.render("Delete (Del)", True, C_ENEMY)
         surf.blit(rs, (r_btn.x + (btn_w - rs.get_width()) // 2, r_btn.y + 7))
-        surf.blit(ds, (d_btn.x + (btn_w - ds.get_width()) // 2, d_btn.y + 7))
+        surf.blit(ds_s, (d_btn.x + (btn_w - ds_s.get_width()) // 2, d_btn.y + 7))
         self._rename_btn = r_btn
         self._delete_btn = d_btn
 
@@ -1285,7 +1331,6 @@ def run():
                     elif ev.key == pygame.K_BACKSPACE:
                         editor.level_prompt_text = editor.level_prompt_text[:-1]
                     elif ev.unicode and ev.unicode.isprintable():
-                        # Allow letters, numbers, underscore, hyphen, etc.
                         if not ev.unicode.isspace():
                             editor.level_prompt_text += ev.unicode
                     continue

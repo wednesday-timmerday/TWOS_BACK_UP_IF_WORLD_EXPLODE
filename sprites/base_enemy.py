@@ -115,12 +115,14 @@ class EnemyBase:
 
         self.rect = self.frames[0].get_rect()
 
-    def blit_frame_from_atlas(self, dst_surface, index, dest_pos):
-        """Blit the indexed frame usinghe shared atlas if available, otherwise fall back."""
+    def blit_frame_from_atlas(self, dst_surface, index, dest_pos, alpha=255):
+        """Blit the indexed frame using the shared atlas if available, otherwise fall back."""
         try:
             if self._atlas and self._atlas_rects:
                 src_rect = self._atlas_rects[index]
+                self._atlas.set_alpha(alpha)
                 dst_surface.blit(self._atlas, dest_pos, src_rect)
+                self._atlas.set_alpha(255)  # Reset alpha after blitting
                 return
         except Exception:
             pass
@@ -128,6 +130,8 @@ class EnemyBase:
         # Fallback
         try:
             frame = self.frames[index]
+            frame.set_alpha(alpha)
             dst_surface.blit(frame, dest_pos)
+            frame.set_alpha(255)  # Reset alpha after blitting
         except Exception:
             pass
