@@ -107,14 +107,14 @@ class Player:
 
         # ── World position ────────────────────────────────────────────────
         self.world_x = 303.0
-        self.world_y = 114.0
+        self.world_y = 130.0
 
         # ── Movement ──────────────────────────────────────────────────────
         self.speed = 90.0
         self.speed_y = 0.0
         self.dir = 0           # 0 = right, 1 = left
         self.on_ground = False
-        self.can_move = True
+        self.can_move = False # we set this to false bcz of the frame-1 bug, in later build we need to check if the first cutscene has triggered
         self.dt = 0.0
         self.set_step_height_for_snapping = 5
 
@@ -154,6 +154,10 @@ class Player:
         self.in_save_menu = False
         self._prev_z = False
         self._saving = False
+
+        # ── Interactable Z input ───────────────────────────────────────────
+        self._prev_z_interactable = False
+        self.z_just_pressed_interactable = False
 
         # ── Active scenes / fight ─────────────────────────────────────────
         self.active_cutscene = None
@@ -250,6 +254,8 @@ class Player:
         self.dash_cooldown_timer = 0.0
         self.dash_cooldown_time = 2.0
         self.dash_cooldown_timer_time = False
+        self.in_death_scene = False
+
 
     # ─────────────────────────────────────────────────────────────────────
     # Private helpers
@@ -390,6 +396,16 @@ class Player:
     def get_deact(self):
         return set(self._deactivated_walls)
 
+    def update_interactable_z_input(self, keys, joystick):
+        """Update and return Z input state for interactables.
+        
+        Returns True if Z was just pressed this frame.
+        """
+        z_pressed = keys[pygame.K_z] or keys[pygame.K_y] or (joystick and joystick.get_button(1))
+        self.z_just_pressed_interactable = z_pressed and not self._prev_z_interactable
+        self._prev_z_interactable = z_pressed
+        return self.z_just_pressed_interactable
+
     # ─────────────────────────────────────────────────────────────────────
     # Die
     # ─────────────────────────────────────────────────────────────────────
@@ -429,6 +445,8 @@ class Player:
 
         if self.respawn_protect_timer > 0.0:
             self.respawn_protect_timer = max(0.0, self.respawn_protect_timer - dt)
+
+        print(self.dead)
 
         # ════════════════════════════════════════════════════════════════
         # Phase 1 — Freeze frame
@@ -623,7 +641,7 @@ class Player:
         except Exception:
             self.jump_down = False
 
-        jump_just_pressed = self.jump_down and not self._prev_jump and not self.freeze_frame_active
+        jump_just_pressed = self.jump_down and not self.freeze_frame_active
         self._prev_jump = self.jump_down
 
         if jump_just_pressed:
@@ -942,7 +960,7 @@ class Player:
                 cx = screen.get_width() // 2 - 50 + self.offset_x
                 cy = screen.get_height() // 2 + self.offset_y
                 screen.blit(img, (cx - img.get_width() // 2, cy - img.get_height() // 2))
-            if self.lives <= 0 and not self.active_cutscene:
+            if self.lives <= 0 and not self.in_death_scene:
                 try:
                     self.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
                     self.curr_animation = "Idle"
@@ -951,6 +969,7 @@ class Player:
                     self.active_cutscene.player = self
                     self.active_cutscene.load("death", self.joystick)
                     self.active_cutscene.trigger_idx = 999999999999999999999999
+                    self.in_death_scene = True
                 except Exception as e:
                     print("Error loading cutscene:", e)
                     self.active_cutscene = None

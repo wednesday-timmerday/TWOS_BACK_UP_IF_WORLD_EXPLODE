@@ -98,7 +98,6 @@ class cutscene:
             self.shadowrock.world_y = -9999
         if self.mrtutor is not None:
             self.mrtutor.world_x = 332
-        self.player.can_move = False
         self.player._deactivated_walls.add("wall_2")
         return "YES"
 

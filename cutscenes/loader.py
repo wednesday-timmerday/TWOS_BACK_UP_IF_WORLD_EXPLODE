@@ -132,6 +132,7 @@ class CutsceneLoader:
 
         self.running = True
         self.player_locked = True
+        self.player.can_move = False
         self.joystick = joystick
         self.trigger_idx = trigger_idx
         self.running_function = None
@@ -368,6 +369,10 @@ class CutsceneLoader:
             if self.add_idx:
                 self.player._triggered_once.add(self.trigger_idx)
             return
+
+        # Keep cutscene 2 locked
+        if hasattr(self.module, "dialogue_id") and self.module.dialogue_id == "2":
+            self.player.can_move = False
 
         if not self.module:
             return

@@ -41,7 +41,6 @@ class ButtonE(StateSerializable, EnemyBase):
             surface.blit(frame, rect)
 
     def draw(self, surface, x, y):
-        print("B")
         frame = self.frames[self.current_frame]
         try:
             self.blit_frame_from_atlas(surface, self.current_frame, (x - frame.get_width()//2, y - frame.get_height()))

@@ -56,9 +56,7 @@ class Interactable:
         self.event = None
 
         # input state
-        self.prev_z = False
         self.prev_x = False
-        self.z_just_pressed = False
         self.x_just_pressed = False
 
         # dialogue state
@@ -144,9 +142,7 @@ class Interactable:
         self.pending_choice_label = None
         self.selected_choice = None
 
-        self.prev_z = False
         self.prev_x = False
-        self.z_just_pressed = False
         self.x_just_pressed = False
 
         if not self.old:
@@ -354,14 +350,13 @@ class Interactable:
         keys = pygame.key.get_pressed()
 
         # --- INPUT (single source of truth) ---
-        z_pressed = keys[pygame.K_z] or keys[pygame.K_y] or (self.joystick and self.joystick.get_button(1))
+        z_just_pressed = self.player.update_interactable_z_input(keys, self.joystick)
         x_pressed = keys[pygame.K_x] or (self.joystick and self.joystick.get_button(0))
 
-        self.z_just_pressed = z_pressed and not self.prev_z
         self.x_just_pressed = x_pressed and not self.prev_x
 
         if self.waiting_to_start:
-            if self.z_just_pressed:
+            if z_just_pressed:
                 self.player.curr_animation = "Idle"
                 self.player.curr_frame = 0
                 self.waiting_to_start = False
@@ -372,12 +367,10 @@ class Interactable:
                     self._advance_dialogue()
 
             # IMPORTANT: update prev state ONLY ONCE PER FRAME
-            self.prev_z = z_pressed
             self.prev_x = x_pressed
             return
 
         if not self.running:
-            self.prev_z = z_pressed
             self.prev_x = x_pressed
             return
 
@@ -387,14 +380,13 @@ class Interactable:
 
                 # --- FUNCTION HOOK ---
                 if self.running_function:
-                    if not self.text_engine.text or self.z_just_pressed:
+                    if not self.text_engine.text or z_just_pressed:
                         func = getattr(self.module, self.running_function)
                         result = func()
                         if result == "YES":
                             self.running_function = None
                             self._advance_dialogue()
 
-                    self.prev_z = z_pressed
                     self.prev_x = x_pressed
                     return
 
@@ -406,7 +398,6 @@ class Interactable:
                         if chosen:
                             self._handle_choice_made(chosen)
 
-                    self.prev_z = z_pressed
                     self.prev_x = x_pressed
                     return
 
@@ -426,7 +417,7 @@ class Interactable:
                             self.text_auto_timer = 0.0
                             self._advance_dialogue()
                     else:
-                        if self.z_just_pressed or (self.joystick and self.joystick.get_button(1)):
+                        if z_just_pressed or (self.joystick and self.joystick.get_button(1)):
                             self._advance_dialogue()
 
             else:
@@ -445,7 +436,6 @@ class Interactable:
         if not self.running:
             self.player_locked = False
 
-        self.prev_z = z_pressed
         self.prev_x = x_pressed
     # ---------------------------------------------------------
 

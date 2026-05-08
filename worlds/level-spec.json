@@ -48,8 +48,8 @@
     "triggers": [
       {
         "type": "trigger",
-        "x": 163,
-        "y": -8,
+        "x": 164,
+        "y": -64,
         "w": 50,
         "h": 172,
         "name": "cutscene(1)",
@@ -268,7 +268,7 @@
         "type": "spawn",
         "came_from": 2,
         "pos_x": 303,
-        "pos_y": 114,
+        "pos_y": 104,
         "id": "1091d641-6587-48cb-b26e-ab9d0828af80"
       },
       {

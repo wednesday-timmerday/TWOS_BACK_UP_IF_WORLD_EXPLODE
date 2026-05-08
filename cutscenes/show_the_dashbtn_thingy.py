@@ -41,7 +41,5 @@ class cutscene:
             if self.btn.world_y <= self.old_y - 2:
                 self.state = 1
         
-        # Trigger next cutscene once when animation completes, but keep running
-        if t >= 1.0 and not self.next_triggered:
-            self.next_triggered = True
+        if self.alpha >= 255:
             return "YES"
