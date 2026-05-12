@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 import importlib.util
 import os
 import sys
@@ -296,7 +296,7 @@ class Interactable:
                 self.text_engine.start_choices(question, options)
                 return
 
-            # (BRANCH) label — unexpected, skip whole block
+            # (BRANCH) label â€” unexpected, skip whole block
             elif line.startswith("(BRANCH)"):
                 self.line_index = self._skip_block_from_branch(self.line_index)
                 continue
@@ -458,4 +458,4 @@ class Interactable:
             try:
                 self.module.draw(self, surface)
             except Exception as e:
-                print(f"[CutsceneLoader] Error in cutscene draw: {e}")
+                print(f"[CutsceneLoader] Error in cutscene draw: {e}")

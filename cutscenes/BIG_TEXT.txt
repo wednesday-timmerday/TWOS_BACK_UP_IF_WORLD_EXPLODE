@@ -79,16 +79,20 @@ parent_yell =
     Mr. Tutorion: * And its also the&only good lightsource here
     {Move_cam_2}
     {(0 0.5)}
+    [shadowrock]
     Shadowrock: * But what about&that lante-
     {Reset_cam}
     {place_shadowrock}
     {(1 0)}
+    [mrtutor]
     Mr. Tutorion: * SHUT UP!
     {set_hammer}
     {(0 0.2)}
+    [shadowrock]
     Shadowrock: * Wha-
     {release_the_hammer}
     {(1 0)}
+    [mrtutor]
     Mr. Tutorion: * Now that that's&over with, lets&continue the tutorial!
     Mr. Tutorion: * So as I was saying,&That's the orb.
     Mr. Tutorion: * To make progress&you need to push it in the gap.&Try to do it.
@@ -178,3 +182,15 @@ death =
     DONTADDIDX
     ENDOFCONVERSATION
 
+tutor_r7_1 =
+    [mrtutor]
+    {(1 0)}
+    Mr. Tutorion: * Well, well, well...
+    Mr. Tutorion: * Look who made it this far
+    {capture_screenshot}
+    Mr. Tutorion: * Pretty impressive for a newcomer
+    Mr. Tutorion: * But there's still so&much you don't know
+    Mr. Tutorion: * This world has secrets&beyond what you can imagine
+    {reset_zoom}
+    Mr. Tutorion: * So... are you ready&to keep going?
+    ENDOFCONVERSATION

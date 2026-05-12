@@ -1,5 +1,5 @@
-"""
-DrawWorld editor — fixed edition
+﻿"""
+DrawWorld editor â€” fixed edition
 
 Fixes:
   - Enemy entries keep the actual sprite folder name
@@ -34,7 +34,7 @@ import sprites.Player.Player  # noqa: F401
 
 pygame.init()
 
-# ── Display ────────────────────────────────────────────────────────────────
+# â”€â”€ Display â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 BIG_SCREEN = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("DrawWorld Editor")
 WORLD_W, WORLD_H = 320, 180
@@ -42,14 +42,14 @@ SCREEN_SURF = pygame.Surface((WORLD_W, WORLD_H))
 CLOCK = pygame.time.Clock()
 SCALE = BIG_SCREEN.get_width() // WORLD_W
 
-# ── Fonts ─────────────────────────────────────────────────────────────────
+# â”€â”€ Fonts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FONT = pygame.font.SysFont("consolas", 16)
 SMALL = pygame.font.SysFont("consolas", 12)
 BIG_FONT = pygame.font.SysFont("consolas", 22)
 BIG_SMALL = pygame.font.SysFont("consolas", 16)
 TINY = pygame.font.SysFont("consolas", 13)
 
-# ── Layout ────────────────────────────────────────────────────────────────
+# â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 TOOLBAR_W = 210
 INSPECTOR_W = 210
 ICON_SIZE = 28
@@ -63,7 +63,7 @@ SAVE_DEBOUNCE_MS = 600
 
 SAVE_PATH = Path("worlds") / "level-spec.json"
 
-# ── Colours ───────────────────────────────────────────────────────────────
+# â”€â”€ Colours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 C_PANEL = (18, 19, 22)
 C_BORDER = (40, 42, 48)
 C_TEXT = (190, 192, 200)
@@ -164,7 +164,7 @@ class Editor:
 
         self._file_mtime = self._get_save_mtime()
 
-    # ── Toolbar ──────────────────────────────────────────────────────────
+    # â”€â”€ Toolbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _build_toolbar(self):
         sprites_dir = Path("sprites")
         if sprites_dir.exists():
@@ -196,7 +196,7 @@ class Editor:
         if not any(it.kind == "enemy" for it in self.toolbar_items):
             self.toolbar_items.append(ToolbarItem("Enemy", make_icon(C_ENEMY), "enemy", enemy_name="enemy"))
 
-    # ── Coordinate helpers ──────────────────────────────────────────────
+    # â”€â”€ Coordinate helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def toolbar_w(self):
         return TOOLBAR_W if self.toolbar_visible else 0
 
@@ -219,7 +219,7 @@ class Editor:
         sx, sy = self.world_to_screen(wx, wy)
         return sx * SCALE + self.toolbar_w(), sy * SCALE
 
-    # ── Persistence ─────────────────────────────────────────────────────
+    # â”€â”€ Persistence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def mark_dirty(self):
         self._dirty = True
         self._last_change = pygame.time.get_ticks()
@@ -234,14 +234,14 @@ class Editor:
                 json.dump(self.world.world_data, f, indent=2)
             self._dirty = False
             self._file_mtime = self._get_save_mtime()
-            DPRINT("Saved →", SAVE_PATH)
+            DPRINT("Saved â†’", SAVE_PATH)
         except Exception as e:
             DPRINT("Save failed:", e)
 
     def save_world(self):
         self._do_save()
 
-    # ── Geometry helpers ────────────────────────────────────────────────
+    # â”€â”€ Geometry helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _obj_rect(self, obj):
         if isinstance(obj, dict):
             t = obj.get("type")
@@ -299,7 +299,7 @@ class Editor:
 
         return None
 
-    # ── Create helpers ─────────────────────────────────────────────────
+    # â”€â”€ Create helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _new_obj(self, kind, wx, wy, enemy_name=None):
         ld = self.world.level_data
         uid = str(uuid.uuid4())
@@ -383,7 +383,7 @@ class Editor:
             obj[2] = max(8, int(abs(wx - start_wx)))
             obj[3] = max(8, int(abs(wy - start_wy)))
 
-    # ── Enemy sync ──────────────────────────────────────────────────────
+    # â”€â”€ Enemy sync â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _sync_enemy(self, edict):
         try:
             pos = edict.get("position")
@@ -456,7 +456,7 @@ class Editor:
         except Exception:
             pass
 
-    # ── Level switching ────────────────────────────────────────────────
+    # â”€â”€ Level switching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def switch_level(self, level_id):
         self.save_world()
         key = f"level_{level_id}"
@@ -475,7 +475,7 @@ class Editor:
         self.drag_state = {"phase": "idle"}
         self._annotate_ids()
 
-    # ── Mouse ───────────────────────────────────────────────────────────
+    # â”€â”€ Mouse â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def handle_mouse_down(self, ev):
         mx, my = ev.pos
         tw = self.toolbar_w()
@@ -497,7 +497,7 @@ class Editor:
             return
 
         if tw and mx < tw:
-            # ── Toolbar click/drag start ──────────────────────────────
+            # â”€â”€ Toolbar click/drag start â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             y0 = 30 - self.toolbar_scroll
             for it in self.toolbar_items:
                 r = pygame.Rect(8, y0, tw - 16, ICON_SIZE + 4)
@@ -523,7 +523,7 @@ class Editor:
                 y0 += ICON_SIZE + 20
             return
 
-        # ── World area click ─────────────────────────────────────────
+        # â”€â”€ World area click â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         wx, wy = self.screen_to_world(mx, my)
         hit = self.pick_at(wx, wy)
         now = pygame.time.get_ticks()
@@ -562,7 +562,7 @@ class Editor:
         ds = self.drag_state
 
         if ds["phase"] == "pending" and ds.get("mode") == "toolbar_new":
-            # ── Single click (no drag): place a default-sized object ──
+            # â”€â”€ Single click (no drag): place a default-sized object â”€â”€
             # Only act if the cursor ended up in the world area.
             if mx >= self.toolbar_w():
                 it = ds["toolbar_item"]
@@ -596,7 +596,7 @@ class Editor:
 
         ds = self.drag_state
 
-        # ── Toolbar-new pending: wait for DRAG_THRESH then enter world ──
+        # â”€â”€ Toolbar-new pending: wait for DRAG_THRESH then enter world â”€â”€
         if ds["phase"] == "pending" and ds.get("mode") == "toolbar_new":
             smx, smy = ds["start_mouse"]
             moved = abs(mx - smx) > DRAG_THRESH or abs(my - smy) > DRAG_THRESH
@@ -630,7 +630,7 @@ class Editor:
             }
             return
 
-        # ── Active drag ──────────────────────────────────────────────
+        # â”€â”€ Active drag â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if ds["phase"] == "active":
             obj = ds["obj"]
             if ds["mode"] == "existing":
@@ -651,14 +651,14 @@ class Editor:
                     self._apply_new_drag(obj, swx, swy, wx, wy)
             self.mark_dirty()
 
-        # ── Pending existing-object drag ─────────────────────────────
+        # â”€â”€ Pending existing-object drag â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if ds["phase"] == "pending" and ds.get("mode") == "existing":
             smx, smy = ds["start_mouse"]
             moved = abs(mx - smx) > DRAG_THRESH or abs(my - smy) > DRAG_THRESH
             if moved:
                 ds["phase"] = "active"
 
-        # ── Resize ───────────────────────────────────────────────────
+        # â”€â”€ Resize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if self.resizing:
             obj = self.resizing["obj"]
             corner = self.resizing["corner"]
@@ -698,7 +698,7 @@ class Editor:
             self.toolbar_scroll -= int(delta * (ICON_SIZE // 2))
             self.clamp_toolbar_scroll()
 
-    # ── Inspector interaction ──────────────────────────────────────────
+    # â”€â”€ Inspector interaction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _inspector_click(self, mx, my):
         for rect, getter, setter, fid in self._inspector_fields:
             if rect.collidepoint(mx, my):
@@ -723,7 +723,7 @@ class Editor:
             af["text"] += ev.unicode
         return True
 
-    # ── Rename popup ────────────────────────────────────────────────────
+    # â”€â”€ Rename popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _open_rename(self, obj):
         self.naming = True
         if isinstance(obj, dict):
@@ -798,7 +798,7 @@ class Editor:
         except Exception as e:
             DPRINT("Auto-reload error:", e)
 
-    # ── Update / render ────────────────────────────────────────────────
+    # â”€â”€ Update / render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def update(self, dt):
         self.dt = dt
         keys = pygame.key.get_pressed()
@@ -1167,7 +1167,7 @@ class Editor:
         pygame.draw.rect(s, C_ACCENT, inp_r, 1, border_radius=3)
         val_s = BIG_SMALL.render(self.naming_text + ("_" if (pygame.time.get_ticks() // 500) % 2 == 0 else ""), True, C_TEXT)
         s.blit(val_s, (inp_r.x + 6, inp_r.y + 5))
-        s.blit(TINY.render("Enter to confirm · Esc to cancel", True, C_MUTED), (10, 57))
+        s.blit(TINY.render("Enter to confirm Â· Esc to cancel", True, C_MUTED), (10, 57))
         surf.blit(s, (px, py))
 
     def draw_level_prompt(self, surf):
@@ -1192,7 +1192,7 @@ class Editor:
             ("Tab=toolbar  Q=level  Del=remove  F2=rename", (50, 55, 70)),
         ]
         if self._dirty:
-            lines.insert(2, ("● unsaved", (180, 140, 60)))
+            lines.insert(2, ("â— unsaved", (180, 140, 60)))
         x0 = self.inspector_x() - 8
         y0 = 10
         for txt, col in lines:
@@ -1213,7 +1213,7 @@ class Editor:
         big_surf.blit(pygame.transform.scale(small_surf, big_surf.get_size()), (0, 0))
         self.render_ui(big_surf)
 
-    # ── Helpers ─────────────────────────────────────────────────────────
+    # â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _load_enemies_safe(self):
         try:
             self.world.load_enemies()
@@ -1360,3 +1360,4 @@ def run():
 
 if __name__ == "__main__":
     run()
+

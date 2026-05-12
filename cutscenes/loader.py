@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 import importlib.util
 import os
 import sys
@@ -437,6 +437,7 @@ class CutsceneLoader:
     # ---------------------------------------------------------
 
     def draw(self, surface):
+        self.surface = surface
         if self.module and hasattr(self.module, "draw_front"):
             try:
                 self.module.draw_front(self, surface)
@@ -454,4 +455,4 @@ class CutsceneLoader:
             try:
                 self.module.draw_back(self, surface)
             except Exception as e:
-                print(f"[CutsceneLoader] Error in cutscene draw: {e}")
+                print(f"[CutsceneLoader] Error in cutscene draw: {e}")

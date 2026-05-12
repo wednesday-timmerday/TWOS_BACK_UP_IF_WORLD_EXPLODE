@@ -84,7 +84,7 @@
       ],
       [
         477,
-        -17,
+        -77,
         16,
         178,
         "wall_2"
@@ -726,6 +726,52 @@
         "pos_x": 66,
         "pos_y": 133,
         "id": "e842bc93-f730-4f86-b2df-24168710687b"
+      }
+    ]
+  },
+  "level_7": {
+    "coll_layers": [
+      1
+    ],
+    "enemies": [
+      {
+        "type": "mrtutor",
+        "position": [
+          17,
+          105
+        ],
+        "id": "e2386278-97fa-4676-9c4f-34f7685fbea0"
+      }
+    ],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 0,
+        "y": -4,
+        "w": 16,
+        "h": 165,
+        "name": "goto(6)",
+        "id": "91bb675c-b16e-4c33-932d-79734b87bfde"
+      },
+      {
+        "type": "trigger",
+        "x": 35,
+        "y": 137,
+        "w": 23,
+        "h": 23,
+        "name": "cutscene(tutor_r7_1)",
+        "id": "3e0e217e-37c2-42e3-992d-6ea8e962a911"
+      }
+    ],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 6,
+        "pos_x": 46,
+        "pos_y": 149,
+        "id": "4dd5158d-0e84-4e40-963b-5c5fb446ff1b"
       }
     ]
   }

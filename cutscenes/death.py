@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 import sys
 
 class cutscene:
@@ -23,4 +23,4 @@ class cutscene:
         return "YES"
     
     def kill_game(self):
-        sys.exit(0)
+        sys.exit(0)

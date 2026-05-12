@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 import importlib
 import math
 import pymunk
@@ -74,14 +74,14 @@ class PhysicEngine:
         print(f"[PhysicEngine] '{name_obj}' image={actual_w}x{actual_h}")
 
         self.space = pymunk.Space()
-        # 400 px/s² feels natural at mini-res (320x180).
+        # 400 px/sÂ² feels natural at mini-res (320x180).
         # Previously 1500 was way too strong and tunnelled through floors.
         self.space.gravity = 0, 400
 
         self.mass = self.object.mass
         self.phys_radius = actual_w // 2
 
-        # Solid circle moment — rolls naturally when it hits things
+        # Solid circle moment â€” rolls naturally when it hits things
         self.moment = pymunk.moment_for_circle(self.mass, 0, self.phys_radius)
         self.body = pymunk.Body(self.mass, self.moment)
 
@@ -170,7 +170,7 @@ class PhysicEngine:
             sign  = 1 if (self.object.world_x >= p_left + p_w / 2.0) else -1
             new_x = (p_left + p_w + r + 1) if sign > 0 else (p_left - r - 1)
             self.body.position = (new_x, self.body.position.y)
-            # Just give it a gentle fixed push — no impulse accumulation
+            # Just give it a gentle fixed push â€” no impulse accumulation
             vx, vy = self.body.velocity
             push = sign * 60
             # Only apply push if orb isn't already moving away fast enough
@@ -192,3 +192,4 @@ class PhysicEngine:
         if DEBUG_HITBOX:
             pygame.draw.circle(screen, (0, 255, 0), (cx, cy), self.phys_radius, 1)
             pygame.draw.circle(screen, (255, 0, 0), (cx, cy), 1)
+
