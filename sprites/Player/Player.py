@@ -58,7 +58,7 @@ def check_collision_solid_only(world, rect):
         return False
 
 
-# â”€â”€â”€ Death screen phase constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# --- Death screen phase constants --------------------------------------------
 _DS_FADE_IN      = "fade_in"       # black overlay fades in
 _DS_HOLD         = "hold"          # fully black, brief pause
 _DS_OLD_OUT      = "old_out"       # old lives count slides/fades away
@@ -68,7 +68,7 @@ _DS_DONE         = "done"          # animation complete, waiting for timer
 
 class Player:
     def __init__(self, screen):
-        # â”€â”€ Character select â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Character select ----------------------------------------------
         self.lebreah = False
         self.screen = screen
 
@@ -78,16 +78,16 @@ class Player:
         )
         sfx_loader = Loader("sprites/Player/Sfx")
 
-        # â”€â”€ Animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # Animations --
         self.animations = {}
         self.animations_left = {}
         self._load_animations(sprite_loader)
 
-        # â”€â”€ Sound effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Sound effects -
         self.sound_effects = {"Walk": []}
         self._load_sfx(sfx_loader)
 
-        # â”€â”€ Animation state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Animation state -
         self.curr_animation = "Idle"
         self.curr_frame = 0
         self.animation_timer = 0.0
@@ -100,16 +100,16 @@ class Player:
         self.image_left = pygame.transform.flip(self.image, True, False)
         self.rect = self.image.get_rect()
 
-        # â”€â”€ Hitbox â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Hitbox 
         self.hit_box = pygame.Rect(5, 0, 6, 16)
         self.hitbox_offset_x = 0
         self.hitbox_offset_y = 0
 
-        # â”€â”€ World position â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  World position 
         self.world_x = 303.0
         self.world_y = 130.0
 
-        # â”€â”€ Movement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Movement 
         self.speed = 90.0
         self.speed_y = 0.0
         self.dir = 0           # 0 = right, 1 = left
@@ -118,7 +118,7 @@ class Player:
         self.dt = 0.0
         self.set_step_height_for_snapping = 5
 
-        # â”€â”€ Jump â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Jump 
         self.is_jumping = False
         self.jump_speed = -180
         self.max_jump_hold_time = 0.4
@@ -127,11 +127,11 @@ class Player:
         self.jump_buffer_timer = 0.0
         self._prev_jump = False
 
-        # â”€â”€ Coyote time â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Coyote time -
         self.coyote_time = 0.18
         self.coyote_timer = 0.0
 
-        # â”€â”€ Wall slide / wall jump â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Wall slide / wall jump 
         self.touching_wall_left = False
         self.touching_wall_right = False
         self.wall_slide_max_fall = 55.0
@@ -141,45 +141,45 @@ class Player:
         self.wall_jump_dir_lock_timer = 0.0
         self.wall_jump_push_dir = 0
 
-        # â”€â”€ Trigger / level state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Trigger / level state -
         self._deactivated_walls = set()
         self._in_triggers = set()
         self._triggered_once = set()
         self._current_level = None
         self.last_level = None
 
-        # â”€â”€ Save / menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Save / menu -
         self.save_obj = SaveOBJ()
         self.save_menu = SaveMenu()
         self.in_save_menu = False
         self._prev_z = False
         self._saving = False
 
-        # â”€â”€ Interactable Z input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Interactable Z input -
         self._prev_z_interactable = False
         self.z_just_pressed_interactable = False
 
-        # â”€â”€ Active scenes / fight â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Active scenes / fight -
         self.active_cutscene = None
         self.active_interactive = None
         self.active_fight = None
         self.event = None
 
-        # â”€â”€ Effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Effects -
         self.current_effect = None
         self._shadow_triggers_active = set()
         self.mass = 1.0
 
-        # â”€â”€ Death knockback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Death knockback 
         self.death_knockback_x = 0.0
 
-        # â”€â”€ Level spec â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Level spec 
         self.level_spec = load_json_level_spec()
 
-        # â”€â”€ Lives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Lives -
         self.lives = 6
 
-        # â”€â”€ Death state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Death state -
         self.dead = False
         self.dead_timer = 0.0
         self.dead_display_time = 3.5
@@ -209,11 +209,11 @@ class Player:
         self.respawn_protect_time = 0.75
         self.collision_enabled = True
 
-        # â”€â”€ Frozen / misc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Frozen / misc -
         self.frozen = False
         self.jump_down = False
 
-        # â”€â”€ Joystick â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Joystick 
         self.joystick = None
         try:
             if pygame.joystick.get_count() > 0:
@@ -222,7 +222,7 @@ class Player:
         except Exception as e:
             print(e)
 
-        # â”€â”€ Load save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Load save -
         try:
             loaded = self.save_obj.load_save()
         except Exception:
@@ -257,9 +257,9 @@ class Player:
         self.in_death_scene = False
 
 
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -
     # Private helpers
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -
 
     def _death_fonts(self):
         """Lazily init death fonts (pygame.font must already be initialised)."""
@@ -353,9 +353,9 @@ class Player:
         self.death_walk_timer = 0.0
         self.collision_enabled = True
 
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -
     # Public helpers
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -
 
     def refresh_animation(self):
         sprite_loader = Loader(
@@ -406,9 +406,9 @@ class Player:
         self._prev_z_interactable = z_pressed
         return self.z_just_pressed_interactable
 
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -----------------------------
     # Die
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -----------------------------
 
     def die(self, world):
         if (
@@ -436,9 +436,9 @@ class Player:
         self.on_ground = False
         self.collision_enabled = False
 
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # 
     # Update
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # 
 
     def update(self, world, screen, dt, current_level=None, player=None, fight_loader=None):
         self.dt = dt
@@ -448,9 +448,9 @@ class Player:
 
         print(self.dead)
 
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        # Phase 1 â€” Freeze frame
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
+        # Phase 1 - Freeze frame
+        # ----------------------------------------------------------------
         if self.freeze_frame_active:
             self.freeze_frame_timer += dt
             if self.freeze_frame_timer >= self.freeze_frame_duration:
@@ -460,9 +460,9 @@ class Player:
                 self.death_walk_timer = 0.0
             # Physics still run below (don't return yet)
 
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        # Phase 2 â€” Death walk
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
+        # Phase 2 - Death walk
+        # ----------------------------------------------------------------
         elif self.death_walk_active:
             self.death_walk_timer += dt
             if self.death_walk_timer >= self.death_walk_duration:
@@ -473,9 +473,9 @@ class Player:
                 self._ds_phase = _DS_FADE_IN
                 self._ds_phase_timer = 0.0
 
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        # Phase 3 â€” Death screen
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
+        # Phase 3 - Death screen
+        # ----------------------------------------------------------------
         elif self.dead:
             self.dead_timer += dt
             self._ds_phase_timer += dt
@@ -507,9 +507,9 @@ class Player:
                 self._reset_after_respawn()
             return
 
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
         # Animation frame advance
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
         if self.curr_animation != self._prev_animation:
             self.curr_frame = 0
             self.animation_timer = 0.0
@@ -549,7 +549,7 @@ class Player:
         self.image = self.image_left if self.dir else self.image_right
         self.rect.size = self.image.get_size()
 
-        # â”€â”€ Input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Input -------------------------------
         keys = pygame.key.get_pressed()
         axis_x = 0.0
         if self.joystick:
@@ -573,7 +573,7 @@ class Player:
 
         ignore_collisions = self.dead or self.death_walk_active or (not self.collision_enabled)
 
-        # â”€â”€ Wall touch probes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Wall touch probes ---------------------------------------------
         if not ignore_collisions:
             self.wall_jump_dir_lock_timer = max(0.0, self.wall_jump_dir_lock_timer - dt)
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
@@ -586,7 +586,7 @@ class Player:
             self.touching_wall_left = False
             self.touching_wall_right = False
 
-        # â”€â”€ Horizontal movement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Horizontal movement -------------------------------------------
         dx = 0.0
         if controls_allowed:
             if self.wall_jump_dir_lock_timer > 0.0:
@@ -594,14 +594,17 @@ class Player:
                 self.curr_animation = "Walking"
             else:
                 if keys[pygame.K_LEFT] or keys[pygame.K_a] or axis_x < -0.5:
+                    world.is_timer_active = True
                     dx = -self.speed * dt
                     self.dir = 1
                     self.curr_animation = "Walking"
                 elif keys[pygame.K_RIGHT] or keys[pygame.K_d] or axis_x > 0.5:
+                    world.is_timer_active = True
                     dx = self.speed * dt
                     self.dir = 0
                     self.curr_animation = "Walking"
                 else:
+                    world.is_timer_active = False
                     self.curr_animation = "Idle"
                     self.curr_frame = min(self.curr_frame, len(self.animations["Idle"]) - 1)
 
@@ -631,7 +634,7 @@ class Player:
         if self.current_effect == 1:
             dx *= 2.5
 
-        # â”€â”€ Jump input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Jump input ----------------------------------------------------
         try:
             self.jump_down = (
                 keys[pygame.K_SPACE]
@@ -655,7 +658,7 @@ class Player:
         else:
             self.coyote_timer = max(0.0, self.coyote_timer - dt)
 
-        # â”€â”€ Wall jump â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Wall jump -----------------------------------------------------
         wall_jumped = False
         if controls_allowed and jump_just_pressed and not self.on_ground and self.wall_jump_dir_lock_timer <= 0.0:
             if self.touching_wall_left:
@@ -677,7 +680,7 @@ class Player:
                 self.jump_buffer_timer = 0.0
                 self.coyote_timer = 0.0
 
-        # â”€â”€ Normal jump â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Normal jump ---------------------------------------------------
         if controls_allowed and not wall_jumped:
             if self.jump_buffer_timer > 0.0 and self.coyote_timer > 0.0 and not self.is_jumping:
                 self.speed_y = self.jump_speed * 1.3 if self.current_effect == 2 else self.jump_speed
@@ -686,7 +689,7 @@ class Player:
                 self.jump_buffer_timer = 0.0
                 self.coyote_timer = 0.0
 
-        # â”€â”€ Gravity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Gravity -------------------------------------------------------
         gravity_jump_hold    = 180
         gravity_jump_release = 480
         gravity_fall         = 810
@@ -712,7 +715,7 @@ class Player:
 
         dy = self.speed_y * dt
 
-        # â”€â”€ Horizontal collision + step-up â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Horizontal collision + step-up --------------------------------
         if ignore_collisions:
             self.world_x += dx
         else:
@@ -731,7 +734,7 @@ class Player:
                         self.world_y -= step
                         break
 
-        # â”€â”€ Vertical collision â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Vertical collision --------------------------------------------
         if ignore_collisions:
             self.world_y += dy
             landed = False
@@ -757,7 +760,7 @@ class Player:
 
         self.update_hitbox()
 
-        # â”€â”€ Re-probe walls after move â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Re-probe walls after move -------------------------------------
         if not ignore_collisions:
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
             left_probe  = pygame.Rect(int(self.world_x + hbx - 1),        int(self.world_y + hby), 1, side_probe_h)
@@ -768,14 +771,14 @@ class Player:
             self.touching_wall_left = False
             self.touching_wall_right = False
 
-        # â”€â”€ Fall off screen â†’ die â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Fall off screen â†’ die -----------------------------------------
         if self.world_y > screen.get_height():
             if not self.freeze_frame_active and not self.death_walk_active:
                 self.can_move = True
                 self.apply_spawn_point(world.current_level)
                 self._reset_after_respawn()
 
-        # â”€â”€ Save menu (Z key) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Save menu (Z key) ---------------------------------------------
         z_pressed = keys[pygame.K_z]
         z_just_pressed = z_pressed and not self._prev_z
         if z_just_pressed and not self.save_menu.visible and not self.freeze_frame_active:
@@ -793,7 +796,7 @@ class Player:
         else:
             self.in_save_menu = False
 
-        # â”€â”€ Triggers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # -- Triggers ------------------------------------------------------
         if not self.freeze_frame_active and not self.death_walk_active:
             level_key = f"level_{getattr(world, 'current_level', current_level or 0)}"
             current_level_num = getattr(world, "current_level", current_level or 0)
@@ -890,7 +893,7 @@ class Player:
 
             self._in_triggers.intersection_update(current_collisions)
 
-            # â”€â”€ Shadow trigger exit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            # -- Shadow trigger exit ---------------------------------------
             shadow_triggers_in_range = set()
             for idx, trigger in enumerate(triggers):
                 trigger_id  = trigger.get("id")
@@ -907,13 +910,13 @@ class Player:
                 if not self._shadow_triggers_active:
                     self.current_effect = None
 
-            # â”€â”€ Active interactive cleanup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            # -- Active interactive cleanup --------------------------------
             if self.active_interactive:
                 trig = getattr(self.active_interactive, "trigger_idx", None)
                 if trig not in self._in_triggers:
                     self.active_interactive = None
 
-            # â”€â”€ Update active scenes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            # -- Update active scenes --------------------------------------
             if self.active_cutscene:
                 self.active_cutscene.update(dt, self)
             if self.active_interactive:
@@ -921,9 +924,9 @@ class Player:
         else:
             pass   # pause triggers during freeze / death walk
 
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ---------------------------------------------------------------------
     # Draw
-    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ---------------------------------------------------------------------
 
     def _ease_out_back(self, t):
         """Overshoot-bounce easing (t in 0..1)."""
@@ -938,9 +941,9 @@ class Player:
         font_large, font_small = self._death_fonts()
         sw, sh = screen.get_size()
 
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
         # Death screen
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
         if self.dead:
             self.dash_timer = 0.0
             self.dash_active = False
@@ -1036,9 +1039,9 @@ class Player:
                 
 
 
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
         # Normal player draw
-        # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        # ----------------------------------------------------------------
         if self.dead:
             return
 

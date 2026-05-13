@@ -539,7 +539,7 @@ class NameScreen:
                 self.is_teto = False
 
 
-
+            le_comment = "Please, dont spoil/post these secrets online... I'd love to keep them a secret"
             self._dialog_started = True
 
 

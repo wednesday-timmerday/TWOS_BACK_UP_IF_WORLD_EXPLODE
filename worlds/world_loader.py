@@ -533,8 +533,8 @@ class World_loader:
     # -------------------------
 
     def update_physics(self, dt):
-
-        self.level_timer += dt
+        if self.is_timer_active:
+            self.level_timer += dt
 
         """Update all physics engines at fixed step."""
 
@@ -1914,9 +1914,8 @@ class World_loader:
 
 
     def draw_timer(self, screen):
-        print(f"Soto no hito {self.is_timer_active}")
         shit_to_render = self.timer_font.render(f"Timer: {round(self.time_to_timer - self.level_timer)}", True, (255,255,255)) #Gwn static txt bcz y noy
-        if self.is_timer_active:
+        if self.level_data.get("timer", None) != None:
             screen.blit(shit_to_render, (10,10))
     # -------------------------
 
@@ -2026,7 +2025,8 @@ class World_loader:
 
         self.build_collision_mask_new()
 
-
+        self.level_timer = 0.0
+        self.is_timer_active = False
 
         for phys_obj in self.all_physic_objects:
 
