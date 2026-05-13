@@ -9,9 +9,9 @@ parent_yell =
             Mom: * Don't you dare put this on me.
             Mom: * You weren't even there!
             [Dad]
-            Dad: * I WAS TRYING TO FIX IT!
+            Dad: * ^special^shake4I WAS TRYING TO FIX IT!^endspecial
             [Mom]
-            Mom: * You always say that!
+            Mom: * ^special^shake4You always say that!^endspecial
             []
             CHARA_NAME * ...
             CHARA_NAME * Lets just go to bed.
