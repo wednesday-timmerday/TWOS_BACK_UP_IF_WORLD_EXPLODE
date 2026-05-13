@@ -730,6 +730,7 @@
     ]
   },
   "level_7": {
+    "timer": 120,
     "coll_layers": [
       1
     ],

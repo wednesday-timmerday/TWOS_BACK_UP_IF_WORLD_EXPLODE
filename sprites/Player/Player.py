@@ -114,7 +114,7 @@ class Player:
         self.speed_y = 0.0
         self.dir = 0           # 0 = right, 1 = left
         self.on_ground = False
-        self.can_move = True #False # we set this to false bcz of the frame-1 bug, in later build we need to check if the first cutscene has triggered
+        self.can_move = False #False # we set this to false bcz of the frame-1 bug, in later build we need to check if the first cutscene has triggered
         self.dt = 0.0
         self.set_step_height_for_snapping = 5
 
@@ -1122,4 +1122,5 @@ class Player:
             try:
                 self.save_menu.draw(screen)
             except Exception:
-                pass
+                pass
+

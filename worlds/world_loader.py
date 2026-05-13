@@ -322,10 +322,6 @@ class World_loader:
 
         self.player = player
 
-
-
-
-
         # -------------------------
 
         # Lighting 
@@ -366,7 +362,7 @@ class World_loader:
 
         self.level_spec_path = self.level_spec_loader.load("level-spec.json")
 
-        self.current_level = 7
+        self.current_level = 0
 
 
 
@@ -462,6 +458,21 @@ class World_loader:
 
                 pass
 
+        # -----------------------
+        #
+        # TIMER SUTFF
+        # 
+        # -----------------------
+
+        self.level_timer = 0.0
+        self.is_timer_active = False
+        self.time_to_timer = 0.0
+
+
+        self.font_loader = Loader("ui/menu/")
+        self.font_path = self.font_loader.load("PixelFont.ttf")
+        self.timer_font = pygame.font.Font(self.font_path, 12)
+
 
 
         # -------------------------
@@ -501,9 +512,6 @@ class World_loader:
         self.shadow_platform_editor_open = False
 
 
-
-        #! TODO: add shadow platforms, give 'm the editor they want and move on...
-
         level_key = f"level_{getattr(self, 'current_level', self.current_level or 0)}"
 
         self.triggers = self.player.level_spec.get(level_key, {}).get("triggers", [])
@@ -518,8 +526,6 @@ class World_loader:
 
 
 
-
-
     # -------------------------
 
     # Update physics
@@ -527,6 +533,8 @@ class World_loader:
     # -------------------------
 
     def update_physics(self, dt):
+
+        self.level_timer += dt
 
         """Update all physics engines at fixed step."""
 
@@ -584,8 +592,6 @@ class World_loader:
 
                                 if os.path.isfile(os.path.join(loader.load("."), n))])
 
-        
-
         for i in range(total_frames):
 
             layer_paths.append(f"{i}.png")
@@ -594,17 +600,18 @@ class World_loader:
 
         coll_layer_names = {f"{i}.png" for i in coll_layer_indices}
 
+        if self.level_data.get("timer", None) != None:
+            self.is_timer_active = True
+            self.time_to_timer = self.level_data.get("timer", None)
+            print("kqqw")
 
-
-
-
+        sans = "AAAAAAAAAA"
+        print(f"Yes {sans}")
 
 
         print(f"BURNNN: {self.level_data}")
 
         print(f"coll_layers={self.level_data.get('coll_layers', 'NOT FOUND')}")
-
-
 
         for path in layer_paths:
 
@@ -1790,7 +1797,6 @@ class World_loader:
 
         self.update_camera(player_x, player_y)
 
-        
 
         cam_x = self.cam_x  # float
 
@@ -1897,7 +1903,6 @@ class World_loader:
             screen.blit(platform["surf"], (platform["x"] - cam_x, platform["y"] - cam_y))
 
 
-
     def draw_shadow(self, screen):
 
         if self.shadow_platform_editor_open:
@@ -1908,6 +1913,11 @@ class World_loader:
 
 
 
+    def draw_timer(self, screen):
+        print(f"Soto no hito {self.is_timer_active}")
+        shit_to_render = self.timer_font.render(f"Timer: {round(self.time_to_timer - self.level_timer)}", True, (255,255,255)) #Gwn static txt bcz y noy
+        if self.is_timer_active:
+            screen.blit(shit_to_render, (10,10))
     # -------------------------
 
     # Collision query
