@@ -464,7 +464,7 @@ class World_loader:
         # 
         # -----------------------
 
-        self.level_timer = 0.0
+        self.Time_left_in_timer_that_times_the_time_in_a_timely_manner = 0.0
         self.is_timer_active = False
         self.time_to_timer = 0.0
 
@@ -533,8 +533,9 @@ class World_loader:
     # -------------------------
 
     def update_physics(self, dt):
-        if self.is_timer_active:
-            self.level_timer += dt
+        if self.is_timer_active and self.level_data.get("timer", None) != None:
+            print("trade offer")
+            self.Time_left_in_timer_that_times_the_time_in_a_timely_manner += dt
 
         """Update all physics engines at fixed step."""
 
@@ -1914,8 +1915,11 @@ class World_loader:
 
 
     def draw_timer(self, screen):
-        shit_to_render = self.timer_font.render(f"Timer: {round(self.time_to_timer - self.level_timer)}", True, (255,255,255)) #Gwn static txt bcz y noy
-        if self.level_data.get("timer", None) != None:
+        shit_to_render = self.timer_font.render(f"Timer: {round(self.time_to_timer - self.Time_left_in_timer_that_times_the_time_in_a_timely_manner)}", True, (255,255,255)) 
+        if round(self.time_to_timer - self.Time_left_in_timer_that_times_the_time_in_a_timely_manner) <= 0 and self.is_timer_active and self.level_data.get("timer", None) != None:
+            self.player.die(self)
+            print(f"1: {self.time_to_timer}, 2: {self.Time_left_in_timer_that_times_the_time_in_a_timely_manner}")
+        if self.level_data.get("timer", None) != None and not self.player.dead:
             screen.blit(shit_to_render, (10,10))
     # -------------------------
 
@@ -2025,7 +2029,7 @@ class World_loader:
 
         self.build_collision_mask_new()
 
-        self.level_timer = 0.0
+        self.Time_left_in_timer_that_times_the_time_in_a_timely_manner = 0.0
         self.is_timer_active = False
 
         for phys_obj in self.all_physic_objects:
@@ -2067,10 +2071,3 @@ class World_loader:
         else:
 
             self.shadow_platform_editor_open = True
-
-
-
-        
-
-
-

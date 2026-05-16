@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 class cutscene:
     def __init__(self, player, world, loader):
@@ -12,9 +12,9 @@ class cutscene:
         cam_x = getattr(world, "cam_x", 0)
         cam_y = getattr(world, "cam_y", 0)
         scale_factor = player.screen.get_width() / 320
-        self.zoom_center_x = (0)*scale_factor
-        self.zoom_center_y = (0) * scale_factor
-        self.target_zoom_scale = 2.5
+        self.zoom_center_x = (player.world_x) * scale_factor
+        self.zoom_center_y = (player.world_y) * scale_factor
+        self.target_zoom_scale = 2.0
         self.current_zoom_scale = 1.0
         self.zoom_smooth_speed = 0.04  # Smoothing factor (0-1, lower = smoother)
         self.zoom = False
@@ -47,10 +47,8 @@ class cutscene:
         self.draw_x = int(self.zoom_center_x - self.zoom_center_x * self.current_zoom_scale)
         self.draw_y = int(self.zoom_center_y - self.zoom_center_y * self.current_zoom_scale)
 
-        if self.current_zoom_scale >= self.target_zoom_scale - 0.005:
-            self.zoomed_snapshot = None
+        if self.current_zoom_scale >= self.target_zoom_scale:
             return "YES"
-        print(self.current_zoom_scale)
     
     def draw_back(self, loader, screen):
         if self.screen_snapshot and self.zoom == True:
@@ -58,6 +56,5 @@ class cutscene:
 
             
             # Draw the zoomed snapshot
-            if self.zoomed_snapshot:
-                screen.blit(self.zoomed_snapshot, (self.draw_x, self.draw_y))
+            screen.blit(self.zoomed_snapshot, (self.draw_x, self.draw_y))
 

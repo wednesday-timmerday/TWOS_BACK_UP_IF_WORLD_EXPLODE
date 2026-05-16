@@ -1,0 +1,14 @@
+test =
+    (SECTION_1)
+    [potato]
+    IN_BBOX=1
+    {(1 0)}
+    A robot decides to attack
+    (ENDSECTION_1)
+    (SECTION_2)
+    [mrtutor]
+    {(1 0)}
+    IN_BBOX=0
+    Hope you like^wait100.^wait100.^wait100.^wait100balls???
+    (ENDSECTION_2)
+

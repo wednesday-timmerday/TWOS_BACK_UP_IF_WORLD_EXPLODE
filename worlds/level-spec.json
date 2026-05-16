@@ -233,7 +233,7 @@
         "y": 127,
         "w": 22,
         "h": 36,
-        "name": "interactable(t_books_r1)",
+        "name": "fight(test_fight)",
         "id": "9eaf3c8e-47e2-4f6c-8171-edc3224e0985"
       },
       {
@@ -715,6 +715,15 @@
         "h": 161,
         "name": "cutscene(tutor_dash_done)",
         "id": "ca3b1c2b-862f-44ee-9101-7f201647b75f"
+      },
+      {
+        "type": "trigger",
+        "x": 470,
+        "y": -5,
+        "w": 10,
+        "h": 167,
+        "name": "goto(7)",
+        "id": "aa4b15c2-6db5-40c9-8499-d241f5bb2fc5"
       }
     ],
     "invis_walls": [],
@@ -726,11 +735,18 @@
         "pos_x": 66,
         "pos_y": 133,
         "id": "e842bc93-f730-4f86-b2df-24168710687b"
+      },
+      {
+        "type": "spawn",
+        "came_from": 7,
+        "pos_x": 401,
+        "pos_y": 130,
+        "id": "25b3d2b1-751c-4a51-93c5-1343e0c42c3f"
       }
     ]
   },
   "level_7": {
-    "timer": 120,
+    "timer": 8,
     "coll_layers": [
       1
     ],

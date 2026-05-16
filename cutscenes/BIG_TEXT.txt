@@ -185,12 +185,10 @@ death =
 tutor_r7_1 =
     [mrtutor]
     {(1 0)}
-    Mr. Tutorion: * Well, well, well...
-    Mr. Tutorion: * Look who made it this far
+    Mr. Tutorion: * see that?
     {capture_screenshot}
-    Mr. Tutorion: * Pretty impressive for a newcomer
-    Mr. Tutorion: * But there's still so&much you don't know
-    Mr. Tutorion: * This world has secrets&beyond what you can imagine
-    {reset_zoom}
-    Mr. Tutorion: * So... are you ready&to keep going?
+    {activate_zoom}
+    Mr. Tutorion: * that is a timer.
+    Mr. Tutorion: * and i want you to reach the end before&the timer runs out.
+    Mr. Tutorion: * think you can do that?
     ENDOFCONVERSATION

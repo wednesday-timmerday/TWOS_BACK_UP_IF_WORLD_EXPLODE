@@ -27,7 +27,6 @@ from pypresence import Presence
 from assetsLoader import Loader
 
 
-
 gc.collect()
 
 
@@ -875,20 +874,19 @@ def main():
     try:
 
         import sprites.Player.Player as PlayerModule
+        import ui.fight.fight as FightModule
 
     except Exception as e:
 
         print(f"Error importing Player module: {e}")
 
         PlayerModule = None
-
-
-
     
 
     try:
 
         player = PlayerModule.Player(screen=screen) # if PlayerModule else None
+        fight_loader = FightModule.Fight(renderer, screen)
 
     except Exception as e:
 
@@ -1126,7 +1124,7 @@ def main():
 
         try:
 
-            player.update(world_loader, renderer, dt, 1.0, player, fight_loader=None)
+            player.update(world_loader, renderer, dt, 1.0, player, fight_loader=fight_loader)
 
         except Exception:
 

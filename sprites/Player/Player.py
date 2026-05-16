@@ -205,8 +205,8 @@ class Player:
         self._death_font_small = None
 
         # Respawn protection + collision gate
-        self.respawn_protect_timer = 0.0
         self.respawn_protect_time = 0.75
+        self.respawn_protect_timer = self.respawn_protect_time
         self.collision_enabled = True
 
         #  Frozen / misc -
@@ -588,6 +588,7 @@ class Player:
 
         # -- Horizontal movement -------------------------------------------
         dx = 0.0
+        world.is_timer_active = False
         if controls_allowed:
             if self.wall_jump_dir_lock_timer > 0.0:
                 dx = self.wall_jump_push_dir * self.wall_jump_push_speed * dt
@@ -604,7 +605,6 @@ class Player:
                     self.dir = 0
                     self.curr_animation = "Walking"
                 else:
-                    world.is_timer_active = False
                     self.curr_animation = "Idle"
                     self.curr_frame = min(self.curr_frame, len(self.animations["Idle"]) - 1)
 
@@ -772,7 +772,7 @@ class Player:
             self.touching_wall_right = False
 
         # -- Fall off screen â†’ die -----------------------------------------
-        if self.world_y > screen.get_height():
+        if self.world_y > 2000:
             if not self.freeze_frame_active and not self.death_walk_active:
                 self.can_move = True
                 self.apply_spawn_point(world.current_level)
@@ -945,6 +945,7 @@ class Player:
         # Death screen
         # ----------------------------------------------------------------
         if self.dead:
+            world.Time_left_in_timer_that_times_the_time_in_a_timely_manner = 0.0
             self.dash_timer = 0.0
             self.dash_active = False
             screen.fill((0, 0, 0))
