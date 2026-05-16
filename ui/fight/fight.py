@@ -71,53 +71,6 @@ def load_fight_module(fight_name: str):
     return module
 
 
-def parse_fight_text(text_content: str, identifier: str, section: int) -> str:
-    """Parse BIG_TEXT.txt file and extract text for a specific identifier and section."""
-    
-    section_marker_start = f"(SECTION_{section})"
-    section_marker_end = f"(ENDSECTION_{section})"
-    
-    # Find the identifier block
-    if f"{identifier} =" not in text_content:
-        return ""
-    
-    # Find start of identifier block
-    identifier_start = text_content.find(f"{identifier} =")
-    if identifier_start == -1:
-        return ""
-    
-    # Find the next identifier (or end of file)
-    next_identifier_pos = len(text_content)
-    remaining_text = text_content[identifier_start + len(f"{identifier} ="):]
-    
-    for line in remaining_text.split('\n'):
-        if ' = ' in line and not line.strip().startswith('[') and not line.strip().startswith('{') and not line.strip().startswith('('):
-            next_identifier_pos = identifier_start + len(f"{identifier} =") + text_content[identifier_start + len(f"{identifier} ="):].find(line)
-            break
-    
-    identifier_block = text_content[identifier_start:next_identifier_pos]
-    
-    # Find the section within the identifier block
-    section_start = identifier_block.find(section_marker_start)
-    section_end = identifier_block.find(section_marker_end)
-    
-    if section_start == -1 or section_end == -1:
-        return ""
-    
-    section_text = identifier_block[section_start + len(section_marker_start):section_end]
-    
-    # Clean up the text, removing extra whitespace and formatting markers
-    lines = []
-    for line in section_text.split('\n'):
-        line = line.strip()
-        if line and not line.startswith('[') and not line.startswith('{'):
-            lines.append(line)
-    
-    return '\n'.join(lines)
-
-
-
-
 
 class Fight:
 
@@ -229,6 +182,59 @@ class Fight:
         self.bullet_engine = BulletHellEngine(max_bullets=1000)
 
         self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = False
+        self.bbox = False
+
+
+    def parse_fight_text(self, text_content: str, identifier: str, section: int) -> str:
+        """Parse BIG_TEXT.txt file and extract text for a specific identifier and section."""
+        self.bbox = False
+        section_marker_start = f"(SECTION_{section})"
+        section_marker_end = f"(ENDSECTION_{section})"
+        
+        # Find the identifier block
+        if f"{identifier} =" not in text_content:
+            return ""
+        
+        # Find start of identifier block
+        identifier_start = text_content.find(f"{identifier} =")
+        if identifier_start == -1:
+            return ""
+        
+        # Find the next identifier (or end of file)
+        next_identifier_pos = len(text_content)
+        remaining_text = text_content[identifier_start + len(f"{identifier} ="):]
+        
+        for line in remaining_text.split('\n'):
+            if ' = ' in line and not line.strip().startswith('[') and not line.strip().startswith('{') and not line.strip().startswith('('):
+                next_identifier_pos = identifier_start + len(f"{identifier} =") + text_content[identifier_start + len(f"{identifier} ="):].find(line)
+                break
+        
+        identifier_block = text_content[identifier_start:next_identifier_pos]
+        
+        # Find the section within the identifier block
+        section_start = identifier_block.find(section_marker_start)
+        section_end = identifier_block.find(section_marker_end)
+        
+        if section_start == -1 or section_end == -1:
+            return ""
+        
+        section_text = identifier_block[section_start + len(section_marker_start):section_end]
+
+        if section_text.find("IN_BBOX") != -1:
+            self.bbox = True
+        
+        # Clean up the text, removing extra whitespace and formatting markers
+        lines = []
+        for line in section_text.split('\n'):
+            line = line.strip()
+            if line and not line.startswith('[') and not line.startswith('{') and not line.startswith("IN_BBOX"):
+                lines.append(line)
+        
+        return '\n'.join(lines)
+
+
+
+
 
         
 
@@ -264,7 +270,7 @@ class Fight:
             with open(text_file, 'r', encoding='utf-8') as f:
                 text_content = f.read()
             
-            section_text = parse_fight_text(text_content, self.fight_identifier, self.current_section)
+            section_text = self.parse_fight_text(text_content, self.fight_identifier, self.current_section)
             
             if section_text:
                 self.text_engine.start_text(section_text, self.fight_identifier)
@@ -272,9 +278,8 @@ class Fight:
             print(f"[Fight] Error loading section text: {e}")
 
 
-
     def update(self, dt, joystick=None):
-
+        print(f"kaas: {self.current_section}")
         # Update bullet engine
         self.bullet_engine.update(
             dt,
@@ -427,7 +432,7 @@ class Fight:
 
 
 
-    def spawn_bullet(self, x, y, size, color, damage, rotation, speed=300):
+    def spawn_bullet(self, x, y, size, color, damage, rotation, speed=300, type="dot"):
 
         """Spawn a bullet with direction based on rotation (degrees).
         
@@ -441,7 +446,7 @@ class Fight:
             speed=speed,
             size=size,
             color=color,
-            bullet_type="dot",
+            bullet_type=type,
             lifetime=float('inf')  # bullets despawn when off-screen
         )
 
@@ -473,11 +478,6 @@ class Fight:
         # Draw buttons
 
         if self.current_turn == 0:
-            print(f"X {self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE}")
-            if self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE:
-                self.load_section_text()
-                self.text_engine.finished = False
-                self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = False
 
             for i, btn in enumerate(self.btn_images):
 
@@ -538,32 +538,27 @@ class Fight:
                 screen = self.screen
             
             # Only draw text during player's turn (not during enemy's turn)
-            if self.current_turn == 1:
-                return
-                
-            self.text_engine.draw(
-
-                x=180,
-
-                y=356,
-
-                text_color=(255, 255, 255),
-
-                choice_color=(180, 180, 180),
-
-                highlight_color=(255, 255, 0),
-
-                size=12,
-
-                surface=screen
-
-            )
-
-            if self.current_turn == 1:
-
-                # C++ renders offscreen, returns a Surface â€” blit it like anything else.
-
-                # Main loop's pygame.display.flip() handles the final present. No fighting.
-
-                pass
-
+            if self.bbox:
+                # IN_BBOX aanwezig: render normaal tijdens spelers beurt
+                if self.current_turn == 0:
+                    self.text_engine.draw(
+                        x=180,
+                        y=356,
+                        text_color=(255, 255, 255),
+                        choice_color=(180, 180, 180),
+                        highlight_color=(255, 255, 0),
+                        size=12,
+                        surface=screen
+                    )
+            else:
+                # Geen IN_BBOX: render tijdens enemy beurt
+                if self.current_turn == 1:
+                    self.text_engine.draw(
+                        x=280,
+                        y=200,
+                        text_color=(255, 255, 255),
+                        choice_color=(180, 180, 180),
+                        highlight_color=(255, 255, 0),
+                        size=12,
+                        surface=screen
+                    )

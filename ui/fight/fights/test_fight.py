@@ -12,7 +12,7 @@ def init(fight_instance):
 
     print(fight_instance.monster_path)
 
-
+    fight_instance.bullet_engine.add_attack
 
     fight_instance.monster_def = 5
 
@@ -32,23 +32,23 @@ def init(fight_instance):
     fight_instance.turn_timer = 0
     fight_instance.turn_duration = 3.0  # How long the monster's turn lasts
     fight_instance.text_finished_last_frame = False
+    print(fight_instance.bullet_engine.register_btype("idfk", "ui/fight/fight_assets/btn_1.png", 20, False, False)) #We love magic numbers
 
 
 
 def run(fight_instance, dt, joystick):
 
-
-
+    # Always update text engine
     if not fight_instance.text_engine.finished:
-
         fight_instance.text_engine.update(dt)
         fight_instance.text_finished_last_frame = False
 
-        return
-    
-    fight_instance.text_finished_last_frame = True
+        # Only block progression if IN_BBOX (player turn text)
+        if fight_instance.bbox:
+            return
 
-
+    else:
+        fight_instance.text_finished_last_frame = True
 
     # Monster turn
 
@@ -85,7 +85,8 @@ def run(fight_instance, dt, joystick):
 
                     rotation=angle,
 
-                    speed=200
+                    speed=200,
+                    type="idfk"
 
                 )
 
@@ -96,6 +97,7 @@ def run(fight_instance, dt, joystick):
             fight_instance.current_turn = 0  # Switch back to player's turn
             fight_instance.bullet_engine.clear()  # Clear bullets for next round
             fight_instance.current_section += 1
+            fight_instance.load_section_text()
 
 
 

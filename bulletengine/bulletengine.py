@@ -457,3 +457,12 @@ class BulletHellEngine:
         the new visuals to take effect immediately.
         """
         self._surf_cache.clear()
+
+    def register_btype(self, name_for_btype, img_path=None, size=4, rotate_to_vel=False, glow=False):
+        """
+        Register a new bullet_type
+
+        Use this if the type of bullet isnt there
+        """
+        from .bullet_types import BulletTypes
+        return BulletTypes.register(name_for_btype, image_path=img_path, size=size, rotate_to_velocity=rotate_to_vel, glow=glow)

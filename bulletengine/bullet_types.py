@@ -415,6 +415,7 @@ class _BulletTypeRegistry:
                 glow=True,
             )
         """
+        print("...---...")
         bt = BulletType(
             key=key,
             color=color,
@@ -426,9 +427,9 @@ class _BulletTypeRegistry:
             glow_alpha=glow_alpha,
             shape=shape,
             scale=scale,
-        )
+        ) # = None
         self._registry[key] = bt
-        return bt
+        return bt #Returns none?!?!? WHY TF DOES IT RETURN NONE
 
     def list_types(self) -> list[str]:
         """Return a list of all registered type keys."""
