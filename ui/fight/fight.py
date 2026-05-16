@@ -507,7 +507,6 @@ class Fight:
             pygame.draw.rect(attack_box_scaled, (255,255,255), attack_box_scaled.get_rect(), 2)
 
             where_to_put_me = (1280/2) - (self.attack_box.get_width() * scale)/2
-
             screen.blit(attack_box_scaled, (where_to_put_me, 84 * scale))
 
 

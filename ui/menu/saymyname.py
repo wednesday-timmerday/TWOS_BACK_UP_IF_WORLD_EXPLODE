@@ -118,7 +118,7 @@ class NameScreen:
 
                 "...",
 
-                "Can you please just&finish this quiz?", #TODO: actually google or smth if this is a quiz
+                "Can you please just&finish this quiz?", #TODO: actually google or smth if this is a quiz... Eh screw it
 
                 "How would you call&this ^wait1000\"thing\"?"
 

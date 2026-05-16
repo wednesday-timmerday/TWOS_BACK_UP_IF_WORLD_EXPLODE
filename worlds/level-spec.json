@@ -215,7 +215,7 @@
         "y": 121,
         "w": 49,
         "h": 40,
-        "name": "interactable(t_clothing_r1)",
+        "name": "fight(fight_mrtutor)",
         "id": "ed4d124f-85d0-401f-8da4-03f71acde879"
       },
       {
@@ -233,7 +233,7 @@
         "y": 127,
         "w": 22,
         "h": 36,
-        "name": "fight(test_fight)",
+        "name": "interactable(t_clothing_r1)",
         "id": "9eaf3c8e-47e2-4f6c-8171-edc3224e0985"
       },
       {

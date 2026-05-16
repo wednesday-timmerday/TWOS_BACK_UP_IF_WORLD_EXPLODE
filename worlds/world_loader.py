@@ -571,7 +571,7 @@ class World_loader:
 
     # -------------------------
 
-    #! TODO: make this take less time to load
+    #! TODO: make this take less time to load,,, Or just dont
 
     def load_layers(self):
 

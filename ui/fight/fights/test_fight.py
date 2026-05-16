@@ -12,8 +12,6 @@ def init(fight_instance):
 
     print(fight_instance.monster_path)
 
-    fight_instance.bullet_engine.add_attack
-
     fight_instance.monster_def = 5
 
     fight_instance.monster_atk = 10
