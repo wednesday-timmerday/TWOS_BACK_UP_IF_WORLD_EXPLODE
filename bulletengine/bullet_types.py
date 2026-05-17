@@ -106,16 +106,28 @@ class BulletType:
 
         diameter = max(1, (size_override or self.size) * 2)
 
+        # Load raw image once, scale to requested diameter each call
         if not self._surface_loaded:
             try:
-                raw = pygame.image.load(self.image_path).convert_alpha()
-                self._surface = pygame.transform.scale(raw, (diameter, diameter))
+                self._surface = pygame.image.load(self.image_path).convert_alpha()
             except Exception as e:
                 print(f"[BulletTypes] Could not load '{self.image_path}': {e}")
                 self._surface = None
             self._surface_loaded = True
 
-        return self._surface
+        if self._surface is None:
+            return None
+        # Scale to diameter while keeping aspect ratio
+        raw_w, raw_h = self._surface.get_size()
+        if raw_w == 0 or raw_h == 0:
+            return None
+        if raw_w >= raw_h:
+            new_w = diameter
+            new_h = max(1, int(diameter * raw_h / raw_w))
+        else:
+            new_h = diameter
+            new_w = max(1, int(diameter * raw_w / raw_h))
+        return pygame.transform.scale(self._surface, (new_w, new_h))
 
     def make_surface(self, size: int) -> Optional[object]:
         """

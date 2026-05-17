@@ -13,7 +13,7 @@ import pygame
 
 import random
 
-atk_index = 1
+atk_index = 0
 balk_spawned = False
 balk_spawned = False
 
@@ -31,11 +31,13 @@ def init(fight_instance):
     fight_instance.turn_duration = 15.0  # How long the monster's turn lasts
     fight_instance.text_finished_last_frame = False
     fight_instance.bullet_interval = 0.5  # seconds between bullet waves
-    fight_instance.bullet_engine.register_btype("Balk", fight_instance.monster_loader.load("btn_e/frames/btn_e-1.png"), rotate_to_vel=True)
+    fight_instance.bullet_engine.register_btype("Balk", fight_instance.monster_loader.load("mrtutor/balk.png"), rotate_to_vel=True)
+    fight_instance.bullet_engine.register_btype("hammer", fight_instance.monster_loader.load("hammer/frames/hammer-1.png"), rotate_to_vel=True)
+    fight_instance.bullet_engine.add_warning(600,84*4,50,True,7)
 
 
 def run(fight_instance, dt, joystick):
-    global balk_spawned
+    global balk_spawned, atk_index
 
     # Always update text engine
     if not fight_instance.text_engine.finished:
@@ -85,7 +87,7 @@ def run(fight_instance, dt, joystick):
                         rotation=0,
 
                         speed=200,
-                        type="Balk"
+                        type="dot"
 
                     )
         elif atk_index == 1:
@@ -94,13 +96,13 @@ def run(fight_instance, dt, joystick):
                 fight_instance.spawn_bullet(
                     x=640,
                     y=516,
-                    size=60,
+                    size=75, #200
                     color=(255, 0, 0),
                     damage=5,
                     rotation=0,
-                    speed=00,
-                    type="Balk",
-                    angular_velocity=360.0
+                    speed=0,
+                    type="hammer",
+                    angular_velocity=120.0
                 )
         # End monster's turn after duration expires
         if fight_instance.turn_timer >= fight_instance.turn_duration:
@@ -111,3 +113,4 @@ def run(fight_instance, dt, joystick):
             fight_instance.current_section += 1
             fight_instance.load_section_text()
             balk_spawned = False
+            atk_index += 1

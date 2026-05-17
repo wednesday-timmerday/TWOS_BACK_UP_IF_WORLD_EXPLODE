@@ -47,13 +47,14 @@ class BulletHellEngine:
         active_attacks:     List of registered AttackType instances.
     """
 
-    def __init__(self, max_bullets: int = 60000):
+    def __init__(self, max_bullets: int = 60000, fight_loader=None):
         """
         Args:
             max_bullets: Maximum simultaneous bullets.  Tune down on weak
                          hardware; tune up for dense patterns.  Default 60 000.
         """
         self.max = max_bullets
+        self.fight_loader = fight_loader
 
         # -- Kinematics --
         self.x   = [0.0] * self.max
@@ -77,6 +78,8 @@ class BulletHellEngine:
 
         # -- Collision --
         self.hit_player  = [False] * self.max
+        self.hit_half_w  = [0.0]  * self.max   # OBB half-width  (0 = use circle)
+        self.hit_half_h  = [0.0]  * self.max   # OBB half-height (0 = use circle)
 
         # -- Homing --
         self.target_x        = [0.0] * self.max
@@ -93,6 +96,9 @@ class BulletHellEngine:
 
         # -- Surface cache: {(type_key, size) -> pygame.Surface} --
         self._surf_cache: dict = {}
+
+        # -- Warning stuff --
+        self.warnings = []
 
     # ---------------------------------------------------------------
     # Spawning
@@ -144,6 +150,8 @@ class BulletHellEngine:
         self.color[idx]        = color
         self.bullet_type[idx]  = bullet_type
         self.hit_player[idx]   = False
+        self.hit_half_w[idx]   = 0.0
+        self.hit_half_h[idx]   = 0.0
         self.homing_strength[idx] = 0.0
         self.angle[idx]           = 0.0
         self.angular_velocity[idx] = angular_velocity
@@ -319,13 +327,28 @@ class BulletHellEngine:
                 i += 1
                 continue
 
-            # --- Player collision (circle-circle) ---
+            # --- Player collision (OBB vs circle when rotated, else circle-circle) ---
             if not self.hit_player[i]:
-                dx      = self.x[i] - px
-                dy      = self.y[i] - py
-                dist_sq = dx * dx + dy * dy
-                thresh  = (self.size[i] + pr) ** 2
-                if dist_sq < thresh:
+                dx = self.x[i] - px
+                dy = self.y[i] - py
+                hw = self.hit_half_w[i]
+                hh = self.hit_half_h[i]
+                if hw > 0 and hh > 0:
+                    # Rotate player position into bullet local space
+                    ang = math.radians(-self.angle[i])
+                    cos_a = math.cos(ang)
+                    sin_a = math.sin(ang)
+                    lx = cos_a * dx - sin_a * dy
+                    ly = sin_a * dx + cos_a * dy
+                    # Clamp to OBB edge, measure remaining distance to circle
+                    cx2 = max(-hw, min(hw, lx))
+                    cy2 = max(-hh, min(hh, ly))
+                    dist_sq = (lx - cx2) ** 2 + (ly - cy2) ** 2
+                    hit = dist_sq < pr * pr
+                else:
+                    dist_sq = dx * dx + dy * dy
+                    hit = dist_sq < (self.size[i] + pr) ** 2
+                if hit:
                     self.hit_player[i] = True
                     if on_hit:
                         on_hit(i)
@@ -335,6 +358,21 @@ class BulletHellEngine:
 
             i += 1
 
+    # ---------------------------------------------------------------
+    # Warning
+    # ---------------------------------------------------------------
+    def add_warning(self, x, y, size, flash=True, time_out=0.5):
+        """"
+        Add warnings...
+        ...---...
+        """
+        self.warnings.append({
+                "x": x,
+                "y": y,
+                "size": size,
+                "flash": flash,
+                "timeout": time_out
+            })
     # ---------------------------------------------------------------
     # Draw
     # ---------------------------------------------------------------
@@ -379,13 +417,22 @@ class BulletHellEngine:
                     angle_deg = math.degrees(math.atan2(self.vy[i], self.vx[i]))
                 
                 # Apply rotation
-                surf = pygame.transform.rotate(surf, -angle_deg)
+                draw_surf = pygame.transform.rotate(surf, -angle_deg)
+                # Sync OBB to pre-rotation surface dimensions
+                sw, sh = surf.get_size()
+                self.hit_half_w[i] = sw / 2
+                self.hit_half_h[i] = sh / 2
 
-                rect = surf.get_rect(center=(cx, cy))
-                screen.blit(surf, rect)
+                rect = draw_surf.get_rect(center=(cx, cy))
+                screen.blit(draw_surf, rect)
             else:
                 # Fallback: plain circle
                 pygame.draw.circle(screen, self.color[i], (cx, cy), max(1, sz))
+
+        for i, warning in enumerate(self.warnings):
+            #Since the warning can never be bigger than 90*4 (the Bbox size)
+            #We can just use size as the x size
+            pygame.draw.rect(screen, (255,0,0), (warning["x"], warning["y"], warning["size"], 90*4))
 
     # ---------------------------------------------------------------
     # Pool management
