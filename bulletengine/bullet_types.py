@@ -109,7 +109,7 @@ class BulletType:
         if not self._surface_loaded:
             try:
                 raw = pygame.image.load(self.image_path).convert_alpha()
-                self._surface = pygame.transform.smoothscale(raw, (diameter, diameter))
+                self._surface = pygame.transform.scale(raw, (diameter, diameter))
             except Exception as e:
                 print(f"[BulletTypes] Could not load '{self.image_path}': {e}")
                 self._surface = None

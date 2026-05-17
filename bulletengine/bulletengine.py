@@ -60,6 +60,10 @@ class BulletHellEngine:
         self.y   = [0.0] * self.max
         self.vx  = [0.0] * self.max
         self.vy  = [0.0] * self.max
+        
+        # -- Rotation --
+        self.angle            = [0.0]  * self.max   # Rotation angle in degrees
+        self.angular_velocity = [0.0]  * self.max   # Rotation speed in degrees/second
 
         # -- Shape & lifetime --
         self.size         = [2]            * self.max
@@ -105,6 +109,7 @@ class BulletHellEngine:
         lifetime:    float = float('inf'),
         color:       tuple = (255, 70, 70),
         bullet_type: str   = "dot",
+        angular_velocity: float = 0.0,
     ):
         """
         Spawn a bullet using explicit velocity components.
@@ -117,6 +122,7 @@ class BulletHellEngine:
                          Use ``float('inf')`` for no expiry.
             color:       RGB tuple override.  If None, uses the type default.
             bullet_type: String key from BulletTypes (e.g. ``"laser"``).
+            angular_velocity: Rotation speed in degrees/second.
 
         Returns:
             int | None: Bullet index, or None if the pool is exhausted.
@@ -139,6 +145,8 @@ class BulletHellEngine:
         self.bullet_type[idx]  = bullet_type
         self.hit_player[idx]   = False
         self.homing_strength[idx] = 0.0
+        self.angle[idx]           = 0.0
+        self.angular_velocity[idx] = angular_velocity
 
         self.active_count += 1
         return idx
@@ -154,6 +162,7 @@ class BulletHellEngine:
         lifetime:    float = float('inf'),
         color:       tuple = (255, 70, 70),
         bullet_type: str   = "dot",
+        angular_velocity: float = 0.0,
     ):
         """
         Spawn a bullet using angle + speed instead of raw velocity.
@@ -166,6 +175,7 @@ class BulletHellEngine:
             lifetime:    Auto-despawn age (seconds).
             color:       RGB override.
             bullet_type: String key from BulletTypes.
+            angular_velocity: Rotation speed in degrees/second.
 
         Returns:
             int | None: Bullet index, or None if pool exhausted.
@@ -184,6 +194,7 @@ class BulletHellEngine:
             lifetime=lifetime,
             color=color,
             bullet_type=bullet_type,
+            angular_velocity=angular_velocity,
         )
 
     def spawn_homing(
@@ -288,6 +299,9 @@ class BulletHellEngine:
             # --- Movement ---
             self.x[i] += self.vx[i] * dt
             self.y[i] += self.vy[i] * dt
+            
+            # --- Rotation ---
+            self.angle[i] += self.angular_velocity[i] * dt
 
             # --- Lifetime ---
             ml = self.max_lifetime[i]
@@ -357,10 +371,15 @@ class BulletHellEngine:
                 self._surf_cache[cache_key] = surf  # may be None
 
             if surf is not None:
-                # Rotate toward velocity if requested
-                if btype.rotate_to_velocity:
+                # Determine rotation angle
+                angle_deg = self.angle[i]  # Use stored angle
+                
+                # If rotate_to_velocity is enabled and velocity exists AND angular velocity is not being used, use velocity direction
+                if btype.rotate_to_velocity and self.angular_velocity[i] == 0.0 and (self.vx[i] != 0 or self.vy[i] != 0):
                     angle_deg = math.degrees(math.atan2(self.vy[i], self.vx[i]))
-                    surf = pygame.transform.rotate(surf, -angle_deg)
+                
+                # Apply rotation
+                surf = pygame.transform.rotate(surf, -angle_deg)
 
                 rect = surf.get_rect(center=(cx, cy))
                 screen.blit(surf, rect)

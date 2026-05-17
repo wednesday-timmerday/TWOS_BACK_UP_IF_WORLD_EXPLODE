@@ -86,6 +86,8 @@ class Fight:
         self.running = False
 
         self.current_turn = 0
+        
+        self.current_section = 1
 
         self.current_selected_btn = 0
 
@@ -432,7 +434,7 @@ class Fight:
 
 
 
-    def spawn_bullet(self, x, y, size, color, damage, rotation, speed=300, type="dot"):
+    def spawn_bullet(self, x, y, size, color, damage, rotation, speed=300, type="dot", angular_velocity=0.0):
 
         """Spawn a bullet with direction based on rotation (degrees).
         
@@ -447,7 +449,8 @@ class Fight:
             size=size,
             color=color,
             bullet_type=type,
-            lifetime=float('inf')  # bullets despawn when off-screen
+            lifetime=float('inf'),  # bullets despawn when off-screen
+            angular_velocity=angular_velocity
         )
 
 

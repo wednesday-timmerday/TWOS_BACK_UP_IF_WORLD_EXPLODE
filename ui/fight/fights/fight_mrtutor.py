@@ -13,7 +13,9 @@ import pygame
 
 import random
 
-atk_index = 0
+atk_index = 1
+balk_spawned = False
+balk_spawned = False
 
 def init(fight_instance):
     fight_instance.monster_path = fight_instance.monster_loader.load("btn_e/frames/btn_e-1.png") #AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA TODO REplace this very noice placeholder E btn ARothfdiuph
@@ -29,8 +31,11 @@ def init(fight_instance):
     fight_instance.turn_duration = 15.0  # How long the monster's turn lasts
     fight_instance.text_finished_last_frame = False
     fight_instance.bullet_interval = 0.5  # seconds between bullet waves
+    fight_instance.bullet_engine.register_btype("Balk", fight_instance.monster_loader.load("btn_e/frames/btn_e-1.png"), rotate_to_vel=True)
+
 
 def run(fight_instance, dt, joystick):
+    global balk_spawned
 
     # Always update text engine
     if not fight_instance.text_engine.finished:
@@ -80,9 +85,23 @@ def run(fight_instance, dt, joystick):
                         rotation=0,
 
                         speed=200,
-                        type="dot"
+                        type="Balk"
 
                     )
+        elif atk_index == 1:
+            if not balk_spawned:
+                balk_spawned = True
+                fight_instance.spawn_bullet(
+                    x=640,
+                    y=516,
+                    size=60,
+                    color=(255, 0, 0),
+                    damage=5,
+                    rotation=0,
+                    speed=00,
+                    type="Balk",
+                    angular_velocity=360.0
+                )
         # End monster's turn after duration expires
         if fight_instance.turn_timer >= fight_instance.turn_duration:
             fight_instance.turn_timer = 0
@@ -91,3 +110,4 @@ def run(fight_instance, dt, joystick):
             fight_instance.bullet_engine.clear()  # Clear bullets for next round
             fight_instance.current_section += 1
             fight_instance.load_section_text()
+            balk_spawned = False
