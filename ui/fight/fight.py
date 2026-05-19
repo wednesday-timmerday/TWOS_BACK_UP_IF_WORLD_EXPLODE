@@ -181,7 +181,7 @@ class Fight:
         self.attack_box.fill((0,0,0))
 
         # Bullet engine
-        self.bullet_engine = BulletHellEngine(max_bullets=1000)
+        self.bullet_engine = BulletHellEngine(max_bullets=1000, fight_loader=self)
 
         self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = False
         self.bbox = False

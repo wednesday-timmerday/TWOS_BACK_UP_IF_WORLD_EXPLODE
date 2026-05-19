@@ -1262,8 +1262,7 @@ def main():
 
             try:
 
-                #screen.blit(last_fps_text, (10, 10))
-                pass
+                screen.blit(last_fps_text, (10, 10))
 
             except Exception:
 

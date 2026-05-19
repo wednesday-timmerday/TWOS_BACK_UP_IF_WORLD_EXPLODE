@@ -127,7 +127,7 @@ class BulletType:
         else:
             new_h = diameter
             new_w = max(1, int(diameter * raw_w / raw_h))
-        return pygame.transform.scale(self._surface, (new_w, new_h))
+        return pygame.transform.smoothscale(self._surface, (new_w, new_h))
 
     def make_surface(self, size: int) -> Optional[object]:
         """

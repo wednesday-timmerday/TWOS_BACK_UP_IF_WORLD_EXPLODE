@@ -99,6 +99,7 @@ class BulletHellEngine:
 
         # -- Warning stuff --
         self.warnings = []
+        self.dt = 0.0
 
     # ---------------------------------------------------------------
     # Spawning
@@ -285,6 +286,7 @@ class BulletHellEngine:
             Bullets are culled 500 px outside the arena bounds, so patterns
             that spawn just off-screen have time to enter the play area.
         """
+        self.dt = dt
         i = 0
         while i < self.max:
             if not self.active[i]:
@@ -371,7 +373,8 @@ class BulletHellEngine:
                 "y": y,
                 "size": size,
                 "flash": flash,
-                "timeout": time_out
+                "timeout": time_out,
+                "elapsed": 0.0
             })
     # ---------------------------------------------------------------
     # Draw
@@ -429,10 +432,19 @@ class BulletHellEngine:
                 # Fallback: plain circle
                 pygame.draw.circle(screen, self.color[i], (cx, cy), max(1, sz))
 
-        for i, warning in enumerate(self.warnings):
-            #Since the warning can never be bigger than 90*4 (the Bbox size)
-            #We can just use size as the x size
-            pygame.draw.rect(screen, (255,0,0), (warning["x"], warning["y"], warning["size"], 90*4))
+        if self.fight_loader.current_turn == 1:
+            for warning in self.warnings:
+                warning["elapsed"] += self.dt
+                warning["timeout"] -= self.dt
+                
+                # Flicker at 5 Hz (alternates every 0.1 seconds)
+                flicker_phase = int((warning["elapsed"] * 5) % 2)
+                color = (255, 0, 0) if flicker_phase == 0 else (255, 100, 0)
+                
+                if warning["timeout"] > 0:
+                    pygame.draw.rect(screen, color, (warning["x"], warning["y"], warning["size"], 360), 2)
+            
+            self.warnings = [w for w in self.warnings if w["timeout"] > 0]
 
     # ---------------------------------------------------------------
     # Pool management
