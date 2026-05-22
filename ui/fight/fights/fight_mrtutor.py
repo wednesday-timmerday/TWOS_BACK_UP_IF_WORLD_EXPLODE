@@ -13,7 +13,7 @@ import pygame
 
 import random
 
-atk_index = 3
+atk_index = 0
 balk_spawned = False
 
 def init(fight_instance):
