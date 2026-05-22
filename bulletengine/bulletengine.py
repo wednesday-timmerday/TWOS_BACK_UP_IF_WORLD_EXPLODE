@@ -195,7 +195,7 @@ class BulletHellEngine:
             engine.spawn_at_angle(400, 300, 270, 400, bullet_type="laser")
         """
         rad = math.radians(angle)
-        return self.spawn(
+        E = self.spawn(
             x, y,
             math.cos(rad) * speed,
             math.sin(rad) * speed,
@@ -205,6 +205,9 @@ class BulletHellEngine:
             bullet_type=bullet_type,
             angular_velocity=angular_velocity,
         )
+        print(E)
+        print("EEEE")
+        return E
 
     def spawn_homing(
         self,

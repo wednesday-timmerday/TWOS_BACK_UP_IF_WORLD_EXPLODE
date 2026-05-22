@@ -13,8 +13,7 @@ import pygame
 
 import random
 
-atk_index = 0
-balk_spawned = False
+atk_index = 3
 balk_spawned = False
 
 def init(fight_instance):
@@ -32,8 +31,10 @@ def init(fight_instance):
     fight_instance.text_finished_last_frame = False
     fight_instance.bullet_interval = 0.5  # seconds between bullet waves
     fight_instance.hammer_timer = 0  # Track warning/spawn cycles for attack 2
+    fight_instance.hat_timer = 0  # Track appearance/explosion cycles for attack 3
     fight_instance.bullet_engine.register_btype("Balk", fight_instance.monster_loader.load("mrtutor/balk.png"), rotate_to_vel=True)
     fight_instance.bullet_engine.register_btype("hammer", fight_instance.monster_loader.load("hammer/frames/hammer-1.png"), rotate_to_vel=True)
+    fight_instance.hat_exploded_this_cycle = True
 
 
 def run(fight_instance, dt, joystick):
@@ -142,11 +143,71 @@ def run(fight_instance, dt, joystick):
             # Reset drop flag at start of new cycle
             if time_in_cycle < 0.05:
                 fight_instance.hammer_dropped_this_cycle = False
+
+        elif atk_index == 3:
+            #First, spawn an hat bullet with no coll
+            #Then, spawn an explosion bullet with collision and remove the hat bullet
+            fight_instance.hat_timer += dt  # Track hat cycling independently
+            cycle_duration = 1.0  # 0.7 sec appearance + 0.3 sec before explosion
+            time_in_cycle = fight_instance.hat_timer % cycle_duration
+            current_cycle = int(fight_instance.hat_timer / cycle_duration)
+            
+            if time_in_cycle < 0.7:
+                # Hat appearance phase - spawn once per cycle
+                if current_cycle > getattr(fight_instance, 'last_hat_cycle', -1) and getattr(fight_instance, 'hat_exploded_this_cycle', False):
+                    hat_x = random.randint(480, 800)
+                    hat_y = random.randint(336, 336+90*4)
+                    hat_bullet_id = fight_instance.spawn_bullet(
+                        x=hat_x,
+                        y=hat_y,
+                        size=40,
+                        damage=0,  # No collision damage
+                        rotation=0,
+                        speed=0,
+                        type="dot",
+                        color=(180, 100, 50)  # Brown hat color
+                    ) #TODO make it actual no collision, not just no coll damage
+
+                    fight_instance.last_hat_cycle = current_cycle
+                    fight_instance.pending_hat_x = hat_x
+                    fight_instance.pending_hat_y = hat_y
+                    fight_instance.pending_hat_id = hat_bullet_id  # Store the bullet ID
+                    fight_instance.hat_exploded_this_cycle = False
+            else:
+                # Explosion phase after hat disappears
+                if hasattr(fight_instance, 'pending_hat_x') and not getattr(fight_instance, 'hat_exploded_this_cycle', False):
+                    # Deactivate the hat bullet before spawning explosion
+                    if hasattr(fight_instance, 'pending_hat_id') and fight_instance.pending_hat_id is not None:
+                        try:
+                            fight_instance.bullet_engine._deactivate(fight_instance.pending_hat_id)
+                        except Exception:
+                            pass
+                    
+                    Explosion_id = fight_instance.spawn_bullet(
+                        x=fight_instance.pending_hat_x,
+                        y=fight_instance.pending_hat_y,
+                        size=60,
+                        damage=15,
+                        rotation=0,
+                        speed=0,
+                        type="dot",
+                        color=(255, 150, 0)  # ?
+                    )
+                    fight_instance.pending_exp_id = Explosion_id # Store the bullet ID
+                    # Fuck it, lets reuse hat_timer, bcz y noy
+                    if time_in_cycle >= 0.9:
+                        try:
+                            fight_instance.bullet_engine._deactivate(fight_instance.pending_exp_id)
+                        except Exception:
+                            pass
+                        fight_instance.hat_exploded_this_cycle = True
+                        print("Dance")
         # End monster's turn after duration expires
         if fight_instance.turn_timer >= fight_instance.turn_duration:
             fight_instance.turn_timer = 0
             fight_instance.bullet_timer = 0
             fight_instance.hammer_timer = 0
+            fight_instance.hat_timer = 0
             fight_instance.current_turn = 0  # Switch back to player's turn
             fight_instance.bullet_engine.clear()  # Clear bullets for next round
             fight_instance.current_section += 1

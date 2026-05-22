@@ -281,7 +281,6 @@ class Fight:
 
 
     def update(self, dt, joystick=None):
-        print(f"kaas: {self.current_section}")
         # Update bullet engine
         self.bullet_engine.update(
             dt,
@@ -441,7 +440,7 @@ class Fight:
         Uses the high-performance bullet engine instead of manual tracking.
         """
 
-        self.bullet_engine.spawn_at_angle(
+        return self.bullet_engine.spawn_at_angle(
             x=x,
             y=y,
             angle=rotation,
