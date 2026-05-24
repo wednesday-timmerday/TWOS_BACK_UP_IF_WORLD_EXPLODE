@@ -524,6 +524,8 @@ class World_loader:
 
         self.boxEngine.create_box(box)
 
+        self.actually_show_timer = True # true by default
+
 
 
     # -------------------------
@@ -1919,7 +1921,7 @@ class World_loader:
         if round(self.time_to_timer - self.Time_left_in_timer_that_times_the_time_in_a_timely_manner) <= 0 and self.is_timer_active and self.level_data.get("timer", None) != None:
             self.player.die(self)
             print(f"1: {self.time_to_timer}, 2: {self.Time_left_in_timer_that_times_the_time_in_a_timely_manner}")
-        if self.level_data.get("timer", None) != None and not self.player.dead:
+        if self.level_data.get("timer", None) != None and not self.player.dead and self.actually_show_timer:
             screen.blit(shit_to_render, (10,10))
     # -------------------------
 
@@ -2019,6 +2021,8 @@ class World_loader:
 
             print(f"Warning: Failed to save state when switching levels: {e}")
 
+
+        self.actually_show_timer = True # true bcz yes
         
 
         self.current_level = level_id

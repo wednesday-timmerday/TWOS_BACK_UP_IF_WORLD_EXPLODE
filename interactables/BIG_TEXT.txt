@@ -5,13 +5,13 @@ t_flowey_r1 =
             ENDOFCONVERSATION
 
 t_clothing_r1 =
-              []
+              [mrtutor]
               * You dont feel like changing&clothes right now
               * After all,^wait250 you just woke up
               ENDOFCONVERSATION
 
 t_books_r1 =
-           []
+           [mrtutor]
            * It's just an bookshelf
            ENDOFCONVERSATION
 

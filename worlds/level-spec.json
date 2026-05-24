@@ -778,6 +778,15 @@
         "h": 23,
         "name": "cutscene(tutor_r7_1)",
         "id": "3e0e217e-37c2-42e3-992d-6ea8e962a911"
+      },
+      {
+        "type": "trigger",
+        "x": 793,
+        "y": 137,
+        "w": 33,
+        "h": 30,
+        "name": "cutscene(tutor_r7_2)",
+        "id": "16e85fb9-8575-478b-9ce2-ed4ae51445f7"
       }
     ],
     "invis_walls": [],

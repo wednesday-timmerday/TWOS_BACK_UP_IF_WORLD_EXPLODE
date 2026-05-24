@@ -1261,9 +1261,10 @@ def main():
         if last_fps_text:
 
             try:
+                # TODO: add debug toggle for da testers...
 
-                screen.blit(last_fps_text, (10, 10))
-
+                # screen.blit(last_fps_text, (10, 10))
+                pass # Its only debug
             except Exception:
 
                 pass
