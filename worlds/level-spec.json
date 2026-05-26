@@ -48,8 +48,8 @@
     "triggers": [
       {
         "type": "trigger",
-        "x": 164,
-        "y": -64,
+        "x": 165,
+        "y": -13,
         "w": 50,
         "h": 172,
         "name": "cutscene(1)",
@@ -84,7 +84,7 @@
       ],
       [
         477,
-        -77,
+        -17,
         16,
         178,
         "wall_2"
@@ -215,7 +215,7 @@
         "y": 121,
         "w": 49,
         "h": 40,
-        "name": "fight(fight_mrtutor)",
+        "name": "interactable(t_clothing_r1)",
         "id": "ed4d124f-85d0-401f-8da4-03f71acde879"
       },
       {
@@ -233,7 +233,7 @@
         "y": 127,
         "w": 22,
         "h": 36,
-        "name": "interactable(t_clothing_r1)",
+        "name": "interactable(t_books_r1)",
         "id": "9eaf3c8e-47e2-4f6c-8171-edc3224e0985"
       },
       {
@@ -268,7 +268,7 @@
         "type": "spawn",
         "came_from": 2,
         "pos_x": 303,
-        "pos_y": 104,
+        "pos_y": 130.0,
         "id": "1091d641-6587-48cb-b26e-ab9d0828af80"
       },
       {

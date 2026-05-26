@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 
 import os
 
@@ -106,8 +106,17 @@ class TextEngine:
 
         self.roar_global_timer = 0.0
 
-        print(locale.getdefaultlocale())
+        # Glyph cache: (char, color, font_size, outline_width) -> (surface, width)
 
+        self.glyph_cache = {}
+
+        self.last_font_size = 24
+
+        # Text block surface cache for static (non-animated) text
+        self._text_surf_cache = None
+        self._text_surf_cache_key = None
+
+        print(locale.getdefaultlocale())
 
 
 
@@ -285,6 +294,9 @@ class TextEngine:
         self.roar_global_timer = 0.0
 
         self.last_sound_char = 0
+
+        self._text_surf_cache = None
+        self._text_surf_cache_key = None
 
 
 
@@ -631,7 +643,6 @@ class TextEngine:
 
 
 
-
     # -----------------------------
 
     # Helper: compute character positions
@@ -690,8 +701,39 @@ class TextEngine:
 
         return (255,255,255)
 
-    
 
+    def _render_glyph_with_outline(self, char, text_color, outline_color, outline_width, size):
+        """Render a character with outline and cache it."""
+        cache_key = (char, text_color, outline_color, outline_width, size)
+        
+        if cache_key in self.glyph_cache:
+            return self.glyph_cache[cache_key]
+        
+        # Create a larger surface to accommodate outline
+        padding = outline_width + 2
+        char_surf = self.font.render(char, True, text_color)
+        width = char_surf.get_width() + 2 * padding
+        height = char_surf.get_height() + 2 * padding
+        
+        # Render to a transparent surface
+        result_surf = pygame.Surface((width, height), pygame.SRCALPHA)
+        
+        # Draw outline
+        outline_surf = self.font.render(char, True, outline_color)
+        for dx in range(-outline_width, outline_width + 1):
+            for dy in range(-outline_width, outline_width + 1):
+                if dx != 0 or dy != 0:
+                    result_surf.blit(outline_surf, (padding + dx, padding + dy))
+        
+        # Draw main character on top
+        result_surf.blit(char_surf, (padding, padding))
+        
+        # Cache and return (surface, offset_x, offset_y, display_width)
+        cached = (result_surf, -padding, -padding, char_surf.get_width())
+        self.glyph_cache[cache_key] = cached
+        return cached
+
+    
     def load(self, text_name):
 
         with open(self.txt_path, "r") as f:
@@ -701,6 +743,7 @@ class TextEngine:
         
 
         return data[text_name]
+
 
 
 
@@ -723,13 +766,18 @@ class TextEngine:
             print(f"[TextEngine.draw] WARNING: surf is None!")
             return
 
-        # update font size if needed
+        # update font size if needed, clear cache on change
         if self.font.get_height() != size:
             self.font = pygame.font.Font(self.font_path, size)
+            if self.last_font_size != size:
+                self.glyph_cache.clear()
+                self.last_font_size = size
 
-        # -----------------------------
-        # draw roar clones first
-        # -----------------------------
+        # limit cache size to prevent memory bloat
+        if len(self.glyph_cache) > 2000:
+            self.glyph_cache.clear()
+
+        # roar clones first
         for clone in self.roar_clones:
             a = max(0, int(clone['alpha']))
             if a <= 0:
@@ -743,93 +791,107 @@ class TextEngine:
 
             surf.blit(glyph, (x + clone['x'], y + clone['y']))
 
-        # -----------------------------
         # main text
-        # -----------------------------
         visible = self.parsed_text[:self.char_index]
         lines = visible.split("&")
 
-        idx = 0
-        offset_y = y
+        # Check if any visible char has animated effects (shake/roar/sp)
+        has_animated = any(
+            any(e.startswith("shake") or e == "roar" or e.startswith("sp")
+                for e in self.char_effects.get(i, []))
+            for i in range(self.char_index)
+        )
 
-        for line in lines:
-            offset_x = x
+        cache_key = (self.char_index, text_color, outline_color, outline_width, size)
 
-            word_index = -1
-            prev_space = True
+        if not has_animated and self._text_surf_cache_key == cache_key and self._text_surf_cache is not None:
+            # Fast path: nothing changed, just blit the cached surface
+            surf.blit(self._text_surf_cache, (x, y))
+        else:
+            line_height = self.font.get_height()
 
-            for ch in line:
+            # Build cache surface dimensions
+            if not has_animated:
+                total_height = max(len(lines) * line_height, 1)
+                total_width = max(
+                    max(
+                        sum(self._render_glyph_with_outline(ch, text_color, outline_color, outline_width, size)[3]
+                            for ch in line)
+                        for line in lines
+                    ) + (outline_width + 2) * 2,
+                    1
+                )
+                cache_surf = pygame.Surface((total_width, total_height), pygame.SRCALPHA)
 
-                # reset per-char effects
-                self.current_color = text_color
-                self.shake_intensity = 0
+            idx = 0
+            rel_y = 0  # position relative to cache surface (or y-offset if animated)
 
-                effects = self.char_effects.get(idx, [])
-                for eff in effects:
-                    self.apply_effect(eff)
+            for line in lines:
+                rel_x = 0
 
-                # stable shake per character (IMPORTANT FIX)
-                shake_x = random.randint(-self.shake_intensity, self.shake_intensity) if self.shake_intensity else 0
-                shake_y = random.randint(-self.shake_intensity, self.shake_intensity) if self.shake_intensity else 0
+                word_index = -1
+                prev_space = True
 
-                if prev_space and ch != " ":
-                    word_index += 1
-                    prev_space = False
-                if ch == " ":
-                    prev_space = True
+                for ch in line:
+                    self.current_color = text_color
+                    self.shake_intensity = 0
 
-                wave = 0
-                if "roar" in effects:
-                    wave = int(math.sin(self.time * 4 + word_index * 0.6) * 6)
+                    effects = self.char_effects.get(idx, [])
+                    for eff in effects:
+                        self.apply_effect(eff)
 
-                char_surf = self.font.render(ch, True, self.current_color)
+                    if prev_space and ch != " ":
+                        word_index += 1
+                        prev_space = False
+                    if ch == " ":
+                        prev_space = True
 
-                # outline (uses SAME shake)
-                for dx in range(-outline_width, outline_width + 1):
-                    for dy in range(-outline_width, outline_width + 1):
+                    cached_glyph, offset_x_adj, offset_y_adj, char_width = self._render_glyph_with_outline(
+                        ch, self.current_color, outline_color, outline_width, size
+                    )
 
-                        if dx == 0 and dy == 0:
-                            continue
-
-                        outline_surf = self.font.render(ch, True, outline_color)
-
+                    if has_animated:
+                        # Animated: blit directly to screen with shake/wave each frame
+                        shake_x = random.randint(-self.shake_intensity, self.shake_intensity) if self.shake_intensity else 0
+                        shake_y = random.randint(-self.shake_intensity, self.shake_intensity) if self.shake_intensity else 0
+                        wave = int(math.sin(self.time * 4 + word_index * 0.6) * 6) if "roar" in effects else 0
                         surf.blit(
-                            outline_surf,
+                            cached_glyph,
                             (
-                                offset_x + dx + shake_x,
-                                offset_y + dy + wave + shake_y
+                                x + rel_x + offset_x_adj + shake_x,
+                                y + rel_y + offset_y_adj + wave + shake_y
                             )
                         )
+                    else:
+                        # Static: blit into the cache surface, no shake/wave needed
+                        cache_surf.blit(
+                            cached_glyph,
+                            (rel_x + offset_x_adj, rel_y + offset_y_adj)
+                        )
 
-                # main glyph (same shake)
-                surf.blit(
-                    char_surf,
-                    (
-                        offset_x + shake_x,
-                        offset_y + wave + shake_y
-                    )
-                )
+                    rel_x += char_width
+                    idx += 1
 
-                offset_x += char_surf.get_width()
+                rel_y += line_height
                 idx += 1
 
-            offset_y += self.font.get_height()
-            idx += 1
+            if not has_animated:
+                self._text_surf_cache = cache_surf
+                self._text_surf_cache_key = cache_key
+                surf.blit(cache_surf, (x, y))
 
-        # -----------------------------
         # choices
-        # -----------------------------
         if self.showing_choices and self.finished:
-            offset_y += 10
+            choices_y = y + len(lines) * self.font.get_height() + 10
 
             for i, c in enumerate(self.choices):
                 col = highlight_color if i == self.selected_choice else choice_color
                 prefix = "> " if i == self.selected_choice else "  "
 
                 line_surf = self.font.render(prefix + c, True, col)
-                surf.blit(line_surf, (x, offset_y))
+                surf.blit(line_surf, (x, choices_y))
 
-                offset_y += line_surf.get_height()
+                choices_y += line_surf.get_height()
 
 
     # -----------------------------
@@ -963,6 +1025,5 @@ class TextEngine:
 
 
         return None
-
 
 

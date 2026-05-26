@@ -29,6 +29,7 @@ class NameScreen:
 
 
         self.font_loader = Loader("ui/menu")
+        self.file_loader = Loader("C:/TWOSFILES/")
 
         self.toby_loader = Loader("ui")
 
@@ -898,7 +899,7 @@ class NameScreen:
 
 
 
-        path = self.font_loader.load("names.json")
+        path = self.file_loader.load("names.json")
 
 
 
@@ -928,7 +929,7 @@ class NameScreen:
 
 
 
-        path = self.font_loader.load("names.json")
+        path = self.file_loader.load("names.json")
 
 
 

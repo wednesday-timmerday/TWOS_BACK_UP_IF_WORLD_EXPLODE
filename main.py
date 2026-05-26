@@ -81,7 +81,7 @@ MINI_RESOLUTION   = (320, 180)    # low-res renderer
 
 FPS               = 240           # set to 0 for uncapped
 
-OPTIONS_FILE      = "options.json"
+OPTIONS_FILE      = r"C:\TWOSFILES\options.json"
 
 
 
@@ -183,10 +183,7 @@ def load_surface_cache(filename):
 
 # -----------------------
 
-options_loader = Loader("ui/menu")
-
-options_path   = options_loader.load(OPTIONS_FILE)
-
+options_path = OPTIONS_FILE
 
 
 def load_options():
@@ -204,6 +201,15 @@ def load_options():
             pass
 
     return {"fullscreen": False, "master_volume": 0.5}
+
+
+def save_options(options):
+
+    os.makedirs(os.path.dirname(options_path), exist_ok=True)
+
+    with open(options_path, "w", encoding="utf-8") as f:
+
+        json.dump(options, f, indent=4)
 
 
 
@@ -672,6 +678,109 @@ def get_cam_target(player):
 
 
 # -----------------------
+# Debug Level Warp Popup
+# -----------------------
+
+def get_available_levels():
+    """Dynamically get available levels from worlds directory."""
+    import os
+    worlds_dir = "worlds"
+    if not os.path.exists(worlds_dir):
+        return []
+    
+    levels = []
+    for item in os.listdir(worlds_dir):
+        item_path = os.path.join(worlds_dir, item)
+        if os.path.isdir(item_path) and item.isdigit():
+            levels.append(item)
+    
+    return sorted(levels, key=lambda x: int(x))
+
+
+class DebugLevelWarp:
+    def __init__(self, screen):
+        self.screen = screen
+        self.active = False
+        self.selected_index = 0
+        self.levels = []
+        self.font = pygame.font.SysFont("Arial", 20, bold=True)
+        self.small_font = pygame.font.SysFont("Arial", 16)
+
+    def set_levels(self, level_list):
+        """Set available levels."""
+        self.levels = level_list if level_list else ["test_level"]
+
+    def open(self):
+        self.active = True
+        self.selected_index = 0
+
+    def close(self):
+        self.active = False
+
+    def handle_input(self):
+        """Handle keyboard input for level selection."""
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP]:
+            self.selected_index = (self.selected_index - 1) % len(self.levels)
+            pygame.time.delay(100)
+        elif keys[pygame.K_DOWN]:
+            self.selected_index = (self.selected_index + 1) % len(self.levels)
+            pygame.time.delay(100)
+        elif keys[pygame.K_RETURN]:
+            return self.levels[self.selected_index]
+        elif keys[pygame.K_ESCAPE]:
+            self.close()
+        return None
+
+    def draw(self):
+        """Draw the level warp popup on screen."""
+        if not self.active or not self.levels:
+            return
+
+        overlay = pygame.Surface(self.screen.get_size())
+        overlay.set_alpha(200)
+        overlay.fill((0, 0, 0))
+        self.screen.blit(overlay, (0, 0))
+
+        popup_width, popup_height = 500, 400
+        popup_x = self.screen.get_width() // 2 - popup_width // 2
+        popup_y = self.screen.get_height() // 2 - popup_height // 2
+
+        pygame.draw.rect(self.screen, (50, 50, 50), (popup_x, popup_y, popup_width, popup_height))
+        pygame.draw.rect(self.screen, (200, 200, 200), (popup_x, popup_y, popup_width, popup_height), 3)
+
+        title = self.font.render("DEBUG: SELECT LEVEL", True, (255, 200, 50))
+        self.screen.blit(title, (popup_x + popup_width // 2 - title.get_width() // 2, popup_y + 20))
+
+        y_offset = popup_y + 70
+        for i, level in enumerate(self.levels):
+            if i == self.selected_index:
+                color = (255, 255, 0)
+                pygame.draw.rect(self.screen, (100, 100, 0), (popup_x + 10, y_offset - 5, popup_width - 20, 25))
+                text = self.font.render(f"> {level}", True, color)
+            else:
+                color = (200, 200, 200)
+                text = self.small_font.render(f"  {level}", True, color)
+
+            self.screen.blit(text, (popup_x + 20, y_offset))
+            y_offset += 30
+
+        instructions = [
+            "UP/DOWN: Navigate",
+            "ENTER: Warp to level",
+            "ESC: Cancel"
+        ]
+        inst_y = popup_y + popup_height - 80
+        for inst in instructions:
+            inst_text = self.small_font.render(inst, True, (150, 150, 150))
+            self.screen.blit(inst_text, (popup_x + 20, inst_y))
+            inst_y += 20
+
+
+
+
+
+# -----------------------
 
 # MAIN
 
@@ -1078,6 +1187,8 @@ def main():
 
     physics_step        = 1.0 / 60.0
 
+    debug_warp_popup    = DebugLevelWarp(screen)
+
 
 
     while running:
@@ -1098,6 +1209,35 @@ def main():
 
                 running = False
 
+            elif event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_q and options.get('debug', 0.0) > 0.0 and not debug_warp_popup.active:
+
+                    debug_warp_popup.set_levels(get_available_levels())
+
+                    debug_warp_popup.open()
+
+
+
+        # Debug level warp popup input
+
+        if debug_warp_popup.active:
+
+            selected_level = debug_warp_popup.handle_input()
+
+            if selected_level:
+
+                try:
+
+                    world_loader.change_level(selected_level, player)
+
+                    print(f"[DEBUG] Warped to level: {selected_level}")
+
+                except Exception as e:
+
+                    print(f"Error warping to level: {e}")
+
+                debug_warp_popup.close()
 
 
         # Clear renderer
@@ -1228,8 +1368,6 @@ def main():
 
                 traceback.print_exc()
 
-
-
         # FPS counter
 
         fps = int(clock.get_fps())
@@ -1262,9 +1400,8 @@ def main():
 
             try:
                 # TODO: add debug toggle for da testers...
-
-                # screen.blit(last_fps_text, (10, 10))
-                pass # Its only debug
+                if options['debug'] != 0.0:
+                    screen.blit(last_fps_text, (10, 10))
             except Exception:
 
                 pass
@@ -1293,6 +1430,13 @@ def main():
 
                 pass
 
+
+
+        # Draw debug level warp popup
+
+        if debug_warp_popup.active:
+
+            debug_warp_popup.draw()
 
 
         pygame.display.flip()
