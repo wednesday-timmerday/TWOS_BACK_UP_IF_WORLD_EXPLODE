@@ -573,8 +573,6 @@ class World_loader:
 
     # -------------------------
 
-    #! TODO: make this take less time to load,,, Or just dont
-
     def load_layers(self):
 
         self.level_data = self.world_data.get(f"level_{self.current_level}", {})
@@ -1139,10 +1137,6 @@ class World_loader:
             self._get_chunk_surface(layer_idx,chunk_idx)
 
             count +=1
-
-
-
-    #! TODO: Make this load system less of a if/else hell and just check the sprites/ folder
 
 
 

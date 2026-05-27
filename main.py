@@ -1399,7 +1399,6 @@ def main():
         if last_fps_text:
 
             try:
-                # TODO: add debug toggle for da testers...
                 if options['debug'] != 0.0:
                     screen.blit(last_fps_text, (10, 10))
             except Exception:

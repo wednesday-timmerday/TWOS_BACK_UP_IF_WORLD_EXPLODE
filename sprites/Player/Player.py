@@ -257,7 +257,7 @@ class Player:
         self.in_death_scene = False
         self.fight_loader = None
         self.show_encounter = False
-        self.encounter_image = pygame.image.load("sprites/Player/animation_frames/encounter/!.png").convert_alpha() #TODO make this load using the ass loader
+        self.encounter_image = pygame.image.load(sprite_loader.load("encounter/!.png"))
         self.temp_timer = 0.0
 
     # -
@@ -411,17 +411,18 @@ class Player:
     
 
     def start_encounter(self, name):
-        print("Twante")
-        #self.active_fight = self.fight_loader.load_fight(name)
+        self.show_encounter = True
         print(self.active_fight)
         self.can_move = False
-        self.show_encounter = True
         self.temp_timer += self.dt
         print(self.temp_timer)
-        if self.temp_timer >= 1:
-            self.active_fight = self.fight_loader.load_fight(name)
+        if self.temp_timer >= 3: #This needs to be the length of the encounter sfx... TODO: get the sfx and make the timings corr
+            self.curr_animation = "imnotracist"
             self.show_encounter = False
-            return 1
+            if self.temp_timer >= 7:
+                self.active_fight = self.fight_loader.load_fight(name)
+                self.show_encounter = False
+                return 1
 
     # -----------------------------
     # Die
@@ -1078,7 +1079,8 @@ class Player:
             round(float_center_x - cam_x),
             round(float_bottom_y - cam_y)
         )
-
+        if self.curr_animation == "imnotracist":
+            screen.fill((0,0,0))
         try:
             img = self.image_left if self.dir else self.image_right
             screen.blit(img, draw_rect)
@@ -1139,6 +1141,8 @@ class Player:
             screen.blit(result, result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
         if self.show_encounter:
             screen.blit(self.encounter_image, (draw_rect.x + 10, draw_rect.y - 10))
+
+
         if self.save_menu.visible:
             try:
                 self.save_menu.draw(screen)

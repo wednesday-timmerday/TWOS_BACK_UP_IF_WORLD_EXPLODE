@@ -459,8 +459,3 @@ class Interactable:
                 self.module.draw(self, surface)
             except Exception as e:
                 print(f"[CutsceneLoader] Error in cutscene draw: {e}")
-
-
-
-
-#TODO make a better "norm" type sfx
