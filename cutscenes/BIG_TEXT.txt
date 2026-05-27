@@ -200,3 +200,15 @@ tutor_r7_2 =
     mr. tutorion: * Only one room left
     {goto_level_only_tutor_yes_no_maybe}
     ENDOFCONVERSATION
+
+tutor_r8_1 =
+    [mrtutor]
+    {(1 0)}
+    {angle_player}
+    mr. tutorion: * This^wait250.^wait250.^wait250.^wait250 is the final room
+    mr. tutorion: * Cool, isn't it?
+    mr. tutorion: * Anyway...
+    mr. tutorion: * The last thing you need to&learn is:
+    mr. tutorion: * Fights
+    {fight}
+    ENDOFCONVERSATION

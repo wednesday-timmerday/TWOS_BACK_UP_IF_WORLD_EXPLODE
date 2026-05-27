@@ -174,6 +174,13 @@
         9,
         177,
         ""
+      ],
+      [
+        0,
+        -3,
+        8,
+        165,
+        ""
       ]
     ],
     "platforms": [],
@@ -411,15 +418,6 @@
         "w": 13,
         "h": 18,
         "name": "cutscene(4)",
-        "id": "67e88b43-c500-45b7-8ac5-10b1688038a0"
-      },
-      {
-        "type": "trigger",
-        "x": 207,
-        "y": 132,
-        "w": 8,
-        "h": 26,
-        "name": "cutscene(the_end)",
         "id": "67e88b43-c500-45b7-8ac5-10b1688038a0"
       },
       {
@@ -787,6 +785,15 @@
         "h": 30,
         "name": "cutscene(tutor_r7_2)",
         "id": "16e85fb9-8575-478b-9ce2-ed4ae51445f7"
+      },
+      {
+        "type": "trigger",
+        "x": 852,
+        "y": -12,
+        "w": 35,
+        "h": 175,
+        "name": "goto(8)",
+        "id": "1927b35f-7c3f-4bc8-89eb-d50bc2d04889"
       }
     ],
     "invis_walls": [],
@@ -798,6 +805,43 @@
         "pos_x": 46,
         "pos_y": 149,
         "id": "4dd5158d-0e84-4e40-963b-5c5fb446ff1b"
+      }
+    ]
+  },
+  "level_8": {
+    "coll_layers": [
+      1
+    ],
+    "enemies": [
+      {
+        "type": "mrtutor",
+        "position": [
+          285,
+          119
+        ],
+        "id": "96114547-a63c-4cf2-b5a0-def1df9b076c"
+      }
+    ],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 230,
+        "y": -9,
+        "w": 15,
+        "h": 177,
+        "name": "cutscene(tutor_r8_1)",
+        "id": "50e24d65-f2d4-49da-930f-f7419c7c7d47"
+      }
+    ],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 7,
+        "pos_x": 12,
+        "pos_y": 154,
+        "id": "af45c0fc-f958-4967-a54f-af3ccc9148fe"
       }
     ]
   }

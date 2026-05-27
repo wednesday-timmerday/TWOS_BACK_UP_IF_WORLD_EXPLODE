@@ -255,7 +255,10 @@ class Player:
         self.dash_cooldown_time = 2.0
         self.dash_cooldown_timer_time = False
         self.in_death_scene = False
-
+        self.fight_loader = None
+        self.show_encounter = False
+        self.encounter_image = pygame.image.load("sprites/Player/animation_frames/encounter/!.png").convert_alpha() #TODO make this load using the ass loader
+        self.temp_timer = 0.0
 
     # -
     # Private helpers
@@ -378,12 +381,12 @@ class Player:
         for sp in level_data.get("save_points", []):
             if sp.get("type") == "spawn" and sp.get("came_from") == came_from:
                 self.world_x = float(sp.get("pos_x", 160))
-                self.world_y = float(sp.get("pos_y", 400))
+                self.world_y = float(sp.get("pos_y", 00))
                 self.speed_y = 0.0
                 return
 
         self.world_x = 160.0
-        self.world_y = 400.0
+        self.world_y = 00.0
         self.speed_y = 0.0
 
     def add_deact(self, name):
@@ -405,6 +408,20 @@ class Player:
         self.z_just_pressed_interactable = z_pressed and not self._prev_z_interactable
         self._prev_z_interactable = z_pressed
         return self.z_just_pressed_interactable
+    
+
+    def start_encounter(self, name):
+        print("Twante")
+        #self.active_fight = self.fight_loader.load_fight(name)
+        print(self.active_fight)
+        self.can_move = False
+        self.show_encounter = True
+        self.temp_timer += self.dt
+        print(self.temp_timer)
+        if self.temp_timer >= 1:
+            self.active_fight = self.fight_loader.load_fight(name)
+            self.show_encounter = False
+            return 1
 
     # -----------------------------
     # Die
@@ -442,7 +459,7 @@ class Player:
 
     def update(self, world, screen, dt, current_level=None, player=None, fight_loader=None):
         self.dt = dt
-
+        self.fight_loader = fight_loader
         if self.respawn_protect_timer > 0.0:
             self.respawn_protect_timer = max(0.0, self.respawn_protect_timer - dt)
 
@@ -771,8 +788,10 @@ class Player:
             self.touching_wall_left = False
             self.touching_wall_right = False
 
-        # -- Fall off screen â†’ die -----------------------------------------
-        if self.world_y > 2000:
+        # -- Fall off screen - die -----------------------------------------
+        if self.world_y > 320:
+            print("zun")
+            print(self.world_y)
             if not self.freeze_frame_active and not self.death_walk_active:
                 self.can_move = True
                 self.apply_spawn_point(world.current_level)
@@ -886,10 +905,8 @@ class Player:
                             self.active_cutscene = None
 
                     elif name.startswith("fight("):
-                        fight_name = name[6:-1]
-                        self.active_fight = fight_loader.load_fight(fight_name)
-                        print(self.active_fight)
-                        self.can_move = False
+                        name = name[6:-1]
+                        self.start_encounter(name)
 
             self._in_triggers.intersection_update(current_collisions)
 
@@ -1120,8 +1137,8 @@ class Player:
 
             screen.blit(self.animations["Dash_cooldown"][0], result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
             screen.blit(result, result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
-
-
+        if self.show_encounter:
+            screen.blit(self.encounter_image, (draw_rect.x + 10, draw_rect.y - 10))
         if self.save_menu.visible:
             try:
                 self.save_menu.draw(screen)
