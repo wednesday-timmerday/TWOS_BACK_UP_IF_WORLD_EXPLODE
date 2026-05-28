@@ -165,6 +165,15 @@
         "h": 91,
         "name": "interactable(t_gate_r2_2)",
         "id": "31aadc03-5022-476d-91cd-981022cf29fe"
+      },
+      {
+        "type": "trigger",
+        "x": 11,
+        "y": -2,
+        "w": 9,
+        "h": 167,
+        "name": "interactable(the_man)",
+        "id": "d7e593f8-3310-4fa5-8d19-0a1c3e2c928d"
       }
     ],
     "invis_walls": [

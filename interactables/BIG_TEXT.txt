@@ -37,7 +37,10 @@ q_gate_r2_1 =
 
 t_gate_r2_2 =
             []
-            * getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&getoutofmyheadgetoutofmyheadgetoutofmyheadgetoutofmyhead&
+            * You listen closely
+            * .^wait250.^wait250.
+            * Your brother seems to be playing that&stupid little anime game about&joining clubs
+            * You wonder why he keeps playing&that game
             ENDOFCONVERSATION
 
 q_gate_r1_idfk =
@@ -50,6 +53,16 @@ arrow_r1_1 =
     {(1 0)}
     * You look at the arrow
     * You think really hard
-    * .^wait1250 .^wait1250 .^wait1250
+    * .^wait1250.^wait1250.^wait1250
     * The arrows might lead to a place
+    ENDOFCONVERSATION
+
+the_man =
+    []
+    {(1 0)}
+    The man: * How did you get here??
+    The man: * Congrats ig
+    The man: * ...
+    The man: * ^special^shake2shoo!^endspecial
+    The man: * Go now
     ENDOFCONVERSATION
