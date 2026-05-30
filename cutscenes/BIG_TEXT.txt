@@ -17,11 +17,11 @@ parent_yell =
 1 =
     [shadowrock]
     {(0 0.5)}
-    shadowrock: * Hey there, looks like&you're new around here^wait250, I'm a&shadowrock^wait250, just an shadowrock
+    shadowrock: * Hey there, looks like&you're new around here
+    shadowrock: * I'm a shadowrock,^wait250 just&an shadowrock
     shadowrock: * You're confused arent&'cha^wait250, well ill help you in your&adventure
     {(1 0)}
     shadowrock: * Normally, you can&skip this text animation with [x]^wait250,&and go further with [z]
-    
     {(0 1.0)}
     shadowrock: * Oh no no no ^wait425, you&cant skip ^special^color(255,0,0)^shake6MY^endspecial text idiot
     {(0 0.5)}
@@ -213,3 +213,7 @@ tutor_r8_1 =
     mr. tutorion: * Fights
     {fight}
     ENDOFCONVERSATION
+
+NAMETEST =
+    [mrtutor]
+    So you must me NAME

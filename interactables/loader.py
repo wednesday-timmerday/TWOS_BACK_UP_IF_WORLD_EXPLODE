@@ -323,6 +323,7 @@ class Interactable:
             return
 
         real_line = self.module.text[self.line_index].replace("CHARA_NAME", self.player.name)
+        real_line = real_line.replace("NAME", self.player.true_name)
         self.text_engine.start_text(real_line, self.talking)
         self.line_index += 1
 

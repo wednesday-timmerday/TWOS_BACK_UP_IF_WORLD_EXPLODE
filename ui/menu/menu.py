@@ -749,7 +749,9 @@ class Menu:
     # ─── Settings draw ──────────────────────────────────────────────────────────
 
     def draw_settings(self, screen):
-        screen.fill((0, 0, 127))
+        screen.blit(self.bg_2, (0,0))
+        self._draw_stars(screen)
+        self._draw_light_overlay(screen, (99999,99))
         self.settings_rects = []
 
         screen_width, screen_height = screen.get_size()
@@ -766,7 +768,7 @@ class Menu:
             elif option == "Master Volume":
                 label += f": {int(self.settings.get('master_volume', 0.5) * 100)}%"
             elif option == "Debug":
-                label += f": {self.settings.get('debug', 0.0):.2f}"
+                label += f": {self.settings.get('debug', 0.0):.0f}"
 
             text_x = left_margin
             text_y = top_margin + i * spacing
@@ -780,7 +782,7 @@ class Menu:
             if option in ("Master Volume", "Debug"):
                 self._draw_inline_slider(screen, option.lower().replace(" ", "_"), rendered, text_x, text_y)
 
-        self._draw_sun_or_moon(screen, screen_width)
+        # self._draw_sun_or_moon(screen, screen_width)
         self._draw_day_label(screen)
 
     def _draw_inline_slider(self, screen, slider_name, label_surface, text_x, text_y):

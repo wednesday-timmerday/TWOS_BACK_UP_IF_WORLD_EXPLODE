@@ -1122,7 +1122,7 @@ def main():
                 player.refresh_animation()
 
             player.name       = name_obj.chara_name
-
+            player.true_name  = os.getlogin()
             player.maker_name = name_obj.creator_name
 
         except Exception:

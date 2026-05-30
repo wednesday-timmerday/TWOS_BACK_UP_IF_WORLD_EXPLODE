@@ -340,6 +340,7 @@ class CutsceneLoader:
             return
 
         real_line = self.module.text[self.line_index].replace("CHARA_NAME", self.player.name)
+        real_line = real_line.replace("NAME", self.player.true_name)
         self.text_engine.start_text(real_line, self.talking)
         self.line_index += 1
 
@@ -455,4 +456,5 @@ class CutsceneLoader:
             try:
                 self.module.draw_back(self, surface)
             except Exception as e:
-                print(f"[CutsceneLoader] Error in cutscene draw: {e}")
+                print(f"[CutsceneLoader] Error in cutscene draw: {e}")
+

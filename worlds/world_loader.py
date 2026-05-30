@@ -54,11 +54,11 @@ def load_settings():
 
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Dynamic Enemy Loader
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─────────────────────────────────────────────────────────────────────────────
 
 _enemy_class_cache = {}
 
@@ -561,9 +561,17 @@ class World_loader:
 
     # -------------------------
 
-    def add_light_source(self, obj, radius):
+    def add_light_source(self, obj, radius, offset=(0, 0)):
+        """
+        Add a light source to the world.
 
-        self.light_sources.append({"obj": obj, "radius": radius})
+        obj    - the object emitting light (needs world_x / world_y)
+        radius - light radius in pixels
+        offset - (x, y) pixel offset from the object's world_x/world_y position.
+                 Use this to anchor the light to a different point on the sprite,
+                 e.g. offset=(0, -32) shifts the light 32px upward.
+        """
+        self.light_sources.append({"obj": obj, "radius": radius, "offset": offset})
 
 
 
@@ -1306,7 +1314,7 @@ class World_loader:
 
                     # Try dynamic loader first
 
-                    if enemy_type == "lantern" or enemy_type == "hammer":
+                    if enemy_type == "lantern" or enemy_type == "hammer" or enemy_type == "shadowrock":
 
                         enemy = get_enemy_class(enemy_type, self)
 
@@ -1672,7 +1680,7 @@ class World_loader:
 
 
 
-        # --------- LIGHT FPS CAP (â‰ˆ60 FPS) ---------
+        # --------- LIGHT FPS CAP (≈60 FPS) ---------
 
         self._light_frame_counter = getattr(self, "_light_frame_counter", 0) + 1
 
@@ -1738,13 +1746,9 @@ class World_loader:
 
                 continue
 
-
-
-            lx = int(obj.world_x - self.cam_x)
-
-            ly = int(obj.world_y - self.cam_y)
-
-
+            ox, oy = light.get("offset", (0, 0))
+            lx = int(obj.world_x - self.cam_x + ox)
+            ly = int(obj.world_y - self.cam_y + oy)
 
             # HARD CULL (VERY IMPORTANT)
 
@@ -1823,7 +1827,7 @@ class World_loader:
 
         if self.static_bg_near:
 
-            screen.blit(self.static_bg_near, (-cam_x, 0))   # float offset â€” pygame truncates at blit
+            screen.blit(self.static_bg_near, (-cam_x, 0))   # float offset — pygame truncates at blit
 
 
 
@@ -1917,6 +1921,7 @@ class World_loader:
             print(f"1: {self.time_to_timer}, 2: {self.Time_left_in_timer_that_times_the_time_in_a_timely_manner}")
         if self.level_data.get("timer", None) != None and not self.player.dead and self.actually_show_timer:
             screen.blit(shit_to_render, (10,10))
+
     # -------------------------
 
     # Collision query
@@ -1989,7 +1994,7 @@ class World_loader:
 
         for engine in self.all_physic_objects:
 
-            # Draw only â€” update is handled by update_physics() called from main
+            # Draw only — update is handled by update_physics() called from main
 
             try:
 
