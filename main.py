@@ -79,7 +79,7 @@ SCREEN_RESOLUTION = (1280, 720)   # actual window size
 
 MINI_RESOLUTION   = (320, 180)    # low-res renderer
 
-FPS               = 240           # set to 0 for uncapped
+FPS               = 60           # set to 0 for uncapped
 
 OPTIONS_FILE      = r"C:\TWOSFILES\options.json"
 
@@ -251,7 +251,7 @@ def init_pygame(options):
 
 
 
-    screen = pygame.display.set_mode(SCREEN_RESOLUTION, flags)
+    screen = pygame.display.set_mode(SCREEN_RESOLUTION, flags, vsync=1)
 
     pygame.display.set_caption("The Weight of Shadows")
 

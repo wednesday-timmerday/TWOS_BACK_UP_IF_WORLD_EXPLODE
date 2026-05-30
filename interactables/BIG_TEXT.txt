@@ -39,7 +39,7 @@ t_gate_r2_2 =
             []
             * You listen closely
             * .^wait250.^wait250.
-            * Your brother seems to be playing that&stupid little anime game about&joining clubs
+            * Your brother seems to be playing that&stupid little anime game about&joining literature clubs
             * You wonder why he keeps playing&that game
             ENDOFCONVERSATION
 

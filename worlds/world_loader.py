@@ -1688,7 +1688,7 @@ class World_loader:
 
 
 
-        self._light_overlay.fill((0, 0, 0, 180))  
+        self._light_overlay.fill((0, 0, 0, 235))  
 
 
 

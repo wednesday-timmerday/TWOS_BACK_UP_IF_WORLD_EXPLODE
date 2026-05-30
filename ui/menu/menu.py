@@ -5,6 +5,7 @@ import math
 import sys
 import time
 import threading
+import numpy as np
 from datetime import datetime, date, timedelta
 
 import requests
@@ -118,6 +119,7 @@ class Menu:
         self._load_assets()
         self._init_first_joystick()
 
+
         # Kick off a background location fetch immediately
         threading.Thread(target=self._background_location_fetch, daemon=True).start()
 
@@ -144,6 +146,15 @@ class Menu:
             fallback=self._arrow_surface(),
         )
 
+        self.bg_1 = self._load_image(
+            Loader("ui/menu").load("bg_img_1.png"),
+            fallback=self._circle_surface(96, (220, 220, 255)),
+        )
+
+        self.bg_2 = self._load_image(
+            Loader("ui/menu").load("bg_image_2.png"),
+            fallback=self._circle_surface(96, (220, 220, 255)),
+        )
         try:
             font_path = Loader("ui/menu").load("PixelFont.ttf")
             self.font = pygame.font.Font(font_path, 30)
@@ -163,6 +174,121 @@ class Menu:
             self.save_path = Loader("sprites/save").load("savedgame.TWOSSAVE")
         except Exception:
             self.save_path = os.path.join(os.getcwd(), "savedgame.TWOSSAVE")
+
+        # ── Light overlay (same technique as world_loader) ──────────────────
+        self._light_overlay    = None   # built lazily on first draw (need screen size)
+        self._light_mask_big   = self._create_light_mask(400)   # wide menu glow
+        self._light_mask_small = self._create_light_mask(0)    # selector glow
+
+        # ── Stars scrolling across the menu background ───────────────────────
+        import random as _rng
+        _star_1_path = Loader("ui/menu").load("star_1.png")
+        _star_2_path = Loader("ui/menu").load("star_2.png")
+        self._star_images = []
+        for _p in (_star_1_path, _star_2_path):
+            try:
+                self._star_images.append(pygame.image.load(_p).convert_alpha())
+            except Exception:
+                # fallback: tiny white dot
+                _s = pygame.Surface((4, 4), pygame.SRCALPHA)
+                pygame.draw.circle(_s, (255, 255, 255, 200), (2, 2), 2)
+                self._star_images.append(_s)
+
+        # Each star: x, y, speed (px/s), image index, alpha, radius
+        # Speed range creates a natural parallax: slow = distant, fast = close
+        self._star_radius   = 10
+        self._star_diameter = self._star_radius * 2
+        self._stars = [
+            {
+                "x":     _rng.uniform(0, 1280),
+                "y":     _rng.uniform(0, 720),
+                "speed": _rng.uniform(0.3, 4.0),
+                "img":   _rng.randint(0, len(self._star_images) - 1),
+                "alpha": _rng.randint(80, 255),
+            }
+            for _ in range(80)
+        ]
+        self._star_last_t = 0
+
+        # ── Moths / flies drawn to the light ────────────────────────────────
+        import random as _rng
+        self._moths = [
+            {
+                "angle":        _rng.uniform(0, math.tau),
+                "radius":       _rng.uniform(60, 180),
+                "speed":        _rng.uniform(0.4, 1.2) * (_rng.choice([-1, 1])),
+                "wobble":       _rng.uniform(0, math.tau),
+                "wobble_speed": _rng.uniform(1.0, 3.0),
+                "wobble_amp":   _rng.uniform(10, 40),
+                "size":         _rng.randint(1, 2),
+                "alpha":        _rng.randint(120, 220),
+            }
+            for _ in range(28)
+        ]
+        self._moth_last_t = 0
+
+    @staticmethod
+    def _create_light_mask(radius):
+        """Pre-render a radial alpha gradient (white circle fading to transparent).
+        Identical algorithm to world_loader._create_light_mask."""
+        size = radius * 2
+        mask = pygame.Surface((size, size), pygame.SRCALPHA)
+        y, x = np.ogrid[:size, :size]
+        dist = np.sqrt((x - radius) ** 2 + (y - radius) ** 2)
+        alpha = np.clip(1.0 - (dist / radius) ** 1.5, 0, 1)
+        alpha = (alpha * 255).astype(np.uint8)
+        arr = pygame.surfarray.pixels_alpha(mask)
+        arr[:] = alpha.T
+        del arr
+        rgb = pygame.surfarray.pixels3d(mask)
+        rgb[:] = 255
+        del rgb
+        return mask.convert_alpha()
+
+    def _draw_light_overlay(self, screen, selector_screen_pos):
+        """Draw a dark vignette with a radial light punch-out around the
+        selected menu item — mirrors world_loader.draw_black_layer."""
+        sw, sh = screen.get_size()
+
+        # (Re)build overlay surface when screen size changes
+        if self._light_overlay is None or self._light_overlay.get_size() != (sw, sh):
+            self._light_overlay = pygame.Surface((sw, sh), pygame.SRCALPHA)
+
+        self._light_overlay.fill((0, 0, 0, 160))
+
+        cx, cy = selector_screen_pos
+        rect_big = self._light_mask_big.get_rect(center=(cx, cy))
+        self._light_overlay.blit(self._light_mask_big, rect_big,
+                                 special_flags=pygame.BLEND_RGBA_SUB)
+
+        rect_small = self._light_mask_small.get_rect(center=(cx, cy))
+        self._light_overlay.blit(self._light_mask_small, rect_small,
+                                 special_flags=pygame.BLEND_RGBA_SUB)
+
+        screen.blit(self._light_overlay, (0, 0))
+
+    def _draw_moths(self, screen, cx, cy):
+        """Animate and draw tiny moth/fly dots orbiting the light centre."""
+        now = pygame.time.get_ticks() / 1000.0
+        dt  = min(now - self._moth_last_t, 0.1)  # cap so first frame isn't huge
+        self._moth_last_t = now
+
+        for m in self._moths:
+            m["angle"]  += m["speed"]  * dt
+            m["wobble"] += m["wobble_speed"] * dt
+
+            r   = m["radius"] + math.sin(m["wobble"]) * m["wobble_amp"]
+            # small erratic flutter on top
+            jitter_a = math.sin(m["wobble"] * 2.7) * 0.18
+            jitter_r = math.cos(m["wobble"] * 1.3) * 6
+
+            px = int(cx + math.cos(m["angle"] + jitter_a) * (r + jitter_r))
+            py = int(cy + math.sin(m["angle"] + jitter_a) * (r + jitter_r) * 0.55)  # flatten orbit
+
+            dot = pygame.Surface((m["size"] * 2 + 2, m["size"] * 2 + 2), pygame.SRCALPHA)
+            pygame.draw.circle(dot, (210, 200, 170, m["alpha"]),
+                               (m["size"] + 1, m["size"] + 1), m["size"])
+            screen.blit(dot, (px - m["size"] - 1, py - m["size"] - 1))
 
     @staticmethod
     def _load_image(path, fallback):
@@ -430,19 +556,104 @@ class Menu:
             print(e)
             self.joystick = None
 
+    def _draw_stars(self, screen):
+        """Move stars, cull collisions, fill empty gaps, then draw."""
+        import random as _rng
+        now = pygame.time.get_ticks() / 1000.0
+        dt  = min(now - self._star_last_t, 0.1)
+        self._star_last_t = now
+
+        sw, sh = screen.get_size()
+        r  = self._star_radius
+        d  = self._star_diameter
+
+        # ── 1. Move every star ───────────────────────────────────────────────
+        for star in self._stars:
+            star["x"] += star["speed"] * dt
+            if star["x"] > sw + r:
+                star["x"] = -r
+                star["y"] = _rng.uniform(r, sh - r)
+
+        # ── 2. Collision cull ────────────────────────────────────────────────
+        # For each group of stars whose centres are within 2*r of each other,
+        # keep one random survivor and remove the rest.
+        alive   = list(self._stars)
+        to_kill = set()
+        for i in range(len(alive)):
+            if i in to_kill:
+                continue
+            group = [i]
+            for j in range(i + 1, len(alive)):
+                if j in to_kill:
+                    continue
+                dx = alive[i]["x"] - alive[j]["x"]
+                dy = alive[i]["y"] - alive[j]["y"]
+                if dx * dx + dy * dy < d * d:   # centres closer than 2r
+                    group.append(j)
+            if len(group) >= 2:
+                survivor = _rng.choice(group)
+                for idx in group:
+                    if idx != survivor:
+                        to_kill.add(idx)
+
+        self._stars = [s for i, s in enumerate(alive) if i not in to_kill]
+
+        # ── 3. Gap fill ──────────────────────────────────────────────────────
+        # Try a handful of random candidate positions; place a new star only
+        # if it fits (no overlap with existing stars).  Skip if it doesn't fit
+        # rather than forcing it.
+        MAX_STARS    = 80
+        CANDIDATES   = 5    # attempts per frame — keeps it cheap
+        added = 0
+        for _ in range(CANDIDATES):
+            if len(self._stars) >= MAX_STARS:
+                break
+            cx = _rng.uniform(r, sw - r)
+            cy = _rng.uniform(r, sh - r)
+            # Check it clears all existing stars
+            fits = all(
+                (cx - s["x"]) ** 2 + (cy - s["y"]) ** 2 >= d * d
+                for s in self._stars
+            )
+            if fits:
+                self._stars.append({
+                    "x":     cx,
+                    "y":     cy,
+                    "speed": _rng.uniform(0.3, 4.0),
+                    "img":   _rng.randint(0, len(self._star_images) - 1),
+                    "alpha": _rng.randint(80, 255),
+                })
+                added += 1
+
+        # ── 4. Draw ──────────────────────────────────────────────────────────
+        for star in self._stars:
+            img = self._star_images[star["img"]]
+            if star["alpha"] < 255:
+                img = img.copy()
+                img.set_alpha(star["alpha"])
+            screen.blit(img, (int(star["x"] - r), int(star["y"] - r)))
+
     def draw_menu(self, screen):
+        screen.blit(self.bg_2, (0,0))
+        self._draw_stars(screen)
+        screen.blit(self.bg_1, (0,0))
         screen_width, screen_height = screen.get_size()
-        y_start = screen_height // 2
+        y_start = screen_height // 2 +25
         self.menu_rects = []
+        self._draw_light_overlay(screen, (1163,327))
+        self._draw_moths(screen, 1163,310)
+        screen_width, screen_height = screen.get_size()
+
+        # Draw the light-source vignette first so text renders on top
+
 
         # Non-selectable title in the top-left
-        title_surface = self.font.render("The Weight of Shadows", True, (255, 255, 255))
-        screen.blit(title_surface, (20, 20))
-
+        title_surface = self.font.render("*TWOSLOGO*", True, (255, 255, 255))
+        screen.blit(title_surface, (20, 40))
         for i, option in enumerate(self.options):
             color = (255, 255, 0) if i == self.selected_index else (255, 255, 255)
             text_surface = self.font.render(option, True, color)
-            x = screen_width // 2 - text_surface.get_width() // 2
+            x = 45
             y = y_start + i * (self.font.get_height() + 15)
             rect = text_surface.get_rect(topleft=(x, y))
             self.menu_rects.append(rect)
@@ -452,6 +663,7 @@ class Menu:
                 icon_x = x - self.selector_icon.get_width() - 10
                 icon_y = y + (text_surface.get_height() - self.selector_icon.get_height()) // 2
                 screen.blit(self.selector_icon, (icon_x, icon_y))
+
 
     # ─── Settings ───────────────────────────────────────────────────────────────
 

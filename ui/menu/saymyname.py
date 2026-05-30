@@ -671,10 +671,7 @@ class NameScreen:
 
             "Thank you for your time",
 
-            f"you may now wake up,&^wait1000{self.chara_name}",
-
-            "..."
-
+            f"you may now wake up,&^wait1000{self.chara_name}"
         ]
 
 

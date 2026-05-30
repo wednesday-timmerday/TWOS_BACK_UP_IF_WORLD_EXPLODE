@@ -214,7 +214,16 @@
     "coll_layers": [
       1
     ],
-    "enemies": [],
+    "enemies": [
+      {
+        "type": "physics_obj_orb",
+        "position": [
+          106,
+          9999
+        ],
+        "id": "2e81c510-2d4f-4c96-8ce7-1f6039746a91"
+      }
+    ],
     "triggers": [
       {
         "type": "trigger",
