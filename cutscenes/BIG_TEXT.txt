@@ -213,11 +213,23 @@ tutor_r8_1 =
     (ENDBRANCH)
     (BRANCH) No.
     mr. tutorion: * Oh^wait250.^wait250.^wait250.
-    mr. tutorion: * I thought you would like it
+    mr. tutorion: * I thought you would&like it
+    mr. tutorion: * ^wait250.^wait250.^wait250.
     (ENDBRANCH)
     mr. tutorion: * Anyway
-    mr. tutorion
+    mr. tutorion: * I've prepped this very cool&and awesome dummy
+    mr. tutorion: * Your final task is to fight&against that
+    mr. tutorion: * Good luck
     {fight}
+    ENDOFCONVERSATION
+
+tutor_r8_killed_dummy =
+    [mrtutor]
+    {(1 0)}
+    mr. tutorion: * Oh...
+    mr. tutorion: * Well, thats a shame
+    mr. tutorion: * Cya later, kiddo
+    {move_offscreen}
     ENDOFCONVERSATION
 
 NAMETEST =

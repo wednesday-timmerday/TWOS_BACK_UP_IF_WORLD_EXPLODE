@@ -17,6 +17,6 @@ class cutscene:
         return "YES"
     
     def fight(self):
-        if self.player.start_encounter("fight_mrtutor") == 1:
+        if self.player.start_encounter("dummy") == 1:
             print("s")
             return "YES"

@@ -66,3 +66,15 @@ the_man =
     The man: * ^special^shake2shoo!^endspecial
     The man: * Go now
     ENDOFCONVERSATION
+
+tutor_r8_dummy =
+    []
+    {(1 0)}
+    (IF) check_dead
+    It's just an piece of cotton
+    (ENDIF)
+    (ELSE)
+    It's an training dummy
+    It doesnt look that uses
+    (ENDELSE
+    ENDOFCONVERSATION
