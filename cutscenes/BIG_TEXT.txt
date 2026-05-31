@@ -99,7 +99,7 @@ parent_yell =
     {follow_the_baby}
     ENDOFCONVERSATION
 
-3 = 
+3 =
     [mrtutor]
     {(1 0)}
     Mr. Tutorion: * Hmmm
@@ -107,7 +107,7 @@ parent_yell =
     Mr. Tutorion: * Wait...&^wait500              * You know how to wall-jump,&              ^wait250* right?
     ENDOFCONVERSATION
 
-4 = 
+4 =
     [mrtutor]
     {(1 0)}
     {jump}
@@ -120,7 +120,7 @@ parent_yell =
     DONTADDIDX
     ENDOFCONVERSATION
 
-the_end = 
+the_end =
     You fool
     you have doomed us all
     {END}
@@ -206,11 +206,17 @@ tutor_r8_1 =
     [mrtutor]
     {(1 0)}
     {angle_player}
-    mr. tutorion: * This^wait250.^wait250.^wait250.^wait250 is the final room
-    mr. tutorion: * Cool, isn't it?
-    mr. tutorion: * Anyway...
-    mr. tutorion: * The last thing you need to&learn is:
-    mr. tutorion: * Fights
+    mr. tutorion: * Its a pretty cool room
+    (CHOICE) Right?; Yes!; No.
+    (BRANCH) Yes!
+    mr. tutorion: i knooow right
+    (ENDBRANCH)
+    (BRANCH) No.
+    mr. tutorion: * Oh^wait250.^wait250.^wait250.
+    mr. tutorion: * I thought you would like it
+    (ENDBRANCH)
+    mr. tutorion: * Anyway
+    mr. tutorion
     {fight}
     ENDOFCONVERSATION
 

@@ -665,8 +665,8 @@
       {
         "type": "spike",
         "position": [
-          328,
-          180
+          326,
+          178
         ],
         "id": "2e204c68-bfdd-435c-af4d-10da352c2cea"
       },
@@ -693,6 +693,14 @@
           134
         ],
         "id": "23125491-84d6-4a3c-ad5a-04f1f5e9afb3"
+      },
+      {
+        "type": "btn_e",
+        "position": [
+          124,
+          63
+        ],
+        "id": "e7deacde-5af6-4624-813a-2bd5ce0acb09"
       }
     ],
     "triggers": [
@@ -716,17 +724,17 @@
       },
       {
         "type": "trigger",
-        "x": 183,
-        "y": 150,
-        "w": 140,
-        "h": 9,
+        "x": 165,
+        "y": 55,
+        "w": 157,
+        "h": 104,
         "name": "cutscene(show_the_dashbtn_thingy)",
         "id": "ffb966a3-8c07-4288-8a25-be1ec5935e1d"
       },
       {
         "type": "trigger",
-        "x": 353,
-        "y": -4,
+        "x": 352,
+        "y": -7,
         "w": 9,
         "h": 161,
         "name": "cutscene(tutor_dash_done)",

@@ -1,0 +1,17 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    "adapter": "Debugpy",
+    "label": "main.py (Debugpy)",
+    "request": "launch",
+    "subProcess": true,
+    "redirectOutput": true,
+    "program": "main.py",
+    "args": [],
+    "stopOnEntry": false,
+    "cwd": "C:\\Users\\JorisDörenkämper\\Desktop\\python\\SHAWOD\\TWOS_BACK_UP_IF_WORLD_EXPLODE",
+  },
+]
