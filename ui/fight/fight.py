@@ -116,7 +116,16 @@ class Fight:
             self.btn_images.append(img)
 
 
+        self.select_btn_images = []
+        for name in ["btn_4.png", "btn_5.png", "btn_6.png"]:
 
+            path = loader.load(name)
+
+            img = pygame.image.load(path).convert_alpha()
+
+            img = img
+
+            self.select_btn_images.append(img)
         # Monster
 
         self.monster_loader = Loader("sprites/")
@@ -483,13 +492,25 @@ class Fight:
 
             for i, btn in enumerate(self.btn_images):
 
-                x = (45 + i * 105) * scale
+                x = (40 + i * 95) * scale
 
                 y = 145 * scale
 
                 # Scale button image
                 scaled_btn = pygame.transform.scale(btn, (btn.get_width() * scale, btn.get_height() * scale))
                 screen.blit(scaled_btn, (x, y))
+
+            for i, btn in enumerate(self.select_btn_images):
+
+                x = (40 + i * 95) * scale
+
+                y = 145 * scale
+
+                # Scale button image
+                scaled_btn = pygame.transform.scale(btn, (btn.get_width() * scale, btn.get_height() * scale))
+                if self.current_selected_btn == i:
+                    screen.blit(scaled_btn, (x, y))
+
 
             # Draw dialogue box
 
