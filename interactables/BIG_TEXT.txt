@@ -75,6 +75,6 @@ tutor_r8_dummy =
     (ENDIF)
     (ELSE)
     It's an training dummy
-    It doesnt look that uses
+    It doesnt look that used
     (ENDELSE
     ENDOFCONVERSATION

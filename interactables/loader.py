@@ -1,10 +1,11 @@
-﻿import pygame
-import importlib.util
+﻿import importlib.util
 import os
 import sys
 
-from ui.textengine.textengine import TextEngine
+import pygame
+
 from sprites.save.save import SaveOBJ
+from ui.textengine.textengine import TextEngine
 
 
 def get_base_path():
@@ -33,7 +34,9 @@ def load_cutscene_module(cutscene_id: str):
         return None
 
     if not hasattr(module, "run") and not hasattr(module, "Interactable"):
-        print(f"[CutsceneLoader] Missing 'run()' or 'Interactable' class in {cutscene_id}.py")
+        print(
+            f"[CutsceneLoader] Missing 'run()' or 'Interactable' class in {cutscene_id}.py"
+        )
         return None
 
     return module
@@ -181,7 +184,7 @@ class Interactable:
         target = self._norm(label)
         for i, line in enumerate(self.module.text):
             if line.startswith("(CHOICE)"):
-                parts = line[len("(CHOICE)"):].strip().split(";")
+                parts = line[len("(CHOICE)") :].strip().split(";")
                 if parts and self._norm(parts[0]) == target:
                     return i
         return None
@@ -191,7 +194,7 @@ class Interactable:
         for i in range(start_index, len(self.module.text)):
             line = self.module.text[i]
             if line.startswith("(BRANCH)"):
-                branch_label = line[len("(BRANCH)"):].strip()
+                branch_label = line[len("(BRANCH)") :].strip()
                 if self._norm(branch_label) == target:
                     return i
         return None
@@ -273,7 +276,7 @@ class Interactable:
 
             # (REROUTE) label
             elif line.startswith("(REROUTE)"):
-                label = line[len("(REROUTE)"):].strip()
+                label = line[len("(REROUTE)") :].strip()
                 target = self._find_choice_line(label)
                 if target is None:
                     print(f"[CutsceneLoader] REROUTE target not found: {label}")
@@ -287,7 +290,7 @@ class Interactable:
 
             # (CHOICE) question; option1; option2; ...
             elif line.startswith("(CHOICE)"):
-                parts = line[len("(CHOICE)"):].strip().split(";")
+                parts = line[len("(CHOICE)") :].strip().split(";")
                 question = parts[0].strip()
                 options = [o.strip() for o in parts[1:]]
                 self.pending_choice_label = question
@@ -304,7 +307,9 @@ class Interactable:
             # {func_name}
             elif line.startswith("{") and line.endswith("}"):
                 func_name = line[1:-1].strip()
-                if hasattr(self.module, func_name) and callable(getattr(self.module, func_name)):
+                if hasattr(self.module, func_name) and callable(
+                    getattr(self.module, func_name)
+                ):
                     self.running_function = func_name
                     self.line_index += 1
                     return
@@ -322,7 +327,9 @@ class Interactable:
             self.player.can_move = True
             return
 
-        real_line = self.module.text[self.line_index].replace("CHARA_NAME", self.player.name)
+        real_line = self.module.text[self.line_index].replace(
+            "CHARA_NAME", self.player.name
+        )
         real_line = real_line.replace("NAME", self.player.true_name)
         self.text_engine.start_text(real_line, self.talking)
         self.line_index += 1
@@ -333,7 +340,9 @@ class Interactable:
         self.waiting_for_choice = False
         self.selected_choice = chosen_option
 
-        branch_index = self._find_branch_line(chosen_option, start_index=self.line_index)
+        branch_index = self._find_branch_line(
+            chosen_option, start_index=self.line_index
+        )
         if branch_index is None:
             print(f"[CutsceneLoader] No branch found for choice: {chosen_option}")
             self._advance_dialogue()
@@ -395,7 +404,9 @@ class Interactable:
                 if self.waiting_for_choice:
                     self.text_engine.update(dt)
                     if self.text_engine.showing_choices and self.text_engine.finished:
-                        chosen = self.text_engine.handle_choice_input(keys, self.joystick)
+                        chosen = self.text_engine.handle_choice_input(
+                            keys, self.joystick
+                        )
                         if chosen:
                             self._handle_choice_made(chosen)
 
@@ -418,7 +429,9 @@ class Interactable:
                             self.text_auto_timer = 0.0
                             self._advance_dialogue()
                     else:
-                        if z_just_pressed or (self.joystick and self.joystick.get_button(1)):
+                        if z_just_pressed or (
+                            self.joystick and self.joystick.get_button(1)
+                        ):
                             self._advance_dialogue()
 
             else:
@@ -429,6 +442,7 @@ class Interactable:
         except Exception as e:
             print(f"[CutsceneLoader] Error in cutscene: {e}")
             import traceback
+
             traceback.print_exc()
             self.running = False
             self.waiting_to_start = False
@@ -438,6 +452,7 @@ class Interactable:
             self.player_locked = False
 
         self.prev_x = x_pressed
+
     # ---------------------------------------------------------
 
     def draw(self, surface):
@@ -452,7 +467,7 @@ class Interactable:
                 y=self.text_y,
                 text_color=(255, 255, 255),
                 choice_color=(180, 180, 180),
-                highlight_color=(255, 255, 0)
+                highlight_color=(255, 255, 0),
             )
 
         if self.module and hasattr(self.module, "draw"):

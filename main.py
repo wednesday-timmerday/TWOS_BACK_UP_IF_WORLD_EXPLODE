@@ -684,7 +684,8 @@ def get_cam_target(player):
 def get_available_levels():
     """Dynamically get available levels from worlds directory."""
     import os
-    worlds_dir = "worlds"
+    loader = Loader("worlds").load(".")
+    worlds_dir = loader
     if not os.path.exists(worlds_dir):
         return []
     
