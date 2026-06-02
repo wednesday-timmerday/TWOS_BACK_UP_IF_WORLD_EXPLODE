@@ -39,10 +39,18 @@
       {
         "type": "physics_obj_orb",
         "position": [
-          815,
-          87
+          829,
+          89
         ],
         "id": "5f1d8274-7cd8-4254-9499-6932f3cff792"
+      },
+      {
+        "type": "lantern",
+        "position": [
+          903,
+          89
+        ],
+        "id": "7dffe394-e378-45ca-9a79-4a12938fb49d"
       }
     ],
     "triggers": [
@@ -83,8 +91,8 @@
         ""
       ],
       [
-        477,
-        -17,
+        476,
+        -42,
         16,
         178,
         "wall_2"
@@ -317,14 +325,16 @@
     "coll_layers": [
       2
     ],
-    "enemies": [      {
-      "type": "physics_obj_orb",
-      "position": [
-        106,
-        9999
-      ],
-      "id": "2e81c510-2d4f-4c96-8ce7-1f6039746a91"
-    }],
+    "enemies": [
+      {
+        "type": "physics_obj_orb",
+        "position": [
+          106,
+          9999
+        ],
+        "id": "2e81c510-2d4f-4c96-8ce7-1f6039746a91"
+      }
+    ],
     "triggers": [
       {
         "type": "trigger",

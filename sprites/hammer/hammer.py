@@ -22,7 +22,7 @@ class hammer(StateSerializable, EnemyBase):
 
         self.world_loader = world_loader
 
-        self.world_loader.add_light_source(self, 550) #TODO wait for a proper hammer sprite
+        # self.world_loader.add_light_source(self, 550) #TODO wait for a proper hammer sprite
 
     
 
