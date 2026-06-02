@@ -11,3 +11,15 @@ test =
     Hope you like^wait100.^wait100.^wait100.^wait100balls???
     (ENDSECTION_2)
 
+dummy =
+    (SECTION_1)
+    IN_BBOX
+    []
+    {(1 0)}
+    It looks like the dummy is made of high-quality cotton
+    (ENDSECTION_1)
+    (SECTION_2)
+    []
+    {(1 0)}
+    ...
+    (ENDSECTION_2)
