@@ -74,7 +74,7 @@ def load_fight_module(fight_name: str):
 
 class Fight:
 
-    def __init__(self, screen, true_screen):
+    def __init__(self, screen, true_screen, player):
 
         self.renderer = screen  # Low-res renderer (320x180 or similar)
         self.screen = true_screen  # Actual display screen (1280x720 or similar)
@@ -90,7 +90,7 @@ class Fight:
         self.current_section = 1
 
         self.current_selected_btn = 0
-
+        self.player = player
 
 
         self._prev_keys = pygame.key.get_pressed()
@@ -166,7 +166,7 @@ class Fight:
 
         # Player
 
-        self.player_atk = 10
+        self.player_atk = 20
 
         self.player_def = 5
 
@@ -400,27 +400,7 @@ class Fight:
 
 
 
-        damage = max(
-
-            1,
-
-            (
-
-                base
-
-                * (1 + (self.player_atk / (self.player_atk + 100)))
-
-                * (100 / (100 + self.monster_def))
-
-                * (1 + missing_hp_ratio * 0.75)
-
-                * (1 + math.sqrt(base) / 60)
-
-            )
-
-        )
-
-
+        damage = base * (1 + (self.player_atk / (self.player_atk + 100))) * (100 / (100 + self.monster_def)) * (1 + missing_hp_ratio * 0.75) * (1 + math.sqrt(base) / 60)
 
         damage = int(damage)
 
@@ -432,7 +412,9 @@ class Fight:
 
         print(f"Damage: {damage} | Monster HP: {self.monster_hp}")
 
+        if self.monster_hp <= 0:
 
+            self.end_fight(reason=0)
 
         # Trigger teleport hit
 
@@ -440,7 +422,59 @@ class Fight:
 
         self.hit_power = min(100, 20 + damage)  # monsters flies farther for big hits
 
+    def end_fight(self, reason=0):
+        """reason 0 = monster dead, reason 1 = spared reason 2 = fled reason 3 = player dead"""
+        print(f"[Fight] end_fight called, reason={reason}")
 
+        # Stop the fight loop
+        self.running = False
+
+        # Clear all bullets
+        self.bullet_engine.clear()
+
+        # Detach from player so main loop stops calling update/draw
+        if self.module is not None:
+            # Notify the fight module if it has an on_end hook
+            if hasattr(self.module, "on_end"):
+                try:
+                    self.module.on_end(self, reason)
+                except Exception as e:
+                    print(f"[Fight] on_end error: {e}")
+
+        self.module = None
+
+        # Reasons:
+        # 0 = monster dead 
+        # 1 = spared
+        # 2 = fled
+        # 3 = player dead
+        if reason == 3:
+            # Player died during fight — trigger death on the player object
+            # The fight stores a reference to the player via fight_loader context;
+            # we reach it through the bullet engine's fight_loader reference.
+            player = self.player
+            if player is not None:
+                try:
+                    player.active_fight = None
+                    player.frozen = False
+                    # Trigger the normal death path
+                    if hasattr(player, 'die'):
+                        player.die()
+                    else:
+                        player.dead = True
+                except Exception as e:
+                    print(f"[Fight] Could not apply player death: {e}")
+        else:
+            # Victory / spared / fled — unfreeze player and clear fight reference
+            player = self.player
+            if player is not None:
+                try:
+                    player.active_fight = None
+                    player.frozen = False
+                    player.can_move = True
+                except Exception as e:
+                    print(f"[Fight] Could not restore player state: {e}")
+        
 
     def spawn_bullet(self, x, y, size, color, damage, rotation, speed=300, type="dot", angular_velocity=0.0):
 

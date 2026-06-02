@@ -19,11 +19,11 @@ balk_spawned = False
 def init(fight_instance):
     fight_instance.monster_path = fight_instance.monster_loader.load("btn_e/frames/btn_e-1.png") #AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA TODO REplace this very noice placeholder E btn ARothfdiuph
     fight_instance.monster_image = pygame.image.load(fight_instance.monster_path).convert_alpha()
-    fight_instance.monster_def = 20 #idfk
+    fight_instance.monster_def = 15 #idfk
     fight_instance.monster_atk = 15
-    fight_instance.monster_hp = 120
-    fight_instance.monster_max_hp = 120
-    fight_instance.fight_identifier = "mrtutor"
+    fight_instance.monster_hp = 20
+    fight_instance.monster_max_hp = 20
+    fight_instance.fight_identifier = "dummy"
     fight_instance.current_section = 1
     fight_instance.bullet_timer = 0
     fight_instance.turn_timer = 0

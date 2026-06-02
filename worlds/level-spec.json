@@ -882,6 +882,15 @@
         "h": 177,
         "name": "cutscene(tutor_r8_1)",
         "id": "50e24d65-f2d4-49da-930f-f7419c7c7d47"
+      },
+      {
+        "type": "trigger",
+        "x": -3,
+        "y": -4,
+        "w": 9,
+        "h": 172,
+        "name": "goto(7)",
+        "id": "8d6b3d9c-7bd5-4808-9953-6d9f7daaa3d1"
       }
     ],
     "invis_walls": [],
@@ -890,8 +899,8 @@
       {
         "type": "spawn",
         "came_from": 7,
-        "pos_x": 12,
-        "pos_y": 154,
+        "pos_x": 22,
+        "pos_y": 158,
         "id": "af45c0fc-f958-4967-a54f-af3ccc9148fe"
       }
     ]

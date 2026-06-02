@@ -436,7 +436,6 @@ class World_loader:
 
     def update_physics(self, dt):
         if self.is_timer_active and self.level_data.get("timer", None) != None:
-            print("trade offer")
             self.Time_left_in_timer_that_times_the_time_in_a_timely_manner += dt
 
         """Update all physics engines at fixed step."""

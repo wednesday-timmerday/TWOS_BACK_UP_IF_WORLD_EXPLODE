@@ -177,7 +177,7 @@ death =
     (BRANCH) fuck you
     ...
     Welp.
-    Fuck you too, CHARA_NAME
+    Fuck you too, NAME
     {kill_game}
     (ENDBRANCH)
     DONTADDIDX

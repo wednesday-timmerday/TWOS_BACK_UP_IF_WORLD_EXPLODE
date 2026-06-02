@@ -996,7 +996,7 @@ def main():
     try:
 
         player = PlayerModule.Player(screen=screen) # if PlayerModule else None
-        fight_loader = FightModule.Fight(renderer, screen)
+        fight_loader = FightModule.Fight(renderer, screen, player)
 
     except Exception as e:
 
@@ -1362,8 +1362,8 @@ def main():
             try:
 
                 player.active_fight.update(dt)
-
-                player.active_fight.draw()
+                if getattr(player, "active_fight", None) and getattr(player.active_fight, "running", False):
+                    player.active_fight.draw()
 
             except Exception:
 
