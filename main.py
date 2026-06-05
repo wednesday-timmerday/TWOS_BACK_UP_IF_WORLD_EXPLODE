@@ -1,4 +1,5 @@
-﻿import pygame
+﻿from mpmath.function_docs import e1
+import pygame
 
 import os
 
@@ -799,7 +800,7 @@ def main():
 
 
 
-    # â”€â”€ Loading bar assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    #  Loading bar assets 
 
     loader = Loader("ui/menu/images_for_load_img_i_guess_idk")
 
@@ -1072,7 +1073,7 @@ def main():
 
 
 
-    # â”€â”€ Menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    #  Menu 
 
     menu_result = None
 
@@ -1108,7 +1109,7 @@ def main():
 
 
 
-    # â”€â”€ Name screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    #  Name screen 
 
     if name_obj:
 
@@ -1132,7 +1133,7 @@ def main():
 
 
 
-    # â”€â”€ Multiplayer init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    #  Multiplayer init 
 
     # mp = None
 
@@ -1176,7 +1177,7 @@ def main():
 
 
 
-    # â”€â”€ Main loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    #  Main loop 
 
     running             = True
 
@@ -1309,7 +1310,7 @@ def main():
 
 
 
-        # â”€â”€ All game drawing to renderer (320x180) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  All game drawing to renderer (320x180) 
 
         try:
 
@@ -1395,7 +1396,7 @@ def main():
 
 
 
-        # â”€â”€ Full-res overlays drawn on top of upscaled screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        #  Full-res overlays drawn on top of upscaled screen 
 
         if last_fps_text:
 
@@ -1429,8 +1430,9 @@ def main():
             except Exception:
 
                 pass
-
-
+        if player.midgamemenu.showing:
+            player.midgamemenu.txt_engine.draw(500,100,surface=player.midgamemenu.true_screen, size=28)
+            player.midgamemenu.txt_engine1.draw(420,300,surface=player.midgamemenu.true_screen, size=14)
 
         # Draw debug level warp popup
 
@@ -1443,7 +1445,7 @@ def main():
 
 
 
-    # â”€â”€ Cleanup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Cleanup
 
     # if mp:
 

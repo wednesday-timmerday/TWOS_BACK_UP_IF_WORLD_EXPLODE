@@ -6,7 +6,7 @@ import interactables.loader as InteractableModule
 from assetsLoader import Loader
 from sprites.save.save import SaveOBJ
 from ui.menu.save_menu import SaveMenu
-from ui.menu.youwenttoofar import Toofar
+from ui.menu.midgame import Menu
 import random
 import math
 
@@ -245,7 +245,6 @@ class Player:
                 except Exception:
                     pass
         
-        self.you_too_far = Toofar(self.screen, self)
         self.offset_x = 0
         self.offset_y = 0
         self.dash_active = False
@@ -259,6 +258,15 @@ class Player:
         self.show_encounter = False
         self.encounter_image = pygame.image.load(sprite_loader.load("encounter/!.png"))
         self.temp_timer = 0.0
+        self.incutscene = False
+        self.atk = 20
+        self.defense = 5
+        self.money = 0
+        try:
+            self.midgamemenu = Menu(screen, player=self)
+        except Exception as e:
+            print(f"KYU {e}")
+
 
     # -
     # Private helpers
@@ -275,13 +283,15 @@ class Player:
         return self._death_font_large, self._death_font_small
 
     def _load_animations(self, sprite_loader):
+        #Load all animation folders
         root = sprite_loader.load("")
         for folder in os.listdir(root):
             folder_path = os.path.join(root, folder)
             if not os.path.isdir(folder_path):
                 continue
             self.animations[folder] = []
-
+            
+        #For all folder names
         for anim_name in list(self.animations.keys()):
             frames = []
             sprite_path = sprite_loader.load(anim_name)
@@ -464,7 +474,8 @@ class Player:
         if self.respawn_protect_timer > 0.0:
             self.respawn_protect_timer = max(0.0, self.respawn_protect_timer - dt)
 
-        print(self.dead)
+        self.midgamemenu.update(dt)
+        print(self.incutscene)
 
         # ----------------------------------------------------------------
         # Phase 1 - Freeze frame
@@ -866,6 +877,7 @@ class Player:
                         cut_id = name[9:-1]
                         if not self.active_cutscene:
                             try:
+                                self.incutscene = True
                                 self.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
                                 self.curr_animation = "Idle"
                                 self.active_cutscene.world = world
@@ -897,7 +909,7 @@ class Player:
                         self._triggered_once.add(trigger_key)
 
                     elif name.startswith("goto("):
-                        level_target = int(name[5:-1])
+                        level_target = name[5:-1]
                         print("GO TO LEVEL:", level_target)
                         self.last_level = getattr(world, "current_level", None)
                         world.change_level(level_target, self)
@@ -1149,3 +1161,5 @@ class Player:
             except Exception:
                 pass
 
+
+        self.midgamemenu.draw(screen, true_screen)

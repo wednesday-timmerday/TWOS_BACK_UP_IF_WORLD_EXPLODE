@@ -232,6 +232,18 @@ tutor_r8_killed_dummy =
     {move_offscreen}
     ENDOFCONVERSATION
 
+tutor_r8_spared_or_fled_dummy =
+    [mrtutor]
+    mr. tutorion: * There we go!
+    mr. tutorion: * You get it
+    mr. tutorion: * no violence
+    mr. tutorion: * thats how it should be
+    mr. tutorion: * cya later kiddo
+    {move_offscreen}
+    ENDOFCONVERSATION
+
+#TODO: Make the better dialouge... if needed ask server
+
 NAMETEST =
     [mrtutor]
     So you must me NAME

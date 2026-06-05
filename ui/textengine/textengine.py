@@ -753,9 +753,10 @@ class TextEngine:
 
     # -----------------------------
 
-    def draw(self, x, y, text_color=(0,0,0), outline_color=(0,0,0),
+    def draw(self, x, y, text_color=(255,255,255), outline_color=(0,0,0),
             choice_color=(180,180,180), highlight_color=(255,255,0),
             outline_width=1, size=24, surface=None):
+
 
         if surface is None:
             surf = pygame.display.get_surface()

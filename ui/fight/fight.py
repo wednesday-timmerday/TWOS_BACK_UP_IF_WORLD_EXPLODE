@@ -166,9 +166,9 @@ class Fight:
 
         # Player
 
-        self.player_atk = 20
+        self.player_atk = self.player.atk #20
 
-        self.player_def = 5
+        self.player_def = self.player.defense #5
 
         self.player_speed = 200
 

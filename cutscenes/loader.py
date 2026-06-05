@@ -322,6 +322,7 @@ class CutsceneLoader:
                 self.line_index += 1
                 self.running = False
                 self.player.can_move = True
+                self.player.incutscene = False
                 return
 
             elif line == "DONTADDIDX":

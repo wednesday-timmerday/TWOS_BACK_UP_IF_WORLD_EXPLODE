@@ -6,7 +6,7 @@ import interactables.loader as InteractableModule
 from assetsLoader import Loader
 from sprites.save.save import SaveOBJ
 from ui.menu.save_menu import SaveMenu
-from ui.menu.youwenttoofar import Toofar
+from ui.menu.midgame import Toofar
 import random
 import math
 
@@ -1111,4 +1111,5 @@ class Player:
             try:
                 self.save_menu.draw(screen)
             except Exception:
-                pass
+                pass
+

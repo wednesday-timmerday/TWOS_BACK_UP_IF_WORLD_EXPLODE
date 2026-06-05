@@ -469,7 +469,7 @@
         "y": 0,
         "w": 20,
         "h": 160,
-        "name": "goto(6)",
+        "name": "goto(tutor_dashandjump)",
         "id": "41fe3844-9792-4df7-bc5d-e93c695796aa"
       },
       {
@@ -502,7 +502,7 @@
       },
       {
         "type": "spawn",
-        "came_from": 6,
+        "came_from": "tutor_dashandjump",
         "pos_x": 462,
         "pos_y": 128,
         "id": "e842bc93-f730-4f86-b2df-24168710687b"
@@ -830,10 +830,10 @@
       },
       {
         "type": "trigger",
-        "x": 793,
-        "y": 137,
-        "w": 33,
-        "h": 30,
+        "x": 805,
+        "y": -45,
+        "w": 21,
+        "h": 212,
         "name": "cutscene(tutor_r7_2)",
         "id": "16e85fb9-8575-478b-9ce2-ed4ae51445f7"
       },
@@ -902,6 +902,67 @@
         "pos_x": 22,
         "pos_y": 158,
         "id": "af45c0fc-f958-4967-a54f-af3ccc9148fe"
+      }
+    ]
+  },
+  "level_tutor_dashandjump": {
+    "coll_layers": [
+      1
+    ],
+    "enemies": [
+      {
+        "type": "spike",
+        "position": [
+          239,
+          163
+        ],
+        "id": "d456577a-ed67-4c8d-bad2-ed546c4e59de"
+      },
+      {
+        "type": "spike",
+        "position": [
+          249,
+          163
+        ],
+        "id": "2f41f645-5fd1-4a1e-9230-201d7b61d70b"
+      }
+    ],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 2,
+        "y": 0,
+        "w": 8,
+        "h": 164,
+        "name": "goto(4)",
+        "id": "eb8a9d21-3fc7-4b7f-9023-501d2114d59c"
+      },
+      {
+        "type": "trigger",
+        "x": 345,
+        "y": 0,
+        "w": 10,
+        "h": 320,
+        "name": "goto(6)",
+        "id": "121ba580-e277-455c-adbc-2db7a548c207"
+      }
+    ],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 4,
+        "pos_x": 30,
+        "pos_y": 147,
+        "id": "bcef38f2-f092-4a91-aa8d-4cf9cf3de9a3"
+      },
+      {
+        "type": "spawn",
+        "came_from": 6,
+        "pos_x": 316,
+        "pos_y": 146,
+        "id": "6dbdb502-ce42-4ea0-9166-71308ba5b639"
       }
     ]
   }
