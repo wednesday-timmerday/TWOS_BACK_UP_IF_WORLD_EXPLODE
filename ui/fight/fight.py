@@ -6,6 +6,7 @@ import math
 from assetsLoader import Loader
 from ui.textengine.textengine import TextEngine
 from bulletengine.bulletengine import BulletHellEngine
+from ui.boxEngine.boxengine import BoxEngine
 
 
 
@@ -74,7 +75,7 @@ def load_fight_module(fight_name: str):
 
 class Fight:
 
-    def __init__(self, screen, true_screen, player):
+    def __init__(self, screen, true_screen, player, world):
 
         self.renderer = screen  # Low-res renderer (320x180 or similar)
         self.screen = true_screen  # Actual display screen (1280x720 or similar)
@@ -194,6 +195,11 @@ class Fight:
 
         self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = False
         self.bbox = False
+        try:
+            self.boxEngine = BoxEngine(world_loader=world, preset="textbox_fights")
+        except Exception as e:
+            print(f"Error while loading boxengine {e}")
+        self.boxEngine.create_box((760,90,100,100))
 
 
     def parse_fight_text(self, text_content: str, identifier: str, section: int) -> str:
@@ -413,8 +419,8 @@ class Fight:
         print(f"Damage: {damage} | Monster HP: {self.monster_hp}")
 
         if self.monster_hp <= 0:
-
-            self.end_fight(reason=0)
+            if self.module.killed(self, 0.0, None)  == 1:
+                self.end_fight(reason=0)
 
         # Trigger teleport hit
 
@@ -589,6 +595,7 @@ class Fight:
 
 
     def draw_text(self, screen=None):
+            print(pygame.mouse.get_pos())
 
             if screen is None:
                 screen = self.screen
@@ -609,10 +616,11 @@ class Fight:
             else:
                 # Geen IN_BBOX: render tijdens enemy beurt
                 if self.current_turn == 1:
+                    self.boxEngine.draw(screen=screen, with_btns=False)
                     self.text_engine.draw(
-                        x=280,
-                        y=200,
-                        text_color=(255, 255, 255),
+                        x=760+10,
+                        y=90+20,
+                        text_color=(0, 0, 0),
                         choice_color=(180, 180, 180),
                         highlight_color=(255, 255, 0),
                         size=12,

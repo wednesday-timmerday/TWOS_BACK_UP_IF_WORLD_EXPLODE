@@ -262,10 +262,13 @@ class Player:
         self.atk = 20
         self.defense = 5
         self.money = 0
+        self.world = None
         try:
             self.midgamemenu = Menu(screen, player=self)
         except Exception as e:
             print(f"KYU {e}")
+
+        self.mouse_flag = False
 
 
     # -
@@ -386,19 +389,20 @@ class Player:
     def apply_spawn_point(self, level_target):
         level_key = f"level_{level_target}"
         level_data = self.level_spec.get(level_key, {})
-        came_from = self.last_level
-
+        came_from = str(self.last_level) if self.last_level is not None else None
+    
         for sp in level_data.get("save_points", []):
-            if sp.get("type") == "spawn" and sp.get("came_from") == came_from:
+            if sp.get("type") == "spawn" and str(sp.get("came_from")) == came_from:
                 self.world_x = float(sp.get("pos_x", 160))
-                self.world_y = float(sp.get("pos_y", 00))
+                self.world_y = float(sp.get("pos_y", 0))
                 self.speed_y = 0.0
                 return
-
+    
+        # fallback
         self.world_x = 160.0
-        self.world_y = 00.0
+        self.world_y = 0.0
         self.speed_y = 0.0
-
+        
     def add_deact(self, name):
         if name:
             self._deactivated_walls.add(str(name))
@@ -422,10 +426,8 @@ class Player:
 
     def start_encounter(self, name):
         self.show_encounter = True
-        print(self.active_fight)
         self.can_move = False
         self.temp_timer += self.dt
-        print(self.temp_timer)
         if self.temp_timer >= 3: #This needs to be the length of the encounter sfx... TODO: get the sfx and make the timings corr
             self.curr_animation = "imnotracist"
             self.show_encounter = False
@@ -471,11 +473,11 @@ class Player:
     def update(self, world, screen, dt, current_level=None, player=None, fight_loader=None):
         self.dt = dt
         self.fight_loader = fight_loader
+        self.world = world
         if self.respawn_protect_timer > 0.0:
             self.respawn_protect_timer = max(0.0, self.respawn_protect_timer - dt)
 
         self.midgamemenu.update(dt)
-        print(self.incutscene)
 
         # ----------------------------------------------------------------
         # Phase 1 - Freeze frame
@@ -802,8 +804,6 @@ class Player:
 
         # -- Fall off screen - die -----------------------------------------
         if self.world_y > 320:
-            print("zun")
-            print(self.world_y)
             if not self.freeze_frame_active and not self.death_walk_active:
                 self.can_move = True
                 self.apply_spawn_point(world.current_level)

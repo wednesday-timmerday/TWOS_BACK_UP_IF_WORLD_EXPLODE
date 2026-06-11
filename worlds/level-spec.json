@@ -56,8 +56,8 @@
     "triggers": [
       {
         "type": "trigger",
-        "x": 165,
-        "y": -13,
+        "x": 164,
+        "y": -70,
         "w": 50,
         "h": 172,
         "name": "cutscene(1)",
@@ -102,21 +102,21 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 3,
+        "came_from": "3",
         "pos_x": 64,
         "pos_y": 282,
         "id": "e842bc93-f730-4f86-b2df-24168710687b"
       },
       {
         "type": "spawn",
-        "came_from": 0,
+        "came_from": "0",
         "pos_x": 67,
         "pos_y": 138,
         "id": "7ece0f7c-d8c9-4266-9cf9-5e0d767867c6"
       },
       {
         "type": "spawn",
-        "came_from": 4,
+        "came_from": "4",
         "pos_x": 1038,
         "pos_y": 68,
         "id": "e894f7fa-7ddf-4fbc-b737-dd3f1c0ca199"
@@ -212,14 +212,14 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 0,
+        "came_from": "0",
         "pos_x": 566,
         "pos_y": 142,
         "id": "8a2bd41b-f75a-4337-a084-bc577671122a"
       },
       {
         "type": "spawn",
-        "came_from": 2,
+        "came_from": "2",
         "pos_x": 242,
         "pos_y": 145,
         "id": "d925cb39-4760-4b31-a4b8-810bf9030e83"
@@ -307,14 +307,14 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 2,
+        "came_from": "2",
         "pos_x": 303,
         "pos_y": 130.0,
         "id": "1091d641-6587-48cb-b26e-ab9d0828af80"
       },
       {
         "type": "spawn",
-        "came_from": 1,
+        "came_from": "1",
         "pos_x": 26,
         "pos_y": 143,
         "id": "7904f943-3eca-447e-9292-a2dc882ed787"
@@ -360,7 +360,7 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 1,
+        "came_from": "1",
         "pos_x": 418,
         "pos_y": 25,
         "id": "e7c7120d-2459-43cc-8872-18cb9dda3270"
@@ -414,7 +414,7 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 3,
+        "came_from": "3",
         "pos_x": 30,
         "pos_y": 79,
         "id": "c3f23294-8c75-49c3-bec5-101ef8ea1282"
@@ -495,7 +495,7 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 3,
+        "came_from": "3",
         "pos_x": 27,
         "pos_y": 140,
         "id": "3914ed24-80dd-4012-a758-aa0c8d74b3a5"
@@ -547,7 +547,7 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 1,
+        "came_from": "1",
         "pos_x": 50,
         "pos_y": 153,
         "id": "e842bc93-f730-4f86-b2df-24168710687b"
@@ -780,14 +780,14 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 4,
+        "came_from": "4",
         "pos_x": 66,
         "pos_y": 133,
         "id": "e842bc93-f730-4f86-b2df-24168710687b"
       },
       {
         "type": "spawn",
-        "came_from": 7,
+        "came_from": "7",
         "pos_x": 401,
         "pos_y": 130,
         "id": "25b3d2b1-751c-4a51-93c5-1343e0c42c3f"
@@ -852,7 +852,7 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 6,
+        "came_from": "6",
         "pos_x": 46,
         "pos_y": 149,
         "id": "4dd5158d-0e84-4e40-963b-5c5fb446ff1b"
@@ -898,9 +898,9 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 7,
+        "came_from": "7",
         "pos_x": 22,
-        "pos_y": 158,
+        "pos_y": 151,
         "id": "af45c0fc-f958-4967-a54f-af3ccc9148fe"
       }
     ]
@@ -952,14 +952,14 @@
     "save_points": [
       {
         "type": "spawn",
-        "came_from": 4,
+        "came_from": "4",
         "pos_x": 30,
         "pos_y": 147,
         "id": "bcef38f2-f092-4a91-aa8d-4cf9cf3de9a3"
       },
       {
         "type": "spawn",
-        "came_from": 6,
+        "came_from": "6",
         "pos_x": 316,
         "pos_y": 146,
         "id": "6dbdb502-ce42-4ea0-9166-71308ba5b639"

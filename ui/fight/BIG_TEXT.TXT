@@ -23,3 +23,19 @@ dummy =
     {(1 0)}
     ...
     (ENDSECTION_2)
+    (SECTION_3)
+    IN_BBOX
+    []
+    {(1 0)}
+    The dummy does a little^wait250.^wait250.^wait250. Dance??
+    (ENDSECTION_3)
+    (SECTION_4)
+    []
+    {(1 0)}
+    ...
+    (ENDSECTION_4)
+    (SECTION_5)
+    []
+    {(1 0)}
+    The dummy is staring
+    (ENDSECTION_5)

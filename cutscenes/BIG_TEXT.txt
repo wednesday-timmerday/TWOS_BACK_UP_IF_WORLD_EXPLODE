@@ -226,10 +226,14 @@ tutor_r8_1 =
 tutor_r8_killed_dummy =
     [mrtutor]
     {(1 0)}
+    {lock_player}
     mr. tutorion: * Oh...
     mr. tutorion: * Well, thats a shame
-    mr. tutorion: * Cya later, kiddo
+    mr. tutorion: * ^wait250. ^wait250. ^wait250.
+    mr. tutorion: * I- ^wait500You-
+    mr. tutorion: * Let's just go
     {move_offscreen}
+    {teleport_to_void}
     ENDOFCONVERSATION
 
 tutor_r8_spared_or_fled_dummy =

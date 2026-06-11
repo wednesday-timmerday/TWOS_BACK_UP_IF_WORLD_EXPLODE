@@ -515,7 +515,8 @@ class NameScreen:
 
                 self.is_teto = True
 
-
+            elif name.len() == 1:
+                self.text_engine.start_text("Too lazy, Eh?")
 
             elif name in ("A", "AAAAAAA", "HUMAN", "PERSON"):
 
@@ -529,7 +530,7 @@ class NameScreen:
 
             elif name in ("TIGO", "JORIS", "QUINTEN", "CARPET", "JOSIAH", "EVERAN", "AMY"): #The developers...
 
-                self.text_engine.start_text('.^wait250.^wait250.^wait250')
+                self.text_engine.start_text('Ah yes, ^wait250my creators')
 
                 self.is_teto = False
 

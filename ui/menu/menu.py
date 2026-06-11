@@ -79,8 +79,7 @@ class Menu:
         self.InSettings = False
         self.selected_setting = 0
         self.settings_options = [
-            "Fullscreen", "Master Volume", "Controllers",
-            "Go back", "Reset Game", "Debug",
+            "Fullscreen", "Master Volume", "Debug",
         ]
         self.settings_rects = []
 
@@ -425,6 +424,7 @@ class Menu:
     # ─── Main draw loop ─────────────────────────────────────────────────────────
 
     def draw(self, screen):
+        pygame.mouse.set_visible(True)
         if not self.music_started:
             try:
                 pygame.mixer.music.play(-1, fade_ms=1000)
@@ -527,7 +527,7 @@ class Menu:
             self.selected_index = (self.selected_index - 1) % len(self.options)
         elif event.key == pygame.K_DOWN:
             self.selected_index = (self.selected_index + 1) % len(self.options)
-        elif event.key == pygame.K_RETURN:
+        elif event.key == pygame.K_z:
             self.activate_selected_option()
 
     def handle_mainmenu_input_joystick(self):
@@ -674,7 +674,7 @@ class Menu:
             self.selected_setting = (self.selected_setting + 1) % len(self.settings_options)
         elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
             self.change_setting(event.key, screen)
-        elif event.key == pygame.K_RETURN:
+        elif event.key == pygame.K_z:
             self.handle_setting_select()
         elif event.key == pygame.K_ESCAPE:
             self.InSettings = False
@@ -724,6 +724,13 @@ class Menu:
             pygame.mixer.music.set_volume(new_vol)
             save_options(self.settings)
 
+        elif self.selected_setting == 2:  # Debug
+            delta   = -1 if key == pygame.K_LEFT else 1
+            new_val = min(max(self.settings.get("debug", 0.5) + delta, 0.0), 1.0)
+            self.settings["debug"] = new_val
+            save_options(self.settings)
+
+
     def handle_setting_select(self):
         if self.settings_options[self.selected_setting] == "Reset Game":
             try:
@@ -751,7 +758,7 @@ class Menu:
     def draw_settings(self, screen):
         screen.blit(self.bg_2, (0,0))
         self._draw_stars(screen)
-        self._draw_light_overlay(screen, (99999,99))
+        self._draw_light_overlay(screen, (99999,99)) #Trust
         self.settings_rects = []
 
         screen_width, screen_height = screen.get_size()

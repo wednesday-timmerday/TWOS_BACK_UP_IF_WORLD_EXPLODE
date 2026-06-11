@@ -43,7 +43,7 @@ class Menu:
         """Helper function to handle inputs"""
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RCTRL] or keys[pygame.K_LCTRL]:
-            if not self.showing and not self.btn_down:
+            if not self.showing and not self.btn_down and not self.player.incutscene:
                 self.left_txt = (
                     f"Attack: {self.player.atk}"
                     f"&Defense: {self.player.defense}"
@@ -52,6 +52,16 @@ class Menu:
                 self.showing = True
                 self.player.can_move = False
                 self.player.curr_animation = "Idle"
+            elif self.showing and not self.btn_down:
+                self.left_txt = (
+                    f"Attack: {self.player.atk}"
+                    f"&Defense: {self.player.defense}"
+                    f"&Dollars: {self.player.money}"
+                )
+                self.showing = False
+                self.player.can_move = True
+                self.player.curr_animation = "Idle"
+            
             elif not self.btn_down:
                 self.showing = False
                 self.player.can_move = True
@@ -60,10 +70,7 @@ class Menu:
             self.btn_down = False
 
     def update(self, dt):
-        if not self.player.incutscene:
-            self.handle_keys()
-        else:
-            self.showing = False
+        self.handle_keys()
         if not self.text_finished_flag:
             self.txt_engine.start_text(f"{self.player.name}", "")
             self.txt_engine.char_index = len(self.txt_engine.text)
