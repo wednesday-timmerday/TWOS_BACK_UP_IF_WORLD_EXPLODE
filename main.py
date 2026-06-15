@@ -1035,8 +1035,8 @@ def main():
 
     while running:
         if not player.mouse_flag:
-            #catch_mouse(True)
-            pass
+            catch_mouse(True)
+            
         dt = clock.tick(FPS) / 1000.0
 
         dt = min(dt, 1 / 30)

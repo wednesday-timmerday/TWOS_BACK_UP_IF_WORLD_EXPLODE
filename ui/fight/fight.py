@@ -371,8 +371,12 @@ class Fight:
 
 
         try:
-
             self.module.run(self, dt, joystick)
+
+            # Somehow doesnt work first try????
+            # It seems to be SECTION_2 is not working
+            # but y???
+            # AAAAAAAAAAAAAAA
 
         except Exception as e:
 
@@ -380,6 +384,8 @@ class Fight:
 
         
         self._prev_keys = keys
+
+        print(self.current_section)
 
 
     def attack_monster(self):
@@ -588,6 +594,8 @@ class Fight:
         # Draw player circle only during monster's turn
         if self.current_turn == 1:
             pygame.draw.circle(screen, (0, 255, 0), (int(self.player_x), int(self.player_y)), 7)
+        else:
+            self.render_text_bbox = True
         
         # Draw text engine
         self.draw_text(screen)
@@ -616,13 +624,19 @@ class Fight:
             else:
                 # Geen IN_BBOX: render tijdens enemy beurt
                 if self.current_turn == 1:
-                    self.boxEngine.draw(screen=screen, with_btns=False)
-                    self.text_engine.draw(
-                        x=760+10,
-                        y=90+20,
-                        text_color=(0, 0, 0),
-                        choice_color=(180, 180, 180),
-                        highlight_color=(255, 255, 0),
-                        size=12,
-                        surface=screen
-                    )
+                    print(self.render_text_bbox)
+                    keys = pygame.key.get_pressed()
+                    if keys[pygame.K_y] and self.text_engine.finished:
+                        self.render_text_bbox = False
+
+                    if self.render_text_bbox:
+                        self.boxEngine.draw(screen=screen, with_btns=False)
+                        self.text_engine.draw(
+                            x=760+10,
+                            y=90+20,
+                            text_color=(0, 0, 0),
+                            choice_color=(180, 180, 180),
+                            highlight_color=(255, 255, 0),
+                            size=12,
+                            surface=screen
+                        )

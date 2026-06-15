@@ -14,6 +14,7 @@ from astral.sun import sun
 from astral import LocationInfo
 
 from assetsLoader import Loader
+from BtnHandeler import btnHandeler
 
 
 # TODO: FIX JOYSTICK BUG
@@ -117,6 +118,8 @@ class Menu:
 
         self._load_assets()
         self._init_first_joystick()
+
+        self.btnhandler = btnHandeler()
 
 
         # Kick off a background location fetch immediately
@@ -523,11 +526,11 @@ class Menu:
             sys.exit(0)
 
     def handle_mainmenu_input(self, event):
-        if event.key == pygame.K_UP:
+        if self.btnhandler.get_btn_pressed("up"):
             self.selected_index = (self.selected_index - 1) % len(self.options)
-        elif event.key == pygame.K_DOWN:
+        elif self.btnhandler.get_btn_pressed("down"):
             self.selected_index = (self.selected_index + 1) % len(self.options)
-        elif event.key == pygame.K_z:
+        elif self.btnhandler.get_btn_pressed("z"):
             self.activate_selected_option()
 
     def handle_mainmenu_input_joystick(self):
@@ -668,15 +671,15 @@ class Menu:
     # ─── Settings ───────────────────────────────────────────────────────────────
 
     def handle_settings_input(self, event, screen):
-        if event.key == pygame.K_UP:
+        if self.btnhandler.get_btn_pressed("up"):
             self.selected_setting = (self.selected_setting - 1) % len(self.settings_options)
-        elif event.key == pygame.K_DOWN:
+        elif self.btnhandler.get_btn_pressed("down"):
             self.selected_setting = (self.selected_setting + 1) % len(self.settings_options)
-        elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+        elif self.btnhandler.get_btn_pressed("left") or self.btnhandler.get_btn_pressed("right"):
             self.change_setting(event.key, screen)
-        elif event.key == pygame.K_z:
+        elif self.btnhandler.get_btn_pressed("z"):
             self.handle_setting_select()
-        elif event.key == pygame.K_ESCAPE:
+        elif self.btnhandler.get_btn_pressed("esc"):
             self.InSettings = False
             save_options(self.settings)
 
@@ -718,14 +721,14 @@ class Menu:
                 self.apply_fullscreen(screen)
 
         elif self.selected_setting == 1:  # Master Volume
-            delta   = -0.05 if key == pygame.K_LEFT else 0.05
+            delta   = -0.05 if self.btnhandler.get_btn_pressed("left") else 0.05
             new_vol = min(max(self.settings.get("master_volume", 0.5) + delta, 0.0), 1.0)
             self.settings["master_volume"] = new_vol
             pygame.mixer.music.set_volume(new_vol)
             save_options(self.settings)
 
         elif self.selected_setting == 2:  # Debug
-            delta   = -1 if key == pygame.K_LEFT else 1
+            delta   = -1 if self.btnhandler.get_btn_pressed("left") else 1
             new_val = min(max(self.settings.get("debug", 0.5) + delta, 0.0), 1.0)
             self.settings["debug"] = new_val
             save_options(self.settings)

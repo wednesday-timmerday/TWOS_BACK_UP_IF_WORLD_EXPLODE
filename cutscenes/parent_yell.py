@@ -113,15 +113,15 @@ class cutscene:
 
 
         elif s == 2:
-            self.player.mouse_flag = True
-            pygame.mouse.set_visible(True)
-            print(pygame.mouse.get_pos()[0])
-            pygame.mouse.set_pos( self._approach(pygame.mouse.get_pos()[0], 160, 200 * self.dt), 720/2)
-            # self.player.world_x = self._approach(
+            # self.player.mouse_flag = True
+            # # pygame.mouse.set_visible(True)
+            # # print(pygame.mouse.get_pos()[0])
+            # # pygame.mouse.set_pos( self._approach(pygame.mouse.get_pos()[0], 160, 200 * self.dt), 720/2)
+            self.player.world_x = self._approach(
 
-            #     self.player.world_x, 160, self.player.speed / 2 * self.dt
+                self.player.world_x, 160, self.player.speed / 2 * self.dt
 
-            # )
+            )
 
             if self.player.world_x <= 160:
 
@@ -184,6 +184,15 @@ class cutscene:
         elif s == 7:
 
             return "YES"
+
+
+    # ------------------------------------------------------------------
+     
+    
+    def kill_music(self):
+        pygame.mixer.music.stop()
+        pygame.mixer.music.unload()
+        return "YES"
 
 
 

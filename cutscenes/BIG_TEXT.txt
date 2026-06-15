@@ -11,6 +11,7 @@ parent_yell =
             Mom: * ^special^shake4You always say that!^endspecial
             CHARA_NAME * ...
             CHARA_NAME * Lets just go to bed.
+            {kill_music}
             {goto_world}
             ENDOFCONVERSATION
 
@@ -27,8 +28,8 @@ parent_yell =
     {(0 0.5)}
     shadowrock: * Who do you think&you are?
     shadowrock: * Geez, why the&long face?
-    (CHOICE) What will you say; Got an F+ for my math test; My grand-pa died
-    (BRANCH) Got an F+ for my math test
+    (CHOICE) What will you say; Got an F for my math test; My grand-pa died;
+    (BRANCH) Got an F for my math test
     {(0 0.5)}
     shadowrock: * I can smell the lie&from over here
     shadowrock: * Did'ja really think&I wouldn't notice?

@@ -9,6 +9,8 @@ This fight would have:
 7. He throws the toolbox, on impact exploding
 """
 
+#TODO: Move textengine stuff to fight.py... and fix self.render_text_bbox
+
 import pygame 
 import cutscenes.loader as CutsceneLoaderModule
 import random

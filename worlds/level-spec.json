@@ -143,6 +143,30 @@
           9999
         ],
         "id": "2e81c510-2d4f-4c96-8ce7-1f6039746a91"
+      },
+      {
+        "type": "door_home",
+        "position": [
+          567,
+          161
+        ],
+        "id": "41409efb-672d-4431-aef0-ed1e91775e49"
+      },
+      {
+        "type": "door_home",
+        "position": [
+          441,
+          163
+        ],
+        "id": "c576c3d2-76ec-429f-974b-b1da7c004ce1"
+      },
+      {
+        "type": "door_home",
+        "position": [
+          296,
+          163
+        ],
+        "id": "f2f6088a-c5ba-4675-95e6-bf36e10287d6"
       }
     ],
     "triggers": [
@@ -166,19 +190,19 @@
       },
       {
         "type": "trigger",
-        "x": 422,
-        "y": 101,
-        "w": 40,
-        "h": 65,
+        "x": 431,
+        "y": 128,
+        "w": 21,
+        "h": 38,
         "name": "interactable(q_gate_r1_idfk)",
         "id": "1ae49caf-ddbd-4978-8424-38f6de2c144b"
       },
       {
         "type": "trigger",
-        "x": 270,
-        "y": 78,
-        "w": 53,
-        "h": 91,
+        "x": 286,
+        "y": 130,
+        "w": 20,
+        "h": 38,
         "name": "interactable(t_gate_r2_2)",
         "id": "31aadc03-5022-476d-91cd-981022cf29fe"
       },
@@ -238,6 +262,14 @@
           9999
         ],
         "id": "2e81c510-2d4f-4c96-8ce7-1f6039746a91"
+      },
+      {
+        "type": "door_home",
+        "position": [
+          9,
+          160
+        ],
+        "id": "3d0b8504-c60b-4604-b7c3-897ba6e18384"
       }
     ],
     "triggers": [
@@ -333,6 +365,14 @@
           9999
         ],
         "id": "2e81c510-2d4f-4c96-8ce7-1f6039746a91"
+      },
+      {
+        "type": "door_home",
+        "position": [
+          10,
+          161
+        ],
+        "id": "92583b3a-6869-4c2c-827c-756ece6ebae9"
       }
     ],
     "triggers": [
@@ -905,7 +945,7 @@
       }
     ]
   },
-  "level_tutor_dashandjump": {
+  "level_9": {
     "coll_layers": [
       1
     ],
@@ -921,7 +961,7 @@
       {
         "type": "spike",
         "position": [
-          249,
+          250,
           163
         ],
         "id": "2f41f645-5fd1-4a1e-9230-201d7b61d70b"
@@ -945,6 +985,15 @@
         "h": 320,
         "name": "goto(6)",
         "id": "121ba580-e277-455c-adbc-2db7a548c207"
+      },
+      {
+        "type": "trigger",
+        "x": 280,
+        "y": 178,
+        "w": 64,
+        "h": 8,
+        "name": "move_cam_y(100)",
+        "id": "c8ef1a01-0223-48f3-b378-e084027ebbed"
       }
     ],
     "invis_walls": [],

@@ -2,6 +2,7 @@
 from assetsLoader import Loader
 from ui.textengine.textengine import TextEngine
 from ui.textengine.textengine import TextEngine as TXT1
+from BtnHandeler import btnHandeler
 
 # TF IS TIS FUCKING CODE
 
@@ -39,10 +40,10 @@ class Menu:
             f"&Dollars: {self.player.money}"
         )
 
+        self.btnhandeler = btnHandeler()
     def handle_keys(self):
         """Helper function to handle inputs"""
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_RCTRL] or keys[pygame.K_LCTRL]:
+        if self.btnhandeler.get_btn_pressed("ctrl"):
             if not self.showing and not self.btn_down and not self.player.incutscene:
                 self.left_txt = (
                     f"Attack: {self.player.atk}"
@@ -61,10 +62,7 @@ class Menu:
                 self.showing = False
                 self.player.can_move = True
                 self.player.curr_animation = "Idle"
-            
-            elif not self.btn_down:
-                self.showing = False
-                self.player.can_move = True
+                
             self.btn_down = True
         else:
             self.btn_down = False

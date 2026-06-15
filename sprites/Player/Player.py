@@ -7,6 +7,7 @@ from assetsLoader import Loader
 from sprites.save.save import SaveOBJ
 from ui.menu.save_menu import SaveMenu
 from ui.menu.midgame import Menu
+from BtnHandeler import btnHandeler
 import random
 import math
 
@@ -135,9 +136,9 @@ class Player:
         self.touching_wall_left = False
         self.touching_wall_right = False
         self.wall_slide_max_fall = 55.0
-        self.wall_jump_y = -200.0  # increased jump height
-        self.wall_jump_push_speed = 85.0  # reduced for smoother feel
-        self.wall_jump_dir_lock_time = 0.18  # increased for better control window
+        self.wall_jump_y = -200.0
+        self.wall_jump_push_speed = 85.0
+        self.wall_jump_dir_lock_time = 0.18
         self.wall_jump_dir_lock_timer = 0.0
         self.wall_jump_push_dir = 0
 
@@ -213,6 +214,35 @@ class Player:
         self.frozen = False
         self.jump_down = False
 
+        # ------------------------------------------------------------------
+        # Celeste-style vertical camera
+        # ------------------------------------------------------------------
+        # The camera always tracks the player's Y position with a smooth
+        # lerp.  While the player is in genuine freefall a "lookahead"
+        # offset builds up so they can see what is below them — exactly
+        # what Celeste does.  The offset melts away the moment they land
+        # or start rising again.
+        #
+        #   _cam_fall_lookahead       – current downward peek (world-px)
+        #   _cam_lookahead_max        – maximum peek distance
+        #   _cam_lookahead_build_rate – how fast the peek grows  (px/s)
+        #   _cam_lookahead_melt_rate  – how fast it shrinks back (px/s)
+        #
+        # The camera catch-up speed scales with the player's fall velocity
+        # so it never lags behind during a long drop.
+        # ------------------------------------------------------------------
+        self._cam_fall_lookahead       = 0.0
+        self._cam_lookahead_max        = 48.0
+        self._cam_lookahead_build_rate = 120.0
+        self._cam_lookahead_melt_rate  = 80.0
+
+        #  Camera override / lock -
+        #  When a cutscene, trigger, or external system wants a fixed Y,
+        #  this lock prevents the follow-camera from overwriting it next frame.
+        self.camera_y_lock = False
+        self.camera_y_lock_target = None
+        self.camera_y_lock_speed = None
+
         #  Joystick 
         self.joystick = None
         try:
@@ -269,6 +299,7 @@ class Player:
             print(f"KYU {e}")
 
         self.mouse_flag = False
+        self.btnhandeler = btnHandeler()
 
 
     # -
@@ -312,14 +343,7 @@ class Player:
                     img = pygame.image.load(path).convert_alpha()
                 except Exception as e:
                     print(f"Error loading frame {i} for animation {anim_name}: {e}")
-                    # img = pygame.Surface((40, 80), pygame.SRCALPHA)
-                    # img.fill((255, 0, 255, 100))
                 frames.append(img)
-
-            # if not frames:
-            #     placeholder = pygame.Surface((40, 80), pygame.SRCALPHA)
-            #     placeholder.fill((255, 0, 255, 100))
-            #     frames = [placeholder]
 
             self.animations[anim_name] = frames
             self.animations_left[anim_name] = [
@@ -368,6 +392,21 @@ class Player:
         self.death_walk_active = False
         self.death_walk_timer = 0.0
         self.collision_enabled = True
+        self._cam_fall_lookahead = 0.0   # snap lookahead away on respawn
+        self.clear_camera_y_lock()
+
+
+    def lock_camera_y(self, target_y, speed=None):
+        # Lock the world camera to a specific world-space Y target.
+        self.camera_y_lock = True
+        self.camera_y_lock_target = float(target_y)
+        self.camera_y_lock_speed = speed
+
+    def clear_camera_y_lock(self):
+        # Return the camera to normal player-follow mode.
+        self.camera_y_lock = False
+        self.camera_y_lock_target = None
+        self.camera_y_lock_speed = None
 
     # -
     # Public helpers
@@ -418,7 +457,7 @@ class Player:
         
         Returns True if Z was just pressed this frame.
         """
-        z_pressed = keys[pygame.K_z] or keys[pygame.K_y] or (joystick and joystick.get_button(1))
+        z_pressed = self.btnhandeler.get_btn_pressed("z") or self.btnhandeler.get_btn_pressed("y") or (joystick and joystick.get_button(1))
         self.z_just_pressed_interactable = z_pressed and not self._prev_z_interactable
         self._prev_z_interactable = z_pressed
         return self.z_just_pressed_interactable
@@ -608,7 +647,6 @@ class Player:
         if not ignore_collisions:
             self.wall_jump_dir_lock_timer = max(0.0, self.wall_jump_dir_lock_timer - dt)
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
-            # Widened probes from 1px to 3px for easier detection, and extended check area
             left_probe  = pygame.Rect(int(self.world_x + hbx - 3),        int(self.world_y + hby), 3, side_probe_h)
             right_probe = pygame.Rect(int(self.world_x + hbx + hb.width), int(self.world_y + hby), 3, side_probe_h)
             self.touching_wall_left  = (not self.on_ground) and check_collision_solid_only(world, left_probe)
@@ -625,12 +663,12 @@ class Player:
                 dx = self.wall_jump_push_dir * self.wall_jump_push_speed * dt
                 self.curr_animation = "Walking"
             else:
-                if keys[pygame.K_LEFT] or keys[pygame.K_a] or axis_x < -0.5:
+                if self.btnhandeler.get_btn_pressed("left") or axis_x < -0.5:
                     world.is_timer_active = True
                     dx = -self.speed * dt
                     self.dir = 1
                     self.curr_animation = "Walking"
-                elif keys[pygame.K_RIGHT] or keys[pygame.K_d] or axis_x > 0.5:
+                elif self.btnhandeler.get_btn_pressed("right") or axis_x > 0.5:
                     world.is_timer_active = True
                     dx = self.speed * dt
                     self.dir = 0
@@ -639,11 +677,9 @@ class Player:
                     self.curr_animation = "Idle"
                     self.curr_frame = min(self.curr_frame, len(self.animations["Idle"]) - 1)
 
-                
-                if keys[pygame.K_e] or (self.joystick and self.joystick.get_button(2)):
+                if self.btnhandeler.get_btn_pressed("e") or (self.joystick and self.joystick.get_button(2)):
                     if self.dash_cooldown_timer_time == False:
                         self.dash_active = True
-                        
 
             if self.dash_active and self.dash_cooldown_timer <= 0.0:
                 dx = self.speed * dt * 2.5 * (1 if self.dir == 0 else -1)
@@ -661,16 +697,13 @@ class Player:
                 self.dash_cooldown_timer_time = False
                 self.dash_cooldown_timer = 0.0
 
-
         if self.current_effect == 1:
             dx *= 2.5
 
         # -- Jump input ----------------------------------------------------
         try:
             self.jump_down = (
-                keys[pygame.K_SPACE]
-                or keys[pygame.K_w]
-                or keys[pygame.K_UP]
+                self.btnhandeler.get_btn_pressed("up")
                 or (self.joystick and self.joystick.get_button(0))
             )
         except Exception:
@@ -739,8 +772,8 @@ class Player:
                 self.speed_y += gravity_fall * dt
 
         if (not self.on_ground) and self.speed_y > 0:
-            holding_left  = keys[pygame.K_LEFT] or keys[pygame.K_a] or axis_x < -0.5
-            holding_right = keys[pygame.K_RIGHT] or keys[pygame.K_d] or axis_x > 0.5
+            holding_left  = self.btnhandeler.get_btn_pressed("left") or axis_x < -0.5
+            holding_right = self.btnhandeler.get_btn_pressed("right") or axis_x > 0.5
             if (self.touching_wall_left and holding_left) or (self.touching_wall_right and holding_right):
                 self.speed_y = min(self.speed_y, self.wall_slide_max_fall)
 
@@ -791,6 +824,54 @@ class Player:
 
         self.update_hitbox()
 
+        # ----------------------------------------------------------------
+        # Celeste-style vertical camera
+        # ----------------------------------------------------------------
+        # Always tracks the player's Y with a smooth lerp.  When the
+        # player is in genuine freefall (speed_y > 40) a downward
+        # "lookahead" offset accumulates so they can see what is below
+        # them — the same trick Celeste uses.  The offset melts away the
+        # moment they land or start rising.
+        #
+        # Camera catch-up speed = max(base, fall_speed * scale * dt) so
+        # the lens never falls behind during a long drop.
+        # ----------------------------------------------------------------
+        if not self.dead:
+            if self.camera_y_lock and self.camera_y_lock_target is not None:
+                # Hard override: external systems can hold the camera
+                # on a specific world-space Y until clear_camera_y_lock().
+                cam_target = self.camera_y_lock_target
+                cam_speed = self.camera_y_lock_speed
+                if cam_speed is None:
+                    world.scroll_cam_y(cam_target)
+                else:
+                    world.scroll_cam_y(cam_target, speed=cam_speed)
+            else:
+                # --- lookahead accumulate / melt ---
+                if not self.on_ground and self.speed_y > 40.0:
+                    self._cam_fall_lookahead = min(
+                        self._cam_fall_lookahead + self._cam_lookahead_build_rate * dt,
+                        self._cam_lookahead_max,
+                    )
+                else:
+                    self._cam_fall_lookahead = max(
+                        self._cam_fall_lookahead - self._cam_lookahead_melt_rate * dt,
+                        0.0,
+                    )
+
+                # --- drive the world camera ---
+                # scroll_cam_y(T) resolves to: cam_y = T - half_h
+                # Passing (world_y + half_h + lookahead) gives:
+                #   cam_y = world_y + lookahead
+                # so the player sits near the top edge and the lookahead
+                # shifts the view downward to reveal the floor below.
+                half_h     = screen.get_height() / 2.0
+                cam_target = self.world_y + half_h + self._cam_fall_lookahead
+
+                # Speed scales with fall velocity so the camera keeps up.
+                cam_speed  = max(8.0, abs(self.speed_y) * dt * 1.2)
+                world.scroll_cam_y(cam_target, speed=cam_speed)
+
         # -- Re-probe walls after move -------------------------------------
         if not ignore_collisions:
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
@@ -802,15 +883,8 @@ class Player:
             self.touching_wall_left = False
             self.touching_wall_right = False
 
-        # -- Fall off screen - die -----------------------------------------
-        if self.world_y > 320:
-            if not self.freeze_frame_active and not self.death_walk_active:
-                self.can_move = True
-                self.apply_spawn_point(world.current_level)
-                self._reset_after_respawn()
-
         # -- Save menu (Z key) ---------------------------------------------
-        z_pressed = keys[pygame.K_z]
+        z_pressed = self.btnhandeler.get_btn_pressed("z")
         z_just_pressed = z_pressed and not self._prev_z
         if z_just_pressed and not self.save_menu.visible and not self.freeze_frame_active:
             self.save_menu.show()
@@ -920,6 +994,13 @@ class Player:
                     elif name.startswith("fight("):
                         name = name[6:-1]
                         self.start_encounter(name)
+
+                    elif name.startswith("move_cam_y("):
+                        value = name[11:-1]
+                        try:
+                            self.lock_camera_y(float(value))
+                        except Exception:
+                            print(f"Bad move_cam_y trigger value: {value}")
 
             self._in_triggers.intersection_update(current_collisions)
 
@@ -1067,7 +1148,6 @@ class Player:
                 Xlabel = font_large.render("X", False, (255,255,255))
                 screen.blit(Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2))
                 screen.blit(label, (cx - label.get_width() // 2, cy - label.get_height() // 2))
-                
 
 
         # ----------------------------------------------------------------
@@ -1151,15 +1231,14 @@ class Player:
 
             screen.blit(self.animations["Dash_cooldown"][0], result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
             screen.blit(result, result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
+
         if self.show_encounter:
             screen.blit(self.encounter_image, (draw_rect.x + 10, draw_rect.y - 10))
-
 
         if self.save_menu.visible:
             try:
                 self.save_menu.draw(screen)
             except Exception:
                 pass
-
 
         self.midgamemenu.draw(screen, true_screen)
