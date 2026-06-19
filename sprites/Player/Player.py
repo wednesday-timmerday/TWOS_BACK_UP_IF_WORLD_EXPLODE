@@ -1,15 +1,18 @@
-﻿import pygame
+﻿import json
+import math
 import os
-import json
+import random
+
+import pygame
+
 import cutscenes.loader as CutsceneLoaderModule
 import interactables.loader as InteractableModule
 from assetsLoader import Loader
-from sprites.save.save import SaveOBJ
-from ui.menu.save_menu import SaveMenu
-from ui.menu.midgame import Menu
 from BtnHandeler import btnHandeler
-import random
-import math
+from sprites.save.save import SaveOBJ
+from ui.menu.midgame import Menu
+from ui.menu.save_menu import SaveMenu
+
 
 def load_json_level_spec():
     level_spec_path = Loader("worlds").load("level-spec.json")
@@ -60,11 +63,11 @@ def check_collision_solid_only(world, rect):
 
 
 # --- Death screen phase constants --------------------------------------------
-_DS_FADE_IN      = "fade_in"       # black overlay fades in
-_DS_HOLD         = "hold"          # fully black, brief pause
-_DS_OLD_OUT      = "old_out"       # old lives count slides/fades away
-_DS_NEW_IN       = "new_in"        # new lives count slides/bounces in
-_DS_DONE         = "done"          # animation complete, waiting for timer
+_DS_FADE_IN = "fade_in"  # black overlay fades in
+_DS_HOLD = "hold"  # fully black, brief pause
+_DS_OLD_OUT = "old_out"  # old lives count slides/fades away
+_DS_NEW_IN = "new_in"  # new lives count slides/bounces in
+_DS_DONE = "done"  # animation complete, waiting for timer
 
 
 class Player:
@@ -74,7 +77,8 @@ class Player:
         self.screen = screen
 
         sprite_loader = Loader(
-            "sprites/Player/animation_frames/lebreah" if self.lebreah
+            "sprites/Player/animation_frames/lebreah"
+            if self.lebreah
             else "sprites/Player/animation_frames"
         )
         sfx_loader = Loader("sprites/Player/Sfx")
@@ -101,25 +105,25 @@ class Player:
         self.image_left = pygame.transform.flip(self.image, True, False)
         self.rect = self.image.get_rect()
 
-        #  Hitbox 
+        #  Hitbox
         self.hit_box = pygame.Rect(5, 0, 6, 16)
         self.hitbox_offset_x = 0
         self.hitbox_offset_y = 0
 
-        #  World position 
+        #  World position
         self.world_x = 303.0
         self.world_y = 130.0
 
-        #  Movement 
+        #  Movement
         self.speed = 90.0
         self.speed_y = 0.0
-        self.dir = 0           # 0 = right, 1 = left
+        self.dir = 0  # 0 = right, 1 = left
         self.on_ground = False
-        self.can_move = False # we set this to false bcz of the frame-1 bug, in later build we need to check if the first cutscene has triggered
+        self.can_move = False  # we set this to false bcz of the frame-1 bug, in later build we need to check if the first cutscene has triggered
         self.dt = 0.0
         self.set_step_height_for_snapping = 5
 
-        #  Jump 
+        #  Jump
         self.is_jumping = False
         self.jump_speed = -180
         self.max_jump_hold_time = 0.4
@@ -132,7 +136,7 @@ class Player:
         self.coyote_time = 0.18
         self.coyote_timer = 0.0
 
-        #  Wall slide / wall jump 
+        #  Wall slide / wall jump
         self.touching_wall_left = False
         self.touching_wall_right = False
         self.wall_slide_max_fall = 55.0
@@ -171,10 +175,10 @@ class Player:
         self._shadow_triggers_active = set()
         self.mass = 1.0
 
-        #  Death knockback 
+        #  Death knockback
         self.death_knockback_x = 0.0
 
-        #  Level spec 
+        #  Level spec
         self.level_spec = load_json_level_spec()
 
         #  Lives -
@@ -196,10 +200,10 @@ class Player:
 
         self._ds_phase = _DS_FADE_IN
         self._ds_phase_timer = 0.0
-        self._ds_fade_in_dur  = 0.45
-        self._ds_hold_dur     = 0.20
-        self._ds_old_out_dur  = 0.45
-        self._ds_new_in_dur   = 0.55
+        self._ds_fade_in_dur = 0.45
+        self._ds_hold_dur = 0.20
+        self._ds_old_out_dur = 0.45
+        self._ds_new_in_dur = 0.55
         self._ds_lives_before = 6
 
         self._death_font_large = None
@@ -215,26 +219,23 @@ class Player:
         self.jump_down = False
 
         # ------------------------------------------------------------------
-        # Celeste-style vertical camera
+        # Vertical camera: plain follow, with an offscreen "catch-up" state
         # ------------------------------------------------------------------
-        # The camera always tracks the player's Y position with a smooth
-        # lerp.  While the player is in genuine freefall a "lookahead"
-        # offset builds up so they can see what is below them — exactly
-        # what Celeste does.  The offset melts away the moment they land
-        # or start rising again.
+        # Normal frames: the camera simply follows the player's world_y.
+        # No lookahead, no peek-ahead-while-falling behavior.
         #
-        #   _cam_fall_lookahead       – current downward peek (world-px)
-        #   _cam_lookahead_max        – maximum peek distance
-        #   _cam_lookahead_build_rate – how fast the peek grows  (px/s)
-        #   _cam_lookahead_melt_rate  – how fast it shrinks back (px/s)
-        #
-        # The camera catch-up speed scales with the player's fall velocity
-        # so it never lags behind during a long drop.
+        # If the player falls far/fast enough that their on-screen Y
+        # position passes the bottom edge of the screen, the player
+        # freezes completely (pose AND physics hold in place) while the
+        # camera eases down over _cam_catchup_dur seconds until the
+        # player sits exactly at screen-y == 0 (the top edge). Once the
+        # ease finishes, the player unfreezes and normal follow resumes.
         # ------------------------------------------------------------------
-        self._cam_fall_lookahead       = 0.0
-        self._cam_lookahead_max        = 48.0
-        self._cam_lookahead_build_rate = 120.0
-        self._cam_lookahead_melt_rate  = 80.0
+        self._cam_catchup_active = False
+        self._cam_catchup_timer = 0.0
+        self._cam_catchup_dur = 0.4  # seconds (within 0.3-0.5s)
+        self._cam_catchup_start_y = 0.0  # world.cam_y when catch-up began
+        self._cam_catchup_target_y = 0.0  # world.cam_y so player screen-y == 0
 
         #  Camera override / lock -
         #  When a cutscene, trigger, or external system wants a fixed Y,
@@ -243,7 +244,7 @@ class Player:
         self.camera_y_lock_target = None
         self.camera_y_lock_speed = None
 
-        #  Joystick 
+        #  Joystick
         self.joystick = None
         try:
             if pygame.joystick.get_count() > 0:
@@ -274,7 +275,7 @@ class Player:
                     self._deactivated_walls = set(str(w) for w in loaded[3])
                 except Exception:
                     pass
-        
+
         self.offset_x = 0
         self.offset_y = 0
         self.dash_active = False
@@ -301,7 +302,6 @@ class Player:
         self.mouse_flag = False
         self.btnhandeler = btnHandeler()
 
-
     # -
     # Private helpers
     # -
@@ -317,23 +317,26 @@ class Player:
         return self._death_font_large, self._death_font_small
 
     def _load_animations(self, sprite_loader):
-        #Load all animation folders
+        # Load all animation folders
         root = sprite_loader.load("")
         for folder in os.listdir(root):
             folder_path = os.path.join(root, folder)
             if not os.path.isdir(folder_path):
                 continue
             self.animations[folder] = []
-            
-        #For all folder names
+
+        # For all folder names
         for anim_name in list(self.animations.keys()):
             frames = []
             sprite_path = sprite_loader.load(anim_name)
             try:
-                total_frames = len([
-                    n for n in os.listdir(sprite_path)
-                    if os.path.isfile(os.path.join(sprite_path, n))
-                ])
+                total_frames = len(
+                    [
+                        n
+                        for n in os.listdir(sprite_path)
+                        if os.path.isfile(os.path.join(sprite_path, n))
+                    ]
+                )
             except Exception:
                 total_frames = 0
 
@@ -355,10 +358,13 @@ class Player:
             sfx = []
             sprite_path = sfx_loader.load(sfx_name)
             try:
-                total_sfx = len([
-                    n for n in os.listdir(sprite_path)
-                    if os.path.isfile(os.path.join(sprite_path, n))
-                ])
+                total_sfx = len(
+                    [
+                        n
+                        for n in os.listdir(sprite_path)
+                        if os.path.isfile(os.path.join(sprite_path, n))
+                    ]
+                )
             except Exception:
                 total_sfx = 0
 
@@ -392,9 +398,10 @@ class Player:
         self.death_walk_active = False
         self.death_walk_timer = 0.0
         self.collision_enabled = True
-        self._cam_fall_lookahead = 0.0   # snap lookahead away on respawn
+        self._cam_catchup_active = False  # cancel any in-flight catch-up on respawn
+        self._cam_catchup_timer = 0.0
+        self.frozen = False
         self.clear_camera_y_lock()
-
 
     def lock_camera_y(self, target_y, speed=None):
         # Lock the world camera to a specific world-space Y target.
@@ -414,7 +421,8 @@ class Player:
 
     def refresh_animation(self):
         sprite_loader = Loader(
-            "sprites/Player/animation_frames/lebreah" if self.lebreah
+            "sprites/Player/animation_frames/lebreah"
+            if self.lebreah
             else "sprites/Player/animation_frames"
         )
         self._load_animations(sprite_loader)
@@ -422,26 +430,26 @@ class Player:
     def update_hitbox(self):
         self.hit_box.topleft = (
             int(self.world_x + self.hitbox_offset_x),
-            int(self.world_y + self.hitbox_offset_y)
+            int(self.world_y + self.hitbox_offset_y),
         )
 
     def apply_spawn_point(self, level_target):
         level_key = f"level_{level_target}"
         level_data = self.level_spec.get(level_key, {})
         came_from = str(self.last_level) if self.last_level is not None else None
-    
+
         for sp in level_data.get("save_points", []):
             if sp.get("type") == "spawn" and str(sp.get("came_from")) == came_from:
                 self.world_x = float(sp.get("pos_x", 160))
                 self.world_y = float(sp.get("pos_y", 0))
                 self.speed_y = 0.0
                 return
-    
+
         # fallback
         self.world_x = 160.0
         self.world_y = 0.0
         self.speed_y = 0.0
-        
+
     def add_deact(self, name):
         if name:
             self._deactivated_walls.add(str(name))
@@ -454,20 +462,25 @@ class Player:
 
     def update_interactable_z_input(self, keys, joystick):
         """Update and return Z input state for interactables.
-        
+
         Returns True if Z was just pressed this frame.
         """
-        z_pressed = self.btnhandeler.get_btn_pressed("z") or self.btnhandeler.get_btn_pressed("y") or (joystick and joystick.get_button(1))
+        z_pressed = (
+            self.btnhandeler.get_btn_pressed("z")
+            or self.btnhandeler.get_btn_pressed("y")
+            or (joystick and joystick.get_button(1))
+        )
         self.z_just_pressed_interactable = z_pressed and not self._prev_z_interactable
         self._prev_z_interactable = z_pressed
         return self.z_just_pressed_interactable
-    
 
     def start_encounter(self, name):
         self.show_encounter = True
         self.can_move = False
         self.temp_timer += self.dt
-        if self.temp_timer >= 3: #This needs to be the length of the encounter sfx... TODO: get the sfx and make the timings corr
+        if (
+            self.temp_timer >= 3
+        ):  # This needs to be the length of the encounter sfx... TODO: get the sfx and make the timings corr
             self.curr_animation = "imnotracist"
             self.show_encounter = False
             if self.temp_timer >= 7:
@@ -505,11 +518,13 @@ class Player:
         self.on_ground = False
         self.collision_enabled = False
 
-    # 
+    #
     # Update
-    # 
+    #
 
-    def update(self, world, screen, dt, current_level=None, player=None, fight_loader=None):
+    def update(
+        self, world, screen, dt, current_level=None, player=None, fight_loader=None
+    ):
         self.dt = dt
         self.fight_loader = fight_loader
         self.world = world
@@ -550,19 +565,33 @@ class Player:
             self.dead_timer += dt
             self._ds_phase_timer += dt
 
-            if self._ds_phase == _DS_FADE_IN and self._ds_phase_timer >= self._ds_fade_in_dur:
+            if (
+                self._ds_phase == _DS_FADE_IN
+                and self._ds_phase_timer >= self._ds_fade_in_dur
+            ):
                 self._ds_phase = _DS_HOLD
                 self._ds_phase_timer = 0.0
-            elif self._ds_phase == _DS_HOLD and self._ds_phase_timer >= self._ds_hold_dur:
+            elif (
+                self._ds_phase == _DS_HOLD and self._ds_phase_timer >= self._ds_hold_dur
+            ):
                 self._ds_phase = _DS_OLD_OUT
                 self._ds_phase_timer = 0.0
-            elif self._ds_phase == _DS_OLD_OUT and self._ds_phase_timer >= self._ds_old_out_dur:
+            elif (
+                self._ds_phase == _DS_OLD_OUT
+                and self._ds_phase_timer >= self._ds_old_out_dur
+            ):
                 self._ds_phase = _DS_NEW_IN
                 self._ds_phase_timer = 0.0
-            elif self._ds_phase == _DS_NEW_IN and self._ds_phase_timer >= self._ds_new_in_dur:
+            elif (
+                self._ds_phase == _DS_NEW_IN
+                and self._ds_phase_timer >= self._ds_new_in_dur
+            ):
                 self._ds_phase = _DS_DONE
                 self._ds_phase_timer = 0.0
-            elif self._ds_phase == _DS_DONE and self._ds_phase_timer >= self.dead_display_time:
+            elif (
+                self._ds_phase == _DS_DONE
+                and self._ds_phase_timer >= self.dead_display_time
+            ):
                 self.dead = False
 
             # Update the death cutscene (lives == 0) while dead
@@ -578,7 +607,7 @@ class Player:
             return
 
         # ----------------------------------------------------------------
-        # Animation frame advance
+        # Animation frame advance (held during camera catch-up freeze)
         # ----------------------------------------------------------------
         if self.curr_animation != self._prev_animation:
             self.curr_frame = 0
@@ -592,10 +621,11 @@ class Player:
             frames = [placeholder]
             self.animations[self.curr_animation] = frames
 
-        self.animation_timer += dt
-        while self.animation_timer >= self.animation_speed:
-            self.animation_timer -= self.animation_speed
-            self.curr_frame = (self.curr_frame + 1) % len(frames)
+        if not self._cam_catchup_active:
+            self.animation_timer += dt
+            while self.animation_timer >= self.animation_speed:
+                self.animation_timer -= self.animation_speed
+                self.curr_frame = (self.curr_frame + 1) % len(frames)
 
         self._prev_frame = self.curr_frame
 
@@ -634,23 +664,37 @@ class Player:
             and not self.active_fight
             and not self.freeze_frame_active
             and not self.death_walk_active
+            and not self._cam_catchup_active
         )
 
-        hbx   = self.hitbox_offset_x
-        hby   = self.hitbox_offset_y
-        hb    = self.hit_box
+        hbx = self.hitbox_offset_x
+        hby = self.hitbox_offset_y
+        hb = self.hit_box
         deact = self._deactivated_walls
 
-        ignore_collisions = self.dead or self.death_walk_active or (not self.collision_enabled)
+        ignore_collisions = (
+            self.dead or self.death_walk_active or (not self.collision_enabled)
+        )
 
         # -- Wall touch probes ---------------------------------------------
-        if not ignore_collisions:
+        if not ignore_collisions and not self._cam_catchup_active:
             self.wall_jump_dir_lock_timer = max(0.0, self.wall_jump_dir_lock_timer - dt)
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
-            left_probe  = pygame.Rect(int(self.world_x + hbx - 3),        int(self.world_y + hby), 3, side_probe_h)
-            right_probe = pygame.Rect(int(self.world_x + hbx + hb.width), int(self.world_y + hby), 3, side_probe_h)
-            self.touching_wall_left  = (not self.on_ground) and check_collision_solid_only(world, left_probe)
-            self.touching_wall_right = (not self.on_ground) and check_collision_solid_only(world, right_probe)
+            left_probe = pygame.Rect(
+                int(self.world_x + hbx - 3), int(self.world_y + hby), 3, side_probe_h
+            )
+            right_probe = pygame.Rect(
+                int(self.world_x + hbx + hb.width),
+                int(self.world_y + hby),
+                3,
+                side_probe_h,
+            )
+            self.touching_wall_left = (
+                not self.on_ground
+            ) and check_collision_solid_only(world, left_probe)
+            self.touching_wall_right = (
+                not self.on_ground
+            ) and check_collision_solid_only(world, right_probe)
         else:
             self.touching_wall_left = False
             self.touching_wall_right = False
@@ -675,9 +719,13 @@ class Player:
                     self.curr_animation = "Walking"
                 else:
                     self.curr_animation = "Idle"
-                    self.curr_frame = min(self.curr_frame, len(self.animations["Idle"]) - 1)
+                    self.curr_frame = min(
+                        self.curr_frame, len(self.animations["Idle"]) - 1
+                    )
 
-                if self.btnhandeler.get_btn_pressed("e") or (self.joystick and self.joystick.get_button(2)):
+                if self.btnhandeler.get_btn_pressed("e") or (
+                    self.joystick and self.joystick.get_button(2)
+                ):
                     if self.dash_cooldown_timer_time == False:
                         self.dash_active = True
 
@@ -702,9 +750,8 @@ class Player:
 
         # -- Jump input ----------------------------------------------------
         try:
-            self.jump_down = (
-                self.btnhandeler.get_btn_pressed("up")
-                or (self.joystick and self.joystick.get_button(0))
+            self.jump_down = self.btnhandeler.get_btn_pressed("up") or (
+                self.joystick and self.joystick.get_button(0)
             )
         except Exception:
             self.jump_down = False
@@ -724,7 +771,12 @@ class Player:
 
         # -- Wall jump -----------------------------------------------------
         wall_jumped = False
-        if controls_allowed and jump_just_pressed and not self.on_ground and self.wall_jump_dir_lock_timer <= 0.0:
+        if (
+            controls_allowed
+            and jump_just_pressed
+            and not self.on_ground
+            and self.wall_jump_dir_lock_timer <= 0.0
+        ):
             if self.touching_wall_left:
                 self.speed_y = self.wall_jump_y
                 self.wall_jump_push_dir = 1
@@ -746,139 +798,198 @@ class Player:
 
         # -- Normal jump ---------------------------------------------------
         if controls_allowed and not wall_jumped:
-            if self.jump_buffer_timer > 0.0 and self.coyote_timer > 0.0 and not self.is_jumping:
-                self.speed_y = self.jump_speed * 1.3 if self.current_effect == 2 else self.jump_speed
+            if (
+                self.jump_buffer_timer > 0.0
+                and self.coyote_timer > 0.0
+                and not self.is_jumping
+            ):
+                self.speed_y = (
+                    self.jump_speed * 1.3
+                    if self.current_effect == 2
+                    else self.jump_speed
+                )
                 self.is_jumping = True
                 self.jump_hold_timer = self.max_jump_hold_time
                 self.jump_buffer_timer = 0.0
                 self.coyote_timer = 0.0
 
-        # -- Gravity -------------------------------------------------------
-        gravity_jump_hold    = 180
-        gravity_jump_release = 480
-        gravity_fall         = 810
+        # ----------------------------------------------------------------
+        # Physics (gravity + movement) are fully held during camera
+        # catch-up: the player's pose AND position stay exactly where
+        # they were when they fell offscreen, while the camera slides
+        # down to meet them.
+        # ----------------------------------------------------------------
+        if not self._cam_catchup_active:
+            # -- Gravity -----------------------------------------------
+            gravity_jump_hold = 180
+            gravity_jump_release = 480
+            gravity_fall = 810
 
-        if self.speed_y < 0:
-            if self.is_jumping and self.jump_down and self.jump_hold_timer > 0.0:
-                gravity = gravity_jump_hold
-                self.jump_hold_timer -= dt
+            if self.speed_y < 0:
+                if self.is_jumping and self.jump_down and self.jump_hold_timer > 0.0:
+                    gravity = gravity_jump_hold
+                    self.jump_hold_timer -= dt
+                else:
+                    gravity = gravity_jump_release
+                self.speed_y += gravity * dt
             else:
-                gravity = gravity_jump_release
-            self.speed_y += gravity * dt
-        else:
-            if self.on_ground:
-                self.speed_y = min(self.speed_y + gravity_fall * dt, 60.0)
-            else:
-                self.speed_y += gravity_fall * dt
+                if self.on_ground:
+                    self.speed_y = min(self.speed_y + gravity_fall * dt, 60.0)
+                else:
+                    self.speed_y += gravity_fall * dt
 
-        if (not self.on_ground) and self.speed_y > 0:
-            holding_left  = self.btnhandeler.get_btn_pressed("left") or axis_x < -0.5
-            holding_right = self.btnhandeler.get_btn_pressed("right") or axis_x > 0.5
-            if (self.touching_wall_left and holding_left) or (self.touching_wall_right and holding_right):
-                self.speed_y = min(self.speed_y, self.wall_slide_max_fall)
+            if (not self.on_ground) and self.speed_y > 0:
+                holding_left = self.btnhandeler.get_btn_pressed("left") or axis_x < -0.5
+                holding_right = (
+                    self.btnhandeler.get_btn_pressed("right") or axis_x > 0.5
+                )
+                if (self.touching_wall_left and holding_left) or (
+                    self.touching_wall_right and holding_right
+                ):
+                    self.speed_y = min(self.speed_y, self.wall_slide_max_fall)
 
-        dy = self.speed_y * dt
+            dy = self.speed_y * dt
 
-        # -- Horizontal collision + step-up --------------------------------
-        if ignore_collisions:
-            self.world_x += dx
-        else:
-            h_test = pygame.Rect(int(self.world_x + dx + hbx), int(self.world_y + hby), hb.width, hb.height)
-            if not check_collision_including_invis(world, h_test, deactivated=deact):
+            # -- Horizontal collision + step-up --------------------------------
+            if ignore_collisions:
                 self.world_x += dx
-            elif dx != 0:
-                for step in range(1, 6):
-                    move_test  = pygame.Rect(int(self.world_x + dx + hbx), int(self.world_y + hby - step), hb.width, hb.height)
-                    stand_test = pygame.Rect(int(self.world_x + hbx),      int(self.world_y + hby - step), hb.width, hb.height)
-                    if (
-                        not check_collision_including_invis(world, move_test,  deactivated=deact)
-                        and not check_collision_including_invis(world, stand_test, deactivated=deact)
-                    ):
-                        self.world_x += dx
-                        self.world_y -= step
-                        break
-
-        # -- Vertical collision --------------------------------------------
-        if ignore_collisions:
-            self.world_y += dy
-            landed = False
-        else:
-            pre_move_y = self.world_y
-            v_test = pygame.Rect(int(self.world_x + hbx), int(self.world_y + hby + dy), hb.width, hb.height)
-
-            landed = False
-            if check_collision_including_invis(world, v_test, deactivated=deact):
-                self.world_y = pre_move_y
-                self.speed_y = 0.0
-                landed = dy > 0
             else:
+                h_test = pygame.Rect(
+                    int(self.world_x + dx + hbx),
+                    int(self.world_y + hby),
+                    hb.width,
+                    hb.height,
+                )
+                if not check_collision_including_invis(
+                    world, h_test, deactivated=deact
+                ):
+                    self.world_x += dx
+                elif dx != 0:
+                    for step in range(1, 6):
+                        move_test = pygame.Rect(
+                            int(self.world_x + dx + hbx),
+                            int(self.world_y + hby - step),
+                            hb.width,
+                            hb.height,
+                        )
+                        stand_test = pygame.Rect(
+                            int(self.world_x + hbx),
+                            int(self.world_y + hby - step),
+                            hb.width,
+                            hb.height,
+                        )
+                        if not check_collision_including_invis(
+                            world, move_test, deactivated=deact
+                        ) and not check_collision_including_invis(
+                            world, stand_test, deactivated=deact
+                        ):
+                            self.world_x += dx
+                            self.world_y -= step
+                            break
+
+            # -- Vertical collision --------------------------------------------
+            if ignore_collisions:
                 self.world_y += dy
+                landed = False
+            else:
+                pre_move_y = self.world_y
+                v_test = pygame.Rect(
+                    int(self.world_x + hbx),
+                    int(self.world_y + hby + dy),
+                    hb.width,
+                    hb.height,
+                )
 
-        prev_on_ground = self.on_ground
-        self.on_ground = landed
+                landed = False
+                if check_collision_including_invis(world, v_test, deactivated=deact):
+                    self.world_y = pre_move_y
+                    self.speed_y = 0.0
+                    landed = dy > 0
+                else:
+                    self.world_y += dy
 
-        if self.on_ground and not prev_on_ground:
-            self.is_jumping = False
-            self.jump_hold_timer = 0.0
-            self.coyote_timer = self.coyote_time
+            prev_on_ground = self.on_ground
+            self.on_ground = landed
 
-        self.update_hitbox()
+            if self.on_ground and not prev_on_ground:
+                self.is_jumping = False
+                self.jump_hold_timer = 0.0
+                self.coyote_timer = self.coyote_time
+
+            self.update_hitbox()
 
         # ----------------------------------------------------------------
-        # Celeste-style vertical camera
-        # ----------------------------------------------------------------
-        # Always tracks the player's Y with a smooth lerp.  When the
-        # player is in genuine freefall (speed_y > 40) a downward
-        # "lookahead" offset accumulates so they can see what is below
-        # them — the same trick Celeste uses.  The offset melts away the
-        # moment they land or start rising.
-        #
-        # Camera catch-up speed = max(base, fall_speed * scale * dt) so
-        # the lens never falls behind during a long drop.
+        # Vertical camera: follow, or freeze + slide-catchup if offscreen
         # ----------------------------------------------------------------
         if not self.dead:
-            if self.camera_y_lock and self.camera_y_lock_target is not None:
-                # Hard override: external systems can hold the camera
-                # on a specific world-space Y until clear_camera_y_lock().
+            cam_y_now = getattr(world, "cam_y", 0.0)
+            screen_h = screen.get_height()
+            half_h = screen_h / 2.0
+            player_screen_y = self.world_y - cam_y_now
+
+            if self._cam_catchup_active:
+                # Player is fully frozen; ease the camera down to meet them.
+                self._cam_catchup_timer += dt
+                t = min(self._cam_catchup_timer / self._cam_catchup_dur, 1.0)
+                eased_t = self._ease_out_back(t)
+                new_cam_y = (
+                    self._cam_catchup_start_y
+                    + (self._cam_catchup_target_y - self._cam_catchup_start_y) * eased_t
+                )
+                world.scroll_cam_y(new_cam_y + half_h, speed=None)
+
+                if t >= 1.0:
+                    self._cam_catchup_active = False
+                    self.frozen = False
+
+            elif self.camera_y_lock:
+                # External hard override (cutscenes / triggers), unchanged.
                 cam_target = self.camera_y_lock_target
                 cam_speed = self.camera_y_lock_speed
                 if cam_speed is None:
                     world.scroll_cam_y(cam_target)
                 else:
                     world.scroll_cam_y(cam_target, speed=cam_speed)
-            else:
-                # --- lookahead accumulate / melt ---
-                if not self.on_ground and self.speed_y > 40.0:
-                    self._cam_fall_lookahead = min(
-                        self._cam_fall_lookahead + self._cam_lookahead_build_rate * dt,
-                        self._cam_lookahead_max,
-                    )
+
+            elif (
+                (player_screen_y > screen_h or player_screen_y < 0)
+                and (world.cam_y != 0 or player_screen_y > screen_h)
+                and not self.freeze_frame_active
+                and not self.death_walk_active
+                and self.collision_enabled
+            ):
+                self.frozen = True
+                self._cam_catchup_active = True
+                self._cam_catchup_timer = 0.0
+                self._cam_catchup_start_y = cam_y_now
+            
+                if player_screen_y > screen_h:
+                    # fell below screen
+                    self._cam_catchup_target_y = self.world_y
                 else:
-                    self._cam_fall_lookahead = max(
-                        self._cam_fall_lookahead - self._cam_lookahead_melt_rate * dt,
-                        0.0,
-                    )
-
-                # --- drive the world camera ---
-                # scroll_cam_y(T) resolves to: cam_y = T - half_h
-                # Passing (world_y + half_h + lookahead) gives:
-                #   cam_y = world_y + lookahead
-                # so the player sits near the top edge and the lookahead
-                # shifts the view downward to reveal the floor below.
-                half_h     = screen.get_height() / 2.0
-                cam_target = self.world_y + half_h + self._cam_fall_lookahead
-
-                # Speed scales with fall velocity so the camera keeps up.
-                cam_speed  = max(8.0, abs(self.speed_y) * dt * 1.2)
-                world.scroll_cam_y(cam_target, speed=cam_speed)
-
+                    # went above screen
+                    self._cam_catchup_target_y = self.world_y - screen_h
+            
+            else:
+                pass
         # -- Re-probe walls after move -------------------------------------
-        if not ignore_collisions:
+        if not ignore_collisions and not self._cam_catchup_active:
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
-            left_probe  = pygame.Rect(int(self.world_x + hbx - 1),        int(self.world_y + hby), 1, side_probe_h)
-            right_probe = pygame.Rect(int(self.world_x + hbx + hb.width), int(self.world_y + hby), 1, side_probe_h)
-            self.touching_wall_left  = (not self.on_ground) and check_collision_solid_only(world, left_probe)
-            self.touching_wall_right = (not self.on_ground) and check_collision_solid_only(world, right_probe)
+            left_probe = pygame.Rect(
+                int(self.world_x + hbx - 1), int(self.world_y + hby), 1, side_probe_h
+            )
+            right_probe = pygame.Rect(
+                int(self.world_x + hbx + hb.width),
+                int(self.world_y + hby),
+                1,
+                side_probe_h,
+            )
+            self.touching_wall_left = (
+                not self.on_ground
+            ) and check_collision_solid_only(world, left_probe)
+            self.touching_wall_right = (
+                not self.on_ground
+            ) and check_collision_solid_only(world, right_probe)
         else:
             self.touching_wall_left = False
             self.touching_wall_right = False
@@ -886,7 +997,11 @@ class Player:
         # -- Save menu (Z key) ---------------------------------------------
         z_pressed = self.btnhandeler.get_btn_pressed("z")
         z_just_pressed = z_pressed and not self._prev_z
-        if z_just_pressed and not self.save_menu.visible and not self.freeze_frame_active:
+        if (
+            z_just_pressed
+            and not self.save_menu.visible
+            and not self.freeze_frame_active
+        ):
             self.save_menu.show()
         self._prev_z = z_pressed
 
@@ -902,7 +1017,11 @@ class Player:
             self.in_save_menu = False
 
         # -- Triggers ------------------------------------------------------
-        if not self.freeze_frame_active and not self.death_walk_active:
+        if (
+            not self.freeze_frame_active
+            and not self.death_walk_active
+            and not self._cam_catchup_active
+        ):
             level_key = f"level_{getattr(world, 'current_level', current_level or 0)}"
             current_level_num = getattr(world, "current_level", current_level or 0)
 
@@ -915,14 +1034,16 @@ class Player:
             current_collisions = set()
 
             for idx, trigger in enumerate(triggers):
-                trigger_id  = trigger.get("id")
+                trigger_id = trigger.get("id")
                 trigger_key = trigger_id if trigger_id else f"_idx_{idx}"
 
                 if trigger_key in self._triggered_once:
                     continue
 
-                trect = pygame.Rect(trigger["x"], trigger["y"], trigger["w"], trigger["h"])
-                name  = trigger.get("name", "").strip()
+                trect = pygame.Rect(
+                    trigger["x"], trigger["y"], trigger["w"], trigger["h"]
+                )
+                name = trigger.get("name", "").strip()
 
                 if not player_rect.colliderect(trect):
                     continue
@@ -936,15 +1057,24 @@ class Player:
                         print("Trigger COLLIDE!")
                         self._triggered_once.add(trigger_key)
 
+                    elif name == "kill_player":
+                        self.can_move = True
+                        self.apply_spawn_point(world.current_level)
+                        self._reset_after_respawn()
+
                     if name == "shadow_platform":
                         for data in world.boxEngine.shadow_data:
                             if data["rect"] == trect:
                                 self.current_effect = data["curr_power"]
                                 self._shadow_triggers_active.add(trigger_key)
 
-                    if self.active_cutscene and not getattr(self.active_cutscene, "running", False):
+                    if self.active_cutscene and not getattr(
+                        self.active_cutscene, "running", False
+                    ):
                         self.active_cutscene = None
-                    if self.active_interactive and not getattr(self.active_interactive, "running", False):
+                    if self.active_interactive and not getattr(
+                        self.active_interactive, "running", False
+                    ):
                         self.active_interactive = None
 
                     if name.startswith("cutscene("):
@@ -952,7 +1082,9 @@ class Player:
                         if not self.active_cutscene:
                             try:
                                 self.incutscene = True
-                                self.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
+                                self.active_cutscene = (
+                                    CutsceneLoaderModule.CutsceneLoader()
+                                )
                                 self.curr_animation = "Idle"
                                 self.active_cutscene.world = world
                                 self.active_cutscene.event = self.event
@@ -967,7 +1099,9 @@ class Player:
                         inter_id = name[13:-1]
                         if not self.active_cutscene:
                             try:
-                                self.active_interactive = InteractableModule.Interactable()
+                                self.active_interactive = (
+                                    InteractableModule.Interactable()
+                                )
                                 self.curr_animation = "Idle"
                                 self.active_interactive.world = world
                                 self.active_interactive.event = self.event
@@ -1007,11 +1141,13 @@ class Player:
             # -- Shadow trigger exit ---------------------------------------
             shadow_triggers_in_range = set()
             for idx, trigger in enumerate(triggers):
-                trigger_id  = trigger.get("id")
+                trigger_id = trigger.get("id")
                 trigger_key = trigger_id if trigger_id else f"_idx_{idx}"
                 name = trigger.get("name", "").strip()
                 if name == "shadow_platform":
-                    trect = pygame.Rect(trigger["x"], trigger["y"], trigger["w"], trigger["h"])
+                    trect = pygame.Rect(
+                        trigger["x"], trigger["y"], trigger["w"], trigger["h"]
+                    )
                     if player_rect.colliderect(trect):
                         shadow_triggers_in_range.add(trigger_key)
 
@@ -1033,7 +1169,7 @@ class Player:
             if self.active_interactive:
                 self.active_interactive.update(dt)
         else:
-            pass   # pause triggers during freeze / death walk
+            pass  # pause triggers during freeze / death walk / camera catch-up
 
     # ---------------------------------------------------------------------
     # Draw
@@ -1071,11 +1207,15 @@ class Player:
                 self.animation_timer += self.dt
                 while self.animation_timer >= self.animation_speed:
                     self.animation_timer -= self.animation_speed
-                    self.curr_frame = min(self.curr_frame + 1, len(frames) - 1)  # clamp, don't loop
+                    self.curr_frame = min(
+                        self.curr_frame + 1, len(frames) - 1
+                    )  # clamp, don't loop
                 img = frames[self.curr_frame]
                 cx = screen.get_width() // 2 - 50 + self.offset_x
                 cy = screen.get_height() // 2 + self.offset_y
-                screen.blit(img, (cx - img.get_width() // 2, cy - img.get_height() // 2))
+                screen.blit(
+                    img, (cx - img.get_width() // 2, cy - img.get_height() // 2)
+                )
             if self.lives <= 0 and not self.in_death_scene:
                 try:
                     self.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
@@ -1092,10 +1232,10 @@ class Player:
             if not font_large:
                 return
 
-            phase     = self._ds_phase
-            t_raw     = self._ds_phase_timer
-            cx        = sw // 2
-            cy        = sh // 2
+            phase = self._ds_phase
+            t_raw = self._ds_phase_timer
+            cx = sw // 2
+            cy = sh // 2
 
             old_lives = self._ds_lives_before
             new_lives = self.lives
@@ -1111,15 +1251,20 @@ class Player:
                 ease_t = self._ease_in_quad(t)
 
                 slide_y = cy - int(ease_t * 12)
-                alpha   = int(255 * (1.0 - ease_t))
+                alpha = int(255 * (1.0 - ease_t))
 
                 label = font_large.render(f"   {old_lives}", False, (255, 255, 255))
-                Xlabel = font_large.render("X", False, (255,255,255))
-                surf  = pygame.Surface(label.get_size(), pygame.SRCALPHA)
+                Xlabel = font_large.render("X", False, (255, 255, 255))
+                surf = pygame.Surface(label.get_size(), pygame.SRCALPHA)
                 surf.blit(label, (0, 0))
-                screen.blit(Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2))
+                screen.blit(
+                    Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2)
+                )
                 surf.set_alpha(alpha)
-                screen.blit(surf, (cx - label.get_width() // 2, slide_y - label.get_height() // 2))
+                screen.blit(
+                    surf,
+                    (cx - label.get_width() // 2, slide_y - label.get_height() // 2),
+                )
 
             if phase == _DS_NEW_IN:
                 self.offset_x = random.randint(-2, 2)
@@ -1130,25 +1275,33 @@ class Player:
 
                 start_y = cy + 16
                 slide_y = int(start_y + (cy - start_y) * ease_t)
-                alpha   = min(255, int(255 * (t * 3.0)))
+                alpha = min(255, int(255 * (t * 3.0)))
 
                 label = font_large.render(f"   {new_lives}", False, (255, 255, 255))
-                Xlabel = font_large.render("X", False, (255,255,255))
-                surf  = pygame.Surface(label.get_size(), pygame.SRCALPHA)
+                Xlabel = font_large.render("X", False, (255, 255, 255))
+                surf = pygame.Surface(label.get_size(), pygame.SRCALPHA)
                 surf.blit(label, (0, 0))
-                screen.blit(Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2))
+                screen.blit(
+                    Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2)
+                )
                 surf.set_alpha(alpha)
-                screen.blit(surf, (cx - label.get_width() // 2, slide_y - label.get_height() // 2))
+                screen.blit(
+                    surf,
+                    (cx - label.get_width() // 2, slide_y - label.get_height() // 2),
+                )
 
             if phase == _DS_DONE:
                 self.offset_x = random.randint(-2, 2)
                 self.offset_y = random.randint(-2, 2)
 
                 label = font_large.render(f"   {new_lives}", False, (255, 255, 255))
-                Xlabel = font_large.render("X", False, (255,255,255))
-                screen.blit(Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2))
-                screen.blit(label, (cx - label.get_width() // 2, cy - label.get_height() // 2))
-
+                Xlabel = font_large.render("X", False, (255, 255, 255))
+                screen.blit(
+                    Xlabel, (cx - Xlabel.get_width() - 4, cy - Xlabel.get_height() // 2)
+                )
+                screen.blit(
+                    label, (cx - label.get_width() // 2, cy - label.get_height() // 2)
+                )
 
         # ----------------------------------------------------------------
         # Normal player draw
@@ -1164,15 +1317,15 @@ class Player:
         self.rect.size = self.image.get_size()
         draw_rect = self.rect.copy()
 
-        float_center_x = self.world_x + self.hitbox_offset_x + self.hit_box.width  / 2.0
+        float_center_x = self.world_x + self.hitbox_offset_x + self.hit_box.width / 2.0
         float_bottom_y = self.world_y + self.hitbox_offset_y + self.hit_box.height
 
         draw_rect.midbottom = (
             round(float_center_x - cam_x),
-            round(float_bottom_y - cam_y)
+            round(float_bottom_y - cam_y),
         )
         if self.curr_animation == "imnotracist":
-            screen.fill((0,0,0))
+            screen.fill((0, 0, 0))
         try:
             img = self.image_left if self.dir else self.image_right
             screen.blit(img, draw_rect)
@@ -1182,7 +1335,7 @@ class Player:
             except Exception:
                 pygame.draw.rect(screen, (0, 255, 0), draw_rect)
 
-        #Draw the cooldown dash thingy
+        # Draw the cooldown dash thingy
         if self.dash_cooldown_timer_time:
             image = self.animations["Dash_cooldown"][1]
 
@@ -1194,26 +1347,25 @@ class Player:
             radius = min(w, h) // 2
 
             start_angle = math.radians(90)
-            end_angle   = start_angle + (2 * math.pi * progress)
+            end_angle = start_angle + (2 * math.pi * progress)
 
             if not hasattr(self, "_cooldown_pixel_mask"):
                 m = pygame.mask.from_surface(image)
                 self._cooldown_pixel_mask = m.to_surface(
-                    setcolor=(255, 255, 255, 255),
-                    unsetcolor=(0, 0, 0, 0)
+                    setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0)
                 )
 
             pixel_mask = self._cooldown_pixel_mask
 
             # --- build solid wedge (no feather) ---
             wedge = pygame.Surface((w, h), pygame.SRCALPHA)
-            steps  = 180
+            steps = 180
             points = [(cx, cy)]
             for i in range(steps + 1):
-                t     = i / steps
+                t = i / steps
                 angle = start_angle + t * (end_angle - start_angle)
-                x     = cx + math.cos(angle) * (radius + 1)
-                y     = cy - math.sin(angle) * (radius + 1)
+                x = cx + math.cos(angle) * (radius + 1)
+                y = cy - math.sin(angle) * (radius + 1)
                 points.append((x, y))
             pygame.draw.polygon(wedge, (255, 255, 255, 255), points)
 
@@ -1225,11 +1377,14 @@ class Player:
             # --- apply ONLY alpha channel to result, leave RGB untouched ---
             result = image.copy().convert_alpha()
             alpha_arr = pygame.surfarray.pixels_alpha(result)
-            mask_arr  = pygame.surfarray.pixels_alpha(mask)
+            mask_arr = pygame.surfarray.pixels_alpha(mask)
             alpha_arr[:] = mask_arr
             del alpha_arr, mask_arr
 
-            screen.blit(self.animations["Dash_cooldown"][0], result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
+            screen.blit(
+                self.animations["Dash_cooldown"][0],
+                result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10),
+            )
             screen.blit(result, result.get_rect(x=draw_rect.x + 20, y=draw_rect.y - 10))
 
         if self.show_encounter:

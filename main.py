@@ -23,7 +23,7 @@ gc.collect()
 # -----------------------
 # Broadcast client config
 # -----------------------
-BROADCAST_SERVER_URL = "http://178.229.222.154:5050"
+BROADCAST_SERVER_URL = "http://dormoticz.duckdns.org:5050/"
 BROADCAST_POLL_INTERVAL = 10  # seconds between polls
 
 # MessageBox constants (Win32)
@@ -1116,21 +1116,18 @@ def main():
 
         #  All game drawing to renderer (320x180)
 
-        try:
-            cam_x, cam_y = get_cam_target(player)
+        cam_x, cam_y = get_cam_target(player)
 
-            world_loader.draw_world(renderer, cam_x, cam_y)
+        world_loader.draw_world(renderer, cam_x, cam_y)
 
-            world_loader.draw_physic_objects(renderer, dt)
+        world_loader.draw_physic_objects(renderer, dt)
 
-            world_loader.draw_black_layer(renderer, cam_x, cam_y)
+        world_loader.draw_black_layer(renderer, cam_x, cam_y)
 
-            world_loader.draw_shadow(renderer)
+        world_loader.draw_shadow(renderer)
 
-            player.draw(renderer, world_loader, screen)
+        player.draw(renderer, world_loader, screen)
 
-        except Exception:
-            traceback.print_exc()
 
         blit_renderer_to_screen(screen, renderer)
 

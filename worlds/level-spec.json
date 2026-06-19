@@ -56,8 +56,8 @@
     "triggers": [
       {
         "type": "trigger",
-        "x": 164,
-        "y": -70,
+        "x": 166,
+        "y": -14,
         "w": 50,
         "h": 172,
         "name": "cutscene(1)",
@@ -66,7 +66,7 @@
       {
         "type": "trigger",
         "x": 395,
-        "y": 171,
+        "y": 185,
         "w": 69,
         "h": 8,
         "name": "cutscene(2)",
@@ -80,6 +80,15 @@
         "h": 125,
         "name": "goto(4)",
         "id": "89d3e7b4-84ee-4dd4-a2f3-afe6a4b47d72"
+      },
+      {
+        "type": "trigger",
+        "x": 362,
+        "y": 200,
+        "w": 121,
+        "h": 26,
+        "name": "kill_player",
+        "id": "fa52e22a-d5dd-4d8d-9724-1f3e3e346e2a"
       }
     ],
     "invis_walls": [
@@ -147,24 +156,24 @@
       {
         "type": "door_home",
         "position": [
-          567,
-          161
+          566,
+          146
         ],
         "id": "41409efb-672d-4431-aef0-ed1e91775e49"
       },
       {
         "type": "door_home",
         "position": [
-          441,
-          163
+          446,
+          145
         ],
         "id": "c576c3d2-76ec-429f-974b-b1da7c004ce1"
       },
       {
         "type": "door_home",
         "position": [
-          296,
-          163
+          371,
+          145
         ],
         "id": "f2f6088a-c5ba-4675-95e6-bf36e10287d6"
       }
@@ -172,26 +181,26 @@
     "triggers": [
       {
         "type": "trigger",
-        "x": 94,
-        "y": 174,
-        "w": 106,
-        "h": 44,
+        "x": 149,
+        "y": 175,
+        "w": 129,
+        "h": 42,
         "name": "goto(2)",
         "id": "487b430f-1e9b-4839-90ae-704c795a6a49"
       },
       {
         "type": "trigger",
-        "x": 548,
+        "x": 557,
         "y": 112,
-        "w": 37,
-        "h": 53,
+        "w": 28,
+        "h": 34,
         "name": "interactable(q_gate_r2_1)",
         "id": "4db3e4be-7dc4-44d4-bc21-40f176ccdc27"
       },
       {
         "type": "trigger",
-        "x": 431,
-        "y": 128,
+        "x": 436,
+        "y": 106,
         "w": 21,
         "h": 38,
         "name": "interactable(q_gate_r1_idfk)",
@@ -199,8 +208,8 @@
       },
       {
         "type": "trigger",
-        "x": 286,
-        "y": 130,
+        "x": 361,
+        "y": 107,
         "w": 20,
         "h": 38,
         "name": "interactable(t_gate_r2_2)",
@@ -218,8 +227,8 @@
     ],
     "invis_walls": [
       [
-        605,
-        -9,
+        634,
+        -13,
         9,
         177,
         ""
@@ -238,14 +247,14 @@
         "type": "spawn",
         "came_from": "0",
         "pos_x": 566,
-        "pos_y": 142,
+        "pos_y": 126,
         "id": "8a2bd41b-f75a-4337-a084-bc577671122a"
       },
       {
         "type": "spawn",
         "came_from": "2",
-        "pos_x": 242,
-        "pos_y": 145,
+        "pos_x": 323,
+        "pos_y": 132,
         "id": "d925cb39-4760-4b31-a4b8-810bf9030e83"
       }
     ]
@@ -369,19 +378,27 @@
       {
         "type": "door_home",
         "position": [
-          10,
-          161
+          22,
+          157
         ],
         "id": "92583b3a-6869-4c2c-827c-756ece6ebae9"
+      },
+      {
+        "type": "door_home",
+        "position": [
+          157,
+          159
+        ],
+        "id": "a0b29e79-2a13-4a1b-b319-969f00b6ae3f"
       }
     ],
     "triggers": [
       {
         "type": "trigger",
-        "x": 460,
+        "x": 632,
         "y": -1,
-        "w": 106,
-        "h": 16,
+        "w": 14,
+        "h": 15,
         "name": "goto(1)",
         "id": "1c165902-ed53-4028-bc5e-70864b802e3e"
       },
@@ -393,6 +410,15 @@
         "h": 169,
         "name": "cutscene(parent_yell)",
         "id": "d50b6697-c750-41e8-b5ce-09baecd70a64"
+      },
+      {
+        "type": "trigger",
+        "x": 42,
+        "y": 143,
+        "w": 135,
+        "h": 20,
+        "name": "interactable(tf)",
+        "id": "86b1887d-4d89-42b9-a373-278690500cac"
       }
     ],
     "invis_walls": [],
@@ -401,8 +427,8 @@
       {
         "type": "spawn",
         "came_from": "1",
-        "pos_x": 418,
-        "pos_y": 25,
+        "pos_x": 591,
+        "pos_y": 26,
         "id": "e7c7120d-2459-43cc-8872-18cb9dda3270"
       }
     ]
@@ -758,14 +784,6 @@
           134
         ],
         "id": "23125491-84d6-4a3c-ad5a-04f1f5e9afb3"
-      },
-      {
-        "type": "btn_e",
-        "position": [
-          124,
-          63
-        ],
-        "id": "e7deacde-5af6-4624-813a-2bd5ce0acb09"
       }
     ],
     "triggers": [
@@ -988,8 +1006,8 @@
       },
       {
         "type": "trigger",
-        "x": 280,
-        "y": 178,
+        "x": 145,
+        "y": 182,
         "w": 64,
         "h": 8,
         "name": "move_cam_y(100)",

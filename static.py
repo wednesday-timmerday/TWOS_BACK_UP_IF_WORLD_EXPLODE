@@ -1,17 +1,17 @@
 ﻿from PIL import Image
 
-img = Image.open("input.jpg")
+input_path = "worlds/3/2.png"
+output_path = "worlds/3/2.png"
 
-# 1. real grayscale (NOT binary)
-img = img.convert("L")
+img = Image.open(input_path)
 
-# 2. pixelation (down + up)
-scale = 0.1  # adjust this
-small = img.resize(
-    (int(img.width * scale), int(img.height * scale)),
-    Image.NEAREST
-)
+target_height = 180
+width, height = img.size
+target_width = round(width * (target_height / height))
 
-pixelated = small.resize(img.size, Image.NEAREST)
+# Pixel-perfect scaling
+resized = img.resize((target_width, target_height), Image.Resampling.NEAREST)
 
-pixelated.save("output.png")
+resized.save(output_path)
+
+print(f"Nieuwe grootte: {target_width}x{target_height}")

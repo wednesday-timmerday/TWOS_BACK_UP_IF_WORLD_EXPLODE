@@ -761,8 +761,7 @@ class Menu:
     def draw_settings(self, screen):
         screen.blit(self.bg_2, (0,0))
         self._draw_stars(screen)
-        self._draw_light_overlay(screen, (99999,99)) #Trust
-        self.settings_rects = []
+        self._draw_light_overlay(screen, (99999,99)) #Trust      self.settings_rects = []
 
         screen_width, screen_height = screen.get_size()
         left_margin = 50
