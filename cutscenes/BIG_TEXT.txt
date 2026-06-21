@@ -136,6 +136,9 @@ luuk =
     Luuk: * BTW, this is an softlock
     Luuk: * You need to restart the game
     Luuk: *  L
+    Luuk: * ...
+    Luuk: * ^image(MOON.png) ^image(UNO.png) ^image(face_angry.png)
+    DONTADDIDX
     ENDOFCONVERSATION
 
 room_idfkanymore_tutor_shit_i_forgot =

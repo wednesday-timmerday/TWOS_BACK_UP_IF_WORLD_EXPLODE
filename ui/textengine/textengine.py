@@ -19,6 +19,10 @@ import locale
 from googletrans import Translator
 
 
+# Sentinel character used as a placeholder in parsed_text for inline images.
+# Must never appear in real dialogue strings.
+IMAGE_PLACEHOLDER = "\x01"
+
 
 class TextEngine:
 
@@ -116,6 +120,10 @@ class TextEngine:
         self._text_surf_cache = None
         self._text_surf_cache_key = None
 
+        # ---- IMAGE SUPPORT ----
+        # Cache of loaded+scaled images: image_name -> pygame.Surface (or None on failure)
+        self.image_cache = {}
+
         print(locale.getdefaultlocale())
 
 
@@ -133,7 +141,8 @@ class TextEngine:
 
         char_effects = {}
 
-        pattern = r"\^(shake\d+|speed\d+|color\(\d+,\d+,\d+\)|sp\d+|wait\d+|special|endspecial|roar|endroar)"
+        # Added image\([^)]+\) to recognise ^image(filename) tags.
+        pattern = r"\^(shake\d+|speed\d+|color\(\d+,\d+,\d+\)|sp\d+|wait\d+|special|endspecial|roar|endroar|image\([^)]+\))"
 
         index = 0
 
@@ -229,8 +238,6 @@ class TextEngine:
 
                 block_type = None
 
-
-
             else:
 
                 if in_block and block_type == "special":
@@ -238,8 +245,16 @@ class TextEngine:
                     block_effects.append(tag)
 
                 else:
-
-                    char_effects.setdefault(len(parsed), []).append(tag)
+                    # ---- IMAGE SUPPORT ----
+                    # ^image(name) inserts a placeholder character into parsed_text
+                    # instead of modifying the *next* char like other inline tags.
+                    # The tag is stored as an effect on the placeholder so the rest
+                    # of the pipeline (shake, roar wave, cache, etc.) can see it.
+                    if tag.startswith("image(") and tag.endswith(")"):
+                        char_effects.setdefault(len(parsed), []).append(tag)
+                        parsed += IMAGE_PLACEHOLDER
+                    else:
+                        char_effects.setdefault(len(parsed), []).append(tag)
 
 
 
@@ -298,6 +313,8 @@ class TextEngine:
         self._text_surf_cache = None
         self._text_surf_cache_key = None
 
+        # Note: image_cache is intentionally NOT cleared here –
+        # loaded images are shared across all text blocks.
 
 
         # Load typing sound
@@ -492,7 +509,9 @@ class TextEngine:
 
                 ch = self.parsed_text[i]
 
-                if ch == " ":
+                # Skip spaces and image placeholders in roar clone spawning –
+                # flying image clones would be complex and look odd.
+                if ch == " " or ch == IMAGE_PLACEHOLDER:
 
                     continue
 
@@ -616,13 +635,15 @@ class TextEngine:
 
             self.char_index += 1
 
-            # Play typing sound
+            # Play typing sound – skip for image placeholders (no audible "character")
 
             if self.type_sound and self.play_sound_interval > 0:
 
                 if self.char_index - self.last_sound_char >= self.play_sound_interval:
 
-                    if self.parsed_text[self.char_index - 1] != " ":
+                    last_ch = self.parsed_text[self.char_index - 1]
+
+                    if last_ch != " " and last_ch != IMAGE_PLACEHOLDER:
 
                         try:
 
@@ -665,9 +686,15 @@ class TextEngine:
 
             for ch in line:
 
-                positions[idx] = (x,y)
+                positions[idx] = (x, y)
 
-                w,_ = self.font.size(ch)
+                # ---- IMAGE SUPPORT ----
+                if ch == IMAGE_PLACEHOLDER:
+                    # Advance x by the image's actual display width.
+                    img = self._image_from_effects(self.char_effects.get(idx, []))
+                    w = img.get_width() if img else 0
+                else:
+                    w, _ = self.font.size(ch)
 
                 x += w
 
@@ -700,6 +727,37 @@ class TextEngine:
                 except: pass
 
         return (255,255,255)
+
+
+    # ---- IMAGE SUPPORT ----
+
+    def _image_from_effects(self, effects):
+        """Return the loaded image surface for the first image(...) effect found, or None."""
+        for eff in effects:
+            if eff.startswith("image(") and eff.endswith(")"):
+                return self._load_image(eff[6:-1])
+        return None
+
+    def _load_image(self, image_name):
+        """
+        Load an image from ui/textengine/txt_images/ via AssetsLoader.
+        The image is used at its native resolution – no rescaling is applied.
+        Results are cached by image_name.
+        """
+        if image_name in self.image_cache:
+            return self.image_cache[image_name]
+
+        try:
+            loader = Loader("ui/textengine/txt_images")
+            path = loader.load(image_name)
+            img = pygame.image.load(path).convert_alpha()
+            self.image_cache[image_name] = img
+            return img
+
+        except Exception as e:
+            print(f"[TextEngine] Could not load image '{image_name}': {e}")
+            self.image_cache[image_name] = None
+            return None
 
 
     def _render_glyph_with_outline(self, char, text_color, outline_color, outline_width, size):
@@ -767,11 +825,13 @@ class TextEngine:
             print(f"[TextEngine.draw] WARNING: surf is None!")
             return
 
-        # update font size if needed, clear cache on change
+        # update font size if needed, clear caches on change
         if self.font.get_height() != size:
             self.font = pygame.font.Font(self.font_path, size)
             if self.last_font_size != size:
                 self.glyph_cache.clear()
+                # image_cache uses plain image_name keys and stores native-res
+                # surfaces, so it does not need to be invalidated on font change.
                 self.last_font_size = size
 
         # limit cache size to prevent memory bloat
@@ -813,15 +873,32 @@ class TextEngine:
 
             # Build cache surface dimensions
             if not has_animated:
-                total_height = max(len(lines) * line_height, 1)
-                total_width = max(
-                    max(
-                        sum(self._render_glyph_with_outline(ch, text_color, outline_color, outline_width, size)[3]
-                            for ch in line)
-                        for line in lines
-                    ) + (outline_width + 2) * 2,
-                    1
-                )
+                # ---- IMAGE SUPPORT ----
+                # Pre-pass: measure per-line widths and track the tallest image
+                # so the cache surface is never too narrow or too short.
+                # total_height formula: (n-1)*line_height + max_img_h covers every
+                # line position – an image on line i ends at i*lh + img_h, which is
+                # always <= (n-1)*lh + max_img_h because i <= n-1.
+                total_width = 1
+                max_img_h = line_height  # minimum: at least one text line tall
+                scan_idx = 0
+                for line in lines:
+                    line_w = 0
+                    for ch in line:
+                        if ch == IMAGE_PLACEHOLDER:
+                            img = self._image_from_effects(self.char_effects.get(scan_idx, []))
+                            if img:
+                                line_w += img.get_width()
+                                max_img_h = max(max_img_h, img.get_height())
+                        else:
+                            line_w += self._render_glyph_with_outline(
+                                ch, text_color, outline_color, outline_width, size
+                            )[3]
+                        scan_idx += 1
+                    scan_idx += 1  # "&" newline separator
+                    total_width = max(total_width, line_w + (outline_width + 2) * 2)
+
+                total_height = max((len(lines) - 1) * line_height + max_img_h, 1)
                 cache_surf = pygame.Surface((total_width, total_height), pygame.SRCALPHA)
 
             idx = 0
@@ -846,6 +923,23 @@ class TextEngine:
                         prev_space = False
                     if ch == " ":
                         prev_space = True
+
+                    # ---- IMAGE SUPPORT ----
+                    if ch == IMAGE_PLACEHOLDER:
+                        img = self._image_from_effects(effects)
+                        if img:
+                            if has_animated:
+                                # Images honour shake and roar wave just like glyphs.
+                                shake_x = random.randint(-self.shake_intensity, self.shake_intensity) if self.shake_intensity else 0
+                                shake_y = random.randint(-self.shake_intensity, self.shake_intensity) if self.shake_intensity else 0
+                                wave = int(math.sin(self.time * 4 + word_index * 0.6) * 6) if "roar" in effects else 0
+                                surf.blit(img, (x + rel_x + shake_x, y + rel_y + wave + shake_y))
+                            else:
+                                cache_surf.blit(img, (rel_x, rel_y))
+                            rel_x += img.get_width()
+                        idx += 1
+                        continue
+                    # ---- END IMAGE SUPPORT ----
 
                     cached_glyph, offset_x_adj, offset_y_adj, char_width = self._render_glyph_with_outline(
                         ch, self.current_color, outline_color, outline_width, size
@@ -1026,5 +1120,3 @@ class TextEngine:
 
 
         return None
-
-

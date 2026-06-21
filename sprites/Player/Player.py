@@ -434,6 +434,7 @@ class Player:
         )
 
     def apply_spawn_point(self, level_target):
+        print("run")
         level_key = f"level_{level_target}"
         level_data = self.level_spec.get(level_key, {})
         came_from = str(self.last_level) if self.last_level is not None else None
@@ -525,6 +526,7 @@ class Player:
     def update(
         self, world, screen, dt, current_level=None, player=None, fight_loader=None
     ):
+        print(self.world_y)
         self.dt = dt
         self.fight_loader = fight_loader
         self.world = world
@@ -598,7 +600,7 @@ class Player:
             if self.active_cutscene:
                 self.active_cutscene.update(dt, self)
 
-            if self.dead_timer >= self.dead_display_time and not self.active_cutscene:
+            if self.dead_timer >= self.dead_display_time: #and not self.active_cutscene:
                 self.dead = False
                 self.dead_timer = 0.0
                 self.can_move = True
