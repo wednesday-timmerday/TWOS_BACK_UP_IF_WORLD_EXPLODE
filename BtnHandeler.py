@@ -40,3 +40,13 @@ class btnHandeler:
             return False
 
         return keys[self.key_map[btn]]
+
+    def get_all_btn_pressed(self):
+        keys = pygame.key.get_pressed()
+    
+        pressed = {}
+    
+        for name, keycode in self.key_map.items():
+            pressed[name] = keys[keycode]
+    
+        return pressed

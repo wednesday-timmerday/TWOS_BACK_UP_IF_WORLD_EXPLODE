@@ -293,6 +293,7 @@ class Player:
         self.atk = 20
         self.defense = 5
         self.money = 0
+        self.hp = 100
         self.world = None
         try:
             self.midgamemenu = Menu(screen, player=self)
@@ -301,11 +302,20 @@ class Player:
 
         self.mouse_flag = False
         self.btnhandeler = btnHandeler()
-        self.items = [{"name": "default", "short_name": "def", "type": "heal", "heal_amount": "17"}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": "17"}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": "17"}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
+        self.items = [{"name": "dog", "short_name": "dog", "type": "heal", "heal_amount": 9999999999999999999999999999999999999999999999}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
 
     # -
     # Private helpers
     # -
+    # 
+     
+    def handle_item_used(self, item_name):
+        for i, item in enumerate(self.items):
+            if item["short_name"] == item_name:
+                self.items.pop(i)
+                if item["type"] == "heal":
+                    self.hp += item["heal_amount"]
+                break
 
     def _death_fonts(self):
         """Lazily init death fonts (pygame.font must already be initialised)."""
@@ -940,7 +950,7 @@ class Player:
                     self.frozen = False
 
             elif self.camera_y_lock:
-                # External hard override (cutscenes / triggers), unchanged.
+                # External hard override (cutscenes / triggers)
                 cam_target = self.camera_y_lock_target
                 cam_speed = self.camera_y_lock_speed
                 if cam_speed is None:
@@ -954,9 +964,9 @@ class Player:
                 and not self.freeze_frame_active
                 and not self.death_walk_active
                 and self.collision_enabled
-                and not (world.cam_y + screen_h) == world.layer_height
             ):
-                self.frozen = True
+                if not (world.cam_y + screen_h) == world.layer_height:
+                    self.frozen = True
                 self._cam_catchup_active = True
                 self._cam_catchup_timer = 0.0
                 self._cam_catchup_start_y = cam_y_now

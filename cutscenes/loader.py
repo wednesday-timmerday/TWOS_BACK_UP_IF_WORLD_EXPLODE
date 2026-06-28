@@ -293,7 +293,7 @@ class CutsceneLoader:
                 parts = line[len("(CHOICE)"):].strip().split(";")
                 question = parts[0].strip()
                 options = [o.strip() for o in parts[1:]]
-
+                print(options)
                 self.pending_choice_label = question
                 self.line_index += 1
                 self.waiting_for_choice = True

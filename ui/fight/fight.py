@@ -5,10 +5,12 @@ import sys
 
 import pygame
 
+import BtnHandeler
 from assetsLoader import Loader
 from bulletengine.bulletengine import BulletHellEngine
 from ui.boxEngine.boxengine import BoxEngine
 from ui.textengine.textengine import TextEngine
+from BtnHandeler import btnHandeler
 
 
 def get_base_path():
@@ -126,7 +128,6 @@ class Fight:
         self.speed_X, self.speed_Y = 0, 0
 
         self.player_max_hp = 100
-        self.player_hp = 100
 
         # Black box with white outline for dialogue
         self.dialogue_box = pygame.Surface((240, 45))
@@ -145,6 +146,8 @@ class Fight:
         except Exception as e:
             print(f"Error while loading boxengine {e}")
             self.boxEngine = None
+
+        self.btnHandeler = btnHandeler()
 
     def parse_fight_text(self, text_content: str, identifier: str, section: int) -> str:
         """Parse BIG_TEXT.txt file and extract text for a specific identifier and section."""
@@ -253,17 +256,20 @@ class Fight:
             print(item["name"])
             item_names.append(item["short_name"])
 
-        self.item_text = " & ".join(item_names)
+        self.text_engine.start_choices("", item_names)
+
+        self.item_text = "& &".join(item_names)
         if not self.item_text:
             self.item_text = "No items."
 
-        self.text_engine.start_text(self.item_text, "")
+            self.text_engine.start_text(self.item_text, "")
 
     def close_item_menu(self):
         self.show_item_shit = False
         self.item_mode = False
         self.item_text = ""
         self.text_engine.finished = True
+        self.load_section_text()
 
     def update(self, dt, joystick=None):
         self.bullet_engine.update(
@@ -285,7 +291,11 @@ class Fight:
 
         if self.current_turn == self.TURN_PLAYER and not self.lock_menumove:
             if self.item_mode:
-                if keys[pygame.K_z] and not self._prev_keys[pygame.K_z]:
+                choice = self.text_engine.handle_choice_input(keys, None)
+                if choice != None:
+                    self.player.handle_item_used(choice)
+                    self.show_item_menu()
+                if keys[pygame.K_x] and not self._prev_keys[pygame.K_x]:
                     self.close_item_menu()
             else:
                 if keys[pygame.K_LEFT] and not self._prev_keys[pygame.K_LEFT]:
@@ -431,10 +441,10 @@ class Fight:
         base = max(1, self.monster_atk - self.player_def)
         damage = max(1, int(base * (1 + self.monster_atk / (self.monster_atk + 100))))
 
-        self.player_hp -= damage
-        self.player_hp = max(0, self.player_hp)
+        self.player.hp -= damage
+        self.player.hp = max(0, self.player.hp)
 
-        print(f"Player hit! Damage: {damage} | Player HP: {self.player_hp}")
+        print(f"Player hit! Damage: {damage} | Player HP: {self.player.hp}")
 
     def draw(self, screen=None):
         if screen is None:

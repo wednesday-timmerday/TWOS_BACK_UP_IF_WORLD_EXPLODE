@@ -205,8 +205,6 @@ class BulletHellEngine:
             bullet_type=bullet_type,
             angular_velocity=angular_velocity,
         )
-        print(E)
-        print("EEEE")
         return E
 
     def spawn_homing(
