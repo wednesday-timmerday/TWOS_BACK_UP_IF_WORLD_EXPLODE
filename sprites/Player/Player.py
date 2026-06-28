@@ -543,7 +543,9 @@ class Player:
         if self.respawn_protect_timer > 0.0:
             self.respawn_protect_timer = max(0.0, self.respawn_protect_timer - dt)
 
-        self.midgamemenu.update(dt)
+
+        if not self.active_fight:
+            self.midgamemenu.update(dt)
 
         # ----------------------------------------------------------------
         # Phase 1 - Freeze frame

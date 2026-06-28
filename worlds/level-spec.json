@@ -949,6 +949,15 @@
         "h": 172,
         "name": "goto(7)",
         "id": "8d6b3d9c-7bd5-4808-9953-6d9f7daaa3d1"
+      },
+      {
+        "type": "trigger",
+        "x": 584,
+        "y": 3,
+        "w": 15,
+        "h": 159,
+        "name": "goto(9)",
+        "id": "2f00e52f-eb1c-4bcd-9aff-7202f6033c00"
       }
     ],
     "invis_walls": [],
@@ -985,9 +994,27 @@
         "id": "9eef5b67-ecd9-418a-b3fb-5ce9098951cc"
       }
     ],
-    "triggers": [],
+    "triggers": [
+      {
+        "type": "trigger",
+        "x": 1,
+        "y": 84,
+        "w": 12,
+        "h": 243,
+        "name": "goto(8)",
+        "id": "2ecdadcc-dbfd-4b38-8330-bcd217765e5a"
+      }
+    ],
     "invis_walls": [],
     "platforms": [],
-    "save_points": []
+    "save_points": [
+      {
+        "type": "spawn",
+        "came_from": 8,
+        "pos_x": 41,
+        "pos_y": 257,
+        "id": "158c86ce-a29a-4bc3-a44a-33ae0f0a678f"
+      }
+    ]
   }
 }
