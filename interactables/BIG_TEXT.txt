@@ -35,6 +35,13 @@ q_gate_r2_1 =
           {switch_room}
           ENDOFCONVERSATION
 
+t_gate_r2_1 =
+            []
+            * You listen closely
+            * .^wait250.^wait250.
+            * Your sister is sleeping
+            * After all, ^wait250its wayy past bedtime
+
 t_gate_r2_2 =
             []
             * You listen closely

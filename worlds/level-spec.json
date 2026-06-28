@@ -203,7 +203,7 @@
         "y": 106,
         "w": 21,
         "h": 38,
-        "name": "interactable(q_gate_r1_idfk)",
+        "name": "interactable(t_gate_r2_1)",
         "id": "1ae49caf-ddbd-4978-8424-38f6de2c144b"
       },
       {
@@ -971,66 +971,23 @@
       {
         "type": "spike",
         "position": [
-          239,
-          163
+          719,
+          266
         ],
-        "id": "d456577a-ed67-4c8d-bad2-ed546c4e59de"
+        "id": "4f00baee-4d72-4a36-9ab9-f8d70169cfee"
       },
       {
         "type": "spike",
         "position": [
-          250,
-          163
+          731,
+          266
         ],
-        "id": "2f41f645-5fd1-4a1e-9230-201d7b61d70b"
+        "id": "9eef5b67-ecd9-418a-b3fb-5ce9098951cc"
       }
     ],
-    "triggers": [
-      {
-        "type": "trigger",
-        "x": 2,
-        "y": 0,
-        "w": 8,
-        "h": 164,
-        "name": "goto(4)",
-        "id": "eb8a9d21-3fc7-4b7f-9023-501d2114d59c"
-      },
-      {
-        "type": "trigger",
-        "x": 345,
-        "y": 0,
-        "w": 10,
-        "h": 320,
-        "name": "goto(6)",
-        "id": "121ba580-e277-455c-adbc-2db7a548c207"
-      },
-      {
-        "type": "trigger",
-        "x": 145,
-        "y": 182,
-        "w": 64,
-        "h": 8,
-        "name": "move_cam_y(100)",
-        "id": "c8ef1a01-0223-48f3-b378-e084027ebbed"
-      }
-    ],
+    "triggers": [],
     "invis_walls": [],
     "platforms": [],
-    "save_points": [
-      {
-        "type": "spawn",
-        "came_from": "4",
-        "pos_x": 30,
-        "pos_y": 147,
-        "id": "bcef38f2-f092-4a91-aa8d-4cf9cf3de9a3"
-      },
-      {
-        "type": "spawn",
-        "came_from": "6",
-        "pos_x": 316,
-        "pos_y": 146,
-        "id": "6dbdb502-ce42-4ea0-9166-71308ba5b639"
-      }
-    ]
+    "save_points": []
   }
 }

@@ -297,6 +297,8 @@ class World_loader:
 
         self.actually_show_timer = True  # true by default
 
+
+        self.layer_h = 0
     # -------------------------
     # Update physics
     # -------------------------

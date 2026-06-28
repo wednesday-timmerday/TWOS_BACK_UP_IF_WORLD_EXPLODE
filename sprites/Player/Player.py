@@ -301,6 +301,7 @@ class Player:
 
         self.mouse_flag = False
         self.btnhandeler = btnHandeler()
+        self.items = [{"name": "default", "short_name": "def", "type": "heal", "heal_amount": "17"}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": "17"}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": "17"}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
 
     # -
     # Private helpers
@@ -526,7 +527,6 @@ class Player:
     def update(
         self, world, screen, dt, current_level=None, player=None, fight_loader=None
     ):
-        print(self.world_y)
         self.dt = dt
         self.fight_loader = fight_loader
         self.world = world
@@ -816,11 +816,6 @@ class Player:
                 self.coyote_timer = 0.0
 
         # ----------------------------------------------------------------
-        # Physics (gravity + movement) are fully held during camera
-        # catch-up: the player's pose AND position stay exactly where
-        # they were when they fell offscreen, while the camera slides
-        # down to meet them.
-        # ----------------------------------------------------------------
         if not self._cam_catchup_active:
             # -- Gravity -----------------------------------------------
             gravity_jump_hold = 180
@@ -959,6 +954,7 @@ class Player:
                 and not self.freeze_frame_active
                 and not self.death_walk_active
                 and self.collision_enabled
+                and not (world.cam_y + screen_h) == world.layer_height
             ):
                 self.frozen = True
                 self._cam_catchup_active = True
