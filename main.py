@@ -134,7 +134,7 @@ MINI_RESOLUTION = (320, 180)  # low-res renderer
 
 FPS = 60  # set to 0 for uncapped
 
-OPTIONS_FILE = r"C:\TWOSFILES\options.json"
+OPTIONS_FILE = rf"{os.path.expanduser('~')}\TWOSFILES\options.json"
 
 
 BASE_DIR = Path(__file__).parent

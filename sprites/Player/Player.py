@@ -303,7 +303,7 @@ class Player:
         self.mouse_flag = False
         self.btnhandeler = btnHandeler()
         self.items = [{"name": "dog", "short_name": "dog", "type": "heal", "heal_amount": 9999999999999999999999999999999999999999999999}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
-
+        self.name = "micheal jackson"
     # -
     # Private helpers
     # -
@@ -951,15 +951,14 @@ class Player:
                     self._cam_catchup_active = False
                     self.frozen = False
 
-            elif self.camera_y_lock:
-                # External hard override (cutscenes / triggers)
-                cam_target = self.camera_y_lock_target
-                cam_speed = self.camera_y_lock_speed
-                if cam_speed is None:
-                    world.scroll_cam_y(cam_target)
-                else:
-                    world.scroll_cam_y(cam_target, speed=cam_speed)
-
+            # elif self.camera_y_lock:
+            #     # External hard override (cutscenes / triggers)
+            #     cam_target = self.camera_y_lock_target
+            #     cam_speed = self.camera_y_lock_speed
+            #     if cam_speed is None:
+            #         world.scroll_cam_y(cam_target)
+            #     else:
+            #         world.scroll_cam_y(cam_target, speed=cam_speed)
             elif (
                 (player_screen_y > screen_h or player_screen_y < 0)
                 and (world.cam_y != 0 or player_screen_y > screen_h)
@@ -972,16 +971,22 @@ class Player:
                 self._cam_catchup_active = True
                 self._cam_catchup_timer = 0.0
                 self._cam_catchup_start_y = cam_y_now
-            
+                which_screen_in = round(self.world_y / 180) * 180
                 if player_screen_y > screen_h:
                     # fell below screen
-                    self._cam_catchup_target_y = self.world_y
+
+                    # Do a check to determine final target_y
+                    
+                    self._cam_catchup_target_y = which_screen_in
+            
                 else:
                     # went above screen
-                    self._cam_catchup_target_y = self.world_y - screen_h
+                    self._cam_catchup_target_y = which_screen_in - screen_h
             
             else:
                 pass
+
+        print(world.cam_y)
         # -- Re-probe walls after move -------------------------------------
         if not ignore_collisions and not self._cam_catchup_active:
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)

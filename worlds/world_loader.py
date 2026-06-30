@@ -960,7 +960,7 @@ class World_loader:
             diff = desired - self.cam_y
             step = math.copysign(min(abs(diff), float(speed)), diff)
             self.cam_y += step
-
+        
     # -------------------------
     # Draw black layer with lights
     # -------------------------

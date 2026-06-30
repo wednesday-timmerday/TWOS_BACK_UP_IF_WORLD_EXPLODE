@@ -19,7 +19,7 @@ from BtnHandeler import btnHandeler
 
 # TODO: FIX JOYSTICK BUG
 
-OPTIONS_FILE = r"C:\TWOSFILES\options.json"
+OPTIONS_FILE = rf"{os.path.expanduser('~')}\TWOSFILES\options.json"
 
 DEFAULT_OPTIONS = {
     "fullscreen": False,
