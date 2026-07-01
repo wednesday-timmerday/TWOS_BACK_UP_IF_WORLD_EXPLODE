@@ -258,3 +258,11 @@ NAMETEST =
     [mrtutor]
     So you must me NAME
 
+
+Credits =
+    []
+    {(0 1)}
+    Credits:
+    {start_scroll}
+    DONTADDIDX
+    ENDOFCONVERSATION

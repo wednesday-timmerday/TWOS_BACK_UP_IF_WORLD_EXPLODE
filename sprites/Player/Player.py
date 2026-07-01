@@ -986,7 +986,6 @@ class Player:
             else:
                 pass
 
-        print(world.cam_y)
         # -- Re-probe walls after move -------------------------------------
         if not ignore_collisions and not self._cam_catchup_active:
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
