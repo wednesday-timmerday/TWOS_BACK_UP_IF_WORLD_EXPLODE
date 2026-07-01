@@ -39,3 +39,11 @@ dummy =
     {(1 0)}
     The dummy is staring
     (ENDSECTION_5)
+
+dummy_talks =
+    (SECTION_1)
+    IN_BBOX
+    You talk to the dummy
+    ...
+    No response
+    (ENDSECTION_1)

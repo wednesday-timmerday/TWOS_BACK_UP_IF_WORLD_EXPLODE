@@ -265,10 +265,11 @@ class PhysicObject(StateSerializable):
     def update_rotation(self):
 
         if self.angle != self._last_angle:
+            self.angle = (self.angle // 15) * 15
 
-            self.rotated_image = pygame.transform.rotozoom(
+            self.rotated_image = pygame.transform.rotate(
 
-                self.original_image, -self.angle, 1.0
+                self.original_image, -self.angle
 
             )
 

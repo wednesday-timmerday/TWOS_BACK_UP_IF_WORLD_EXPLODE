@@ -2,6 +2,7 @@
 import math
 import os
 import sys
+from typing import Dict, Optional, Tuple
 
 import pygame
 
@@ -10,119 +11,10 @@ from bulletengine.bulletengine import BulletHellEngine
 from ui.boxEngine.boxengine import BoxEngine
 from ui.textengine.textengine import TextEngine
 
-
-class btnHandeler:
-    def __init__(self):
-        self.btn_file_path = Loader("ui/menu").load("btn_config.txt")
-        self.key_map = {}
-        self.current = {}
-        self.previous = {}
-
-        self._load_config()
-
-    def _load_config(self):
-        special = {
-            "ctrl": pygame.K_LCTRL,
-            "lctrl": pygame.K_LCTRL,
-            "rctrl": pygame.K_RCTRL,
-            "shift": pygame.K_LSHIFT,
-            "lshift": pygame.K_LSHIFT,
-            "rshift": pygame.K_RSHIFT,
-            "alt": pygame.K_LALT,
-            "lalt": pygame.K_LALT,
-            "ralt": pygame.K_RALT,
-            "up": pygame.K_UP,
-            "down": pygame.K_DOWN,
-            "left": pygame.K_LEFT,
-            "right": pygame.K_RIGHT,
-            "esc": pygame.K_ESCAPE,
-            "escape": pygame.K_ESCAPE,
-            "enter": pygame.K_RETURN,
-            "return": pygame.K_RETURN,
-            "space": pygame.K_SPACE,
-            "tab": pygame.K_TAB,
-            "backspace": pygame.K_BACKSPACE,
-            "delete": pygame.K_DELETE,
-            "home": pygame.K_HOME,
-            "end": pygame.K_END,
-            "pageup": pygame.K_PAGEUP,
-            "pagedown": pygame.K_PAGEDOWN,
-            "capslock": pygame.K_CAPSLOCK,
-        }
-
-        self.key_map.clear()
-
-        if not self.btn_file_path or not os.path.exists(self.btn_file_path):
-            print(f"[BtnHandeler] Missing config file: {self.btn_file_path}")
-            return
-
-        try:
-            with open(self.btn_file_path, "r", encoding="utf-8") as f:
-                for raw_line in f:
-                    line = raw_line.strip()
-
-                    if not line or line.startswith("#"):
-                        continue
-
-                    if "=" not in line:
-                        continue
-
-                    name, key = line.split("=", 1)
-                    name = name.strip().lower()
-                    key = key.strip().lower()
-
-                    if not name or not key:
-                        continue
-
-                    if key in special:
-                        keycode = special[key]
-                    else:
-                        try:
-                            keycode = pygame.key.key_code(key)
-                        except Exception:
-                            print(f"[BtnHandeler] Unknown key name: {key}")
-                            continue
-
-                    self.key_map[name] = keycode
-
-        except Exception as e:
-            print(f"[BtnHandeler] Failed to load config: {e}")
-
-        self.current = {name: False for name in self.key_map}
-        self.previous = {name: False for name in self.key_map}
-
-    def update(self):
-        self.previous = self.current.copy()
-        keys = pygame.key.get_pressed()
-
-        for name, keycode in self.key_map.items():
-            try:
-                self.current[name] = bool(keys[keycode])
-            except Exception:
-                self.current[name] = False
-
-    def get_btn_pressed(self, btn):
-        return bool(self.current.get(btn.lower(), False))
-
-    def get_btn_down(self, btn):
-        btn = btn.lower()
-        return self.current.get(btn, False) and not self.previous.get(btn, False)
-
-    def get_btn_up(self, btn):
-        btn = btn.lower()
-        return (not self.current.get(btn, False)) and self.previous.get(btn, False)
-
-    def get_all_btn_pressed(self):
-        return self.current.copy()
-
-    def get_keycode(self, btn):
-        return self.key_map.get(btn.lower())
-
-    def reload(self):
-        self._load_config()
+import BtnHandeler
 
 
-def get_base_path():
+def get_base_path() -> str:
     if hasattr(sys, "_MEIPASS"):
         return sys._MEIPASS
 
@@ -150,7 +42,6 @@ def load_fight_module(fight_name: str):
 
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-
     except Exception as e:
         print(f"[FightLoader] Failed to load fight {fight_name}: {e}")
         return None
@@ -165,33 +56,43 @@ def load_fight_module(fight_name: str):
 class Fight:
     TURN_PLAYER = 0
     TURN_ENEMY = 1
+    UI_SCALE = 4
 
     def __init__(self, screen, true_screen, player, world):
         self.renderer = screen
         self.screen = true_screen
         self.world = world
+        self.player = player
 
         self.module = None
         self.running = False
 
         self.current_turn = self.TURN_PLAYER
         self.current_section = 1
+        self.current_talk_section = 1
         self.current_selected_btn = 0
-
-        self.player = player
 
         self.text_engine = TextEngine()
         self.hp_text_engine = TextEngine()
         self.item_text_engine = TextEngine()
 
-        self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = False
         self.bbox = False
         self.render_text_bbox = True
         self.show_item_shit = False
         self.lock_menumove = False
-
         self.item_text = ""
         self.item_mode = False
+        self.talk_lock_stage = 0
+        self.is_btn_hold = False
+        self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = False
+        self.text_finished_last_frame = False
+
+        self._fight_text_cache: Dict[Tuple[str, int], str] = {}
+        self._big_text_cache: Optional[str] = None
+        self._big_text_mtime: Optional[float] = None
+        self._monster_scaled_cache = None
+        self._monster_scaled_source = None
+        self._hp_label_text = None
 
         loader = Loader("ui/fight/fight_assets")
 
@@ -199,13 +100,23 @@ class Fight:
         for name in ["btn_1.png", "btn_2.png", "btn_3.png"]:
             path = loader.load(name)
             img = pygame.image.load(path).convert_alpha()
-            self.btn_images.append(img)
+            self.btn_images.append(
+                pygame.transform.scale(
+                    img,
+                    (img.get_width() * self.UI_SCALE, img.get_height() * self.UI_SCALE),
+                )
+            )
 
         self.select_btn_images = []
         for name in ["btn_4.png", "btn_5.png", "btn_6.png"]:
             path = loader.load(name)
             img = pygame.image.load(path).convert_alpha()
-            self.select_btn_images.append(img)
+            self.select_btn_images.append(
+                pygame.transform.scale(
+                    img,
+                    (img.get_width() * self.UI_SCALE, img.get_height() * self.UI_SCALE),
+                )
+            )
 
         self.monster_loader = Loader("sprites/")
         self.monster_image = None
@@ -220,7 +131,7 @@ class Fight:
         self.monster_x = self.monster_base_x
         self.monster_y = self.monster_base_y
 
-        self.hit_timer = 0
+        self.hit_timer = 0.0
         self.hit_duration = 0.1
         self.hit_power = 60
 
@@ -229,15 +140,16 @@ class Fight:
         self.player_speed = 200
 
         self.player_x, self.player_y = 533, 150 + 280
-        self.speed_X, self.speed_Y = 0, 0
-
+        self.speed_X, self.speed_Y = 0.0, 0.0
         self.player_max_hp = 100
 
-        self.dialogue_box = pygame.Surface((240, 45))
+        self.dialogue_box = pygame.Surface((240 * self.UI_SCALE, 45 * self.UI_SCALE)).convert_alpha()
         self.dialogue_box.fill((0, 0, 0))
+        pygame.draw.rect(self.dialogue_box, (255, 255, 255), self.dialogue_box.get_rect(), 8)
 
-        self.attack_box = pygame.Surface((90, 90))
+        self.attack_box = pygame.Surface((90 * self.UI_SCALE, 90 * self.UI_SCALE)).convert_alpha()
         self.attack_box.fill((0, 0, 0))
+        pygame.draw.rect(self.attack_box, (255, 255, 255), self.attack_box.get_rect(), 8)
 
         self.bullet_engine = BulletHellEngine(max_bullets=1000, fight_loader=self)
 
@@ -248,39 +160,75 @@ class Fight:
             print(f"Error while loading boxengine {e}")
             self.boxEngine = None
 
-        self.btnHandeler = btnHandeler()
+        self.btnHandeler = BtnHandeler.btnHandeler()
 
-        self.hp_text = f"{self.player.hp}/number"
+        self.hp_text = f"{self.player.hp}/100"
         self.hp_text_dirty = True
+        self._last_hp_text = None
 
-        self.is_btn_hold = False
+        self.bullet_timer = 0.0
+        self.turn_timer = 0.0
+        self.turn_duration = 15.0
+        self.bullet_interval = 0.5
+        self.hammer_timer = 0.0
+        self.hat_timer = 0.0
+
+        self.last_hammer_cycle = -1
+        self.hammer_dropped_this_cycle = False
+        self.pending_hammer_x = 0
+
+        self.last_hat_cycle = -1
+        self.hat_exploded_this_cycle = True
+        self.pending_hat_x = 0
+        self.pending_hat_y = 0
+        self.pending_hat_id = None
+        self.pending_exp_id = None
+
+    def _load_big_text(self) -> str:
+        base_path = get_base_path()
+        text_file = os.path.join(base_path, "ui", "fight", "BIG_TEXT.TXT")
+
+        if not os.path.exists(text_file):
+            return ""
+
+        try:
+            mtime = os.path.getmtime(text_file)
+            if self._big_text_cache is None or self._big_text_mtime != mtime:
+                with open(text_file, "r", encoding="utf-8") as f:
+                    self._big_text_cache = f.read()
+                self._big_text_mtime = mtime
+        except Exception as e:
+            print(f"[Fight] Error loading BIG_TEXT.TXT: {e}")
+            return ""
+
+        return self._big_text_cache or ""
 
     def parse_fight_text(self, text_content: str, identifier: str, section: int) -> str:
         self.bbox = False
         section_marker_start = f"(SECTION_{section})"
         section_marker_end = f"(ENDSECTION_{section})"
 
-        if f"{identifier} =" not in text_content:
-            return ""
-
-        identifier_start = text_content.find(f"{identifier} =")
+        search_token = f"{identifier} ="
+        identifier_start = text_content.find(search_token)
         if identifier_start == -1:
             return ""
 
         next_identifier_pos = len(text_content)
-        remaining_text = text_content[identifier_start + len(f"{identifier} =") :]
+        remaining_text = text_content[identifier_start + len(search_token) :]
 
         for line in remaining_text.splitlines():
+            stripped = line.strip()
             if (
                 " = " in line
-                and not line.strip().startswith("[")
-                and not line.strip().startswith("{")
-                and not line.strip().startswith("(")
+                and stripped
+                and not stripped.startswith("[")
+                and not stripped.startswith("{")
+                and not stripped.startswith("(")
             ):
                 next_identifier_pos = (
                     identifier_start
-                    + len(f"{identifier} =")
-                    + text_content[identifier_start + len(f"{identifier} =") :].find(line)
+                    + len(search_token)
+                    + text_content[identifier_start + len(search_token) :].find(line)
                 )
                 break
 
@@ -288,7 +236,6 @@ class Fight:
 
         section_start = identifier_block.find(section_marker_start)
         section_end = identifier_block.find(section_marker_end)
-
         if section_start == -1 or section_end == -1:
             return ""
 
@@ -312,16 +259,26 @@ class Fight:
 
         return "".join(lines)
 
+    def _get_cached_section(self, identifier: str, section: int) -> str:
+        key = (identifier, section)
+        if key in self._fight_text_cache:
+            return self._fight_text_cache[key]
+
+        text_content = self._load_big_text()
+        if not text_content:
+            return ""
+
+        parsed = self.parse_fight_text(text_content, identifier, section)
+        self._fight_text_cache[key] = parsed
+        return parsed
+
     def load_fight(self, fight_name):
         self.module = load_fight_module(fight_name)
 
-        if self.module:
-            if hasattr(self.module, "init"):
-                self.module.init(self)
+        if self.module and hasattr(self.module, "init"):
+            self.module.init(self)
 
         self.running = True
-        print("PPPP")
-
         self.load_section_text()
         return self
 
@@ -329,38 +286,40 @@ class Fight:
         if not hasattr(self, "fight_identifier") or not hasattr(self, "current_section"):
             return
 
-        base_path = get_base_path()
-        text_file = os.path.join(base_path, "ui", "fight", "BIG_TEXT.TXT")
+        section_text = self._get_cached_section(self.fight_identifier, self.current_section)
+        if section_text:
+            self.item_mode = False
+            self.item_text = ""
+            self.text_engine.start_text(section_text, self.fight_identifier)
+            self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = False
+            self.render_text_bbox = True
 
-        if not os.path.exists(text_file):
+    def load_talk_text(self):
+        if not hasattr(self, "fight_identifier") or not hasattr(self, "current_talk_section"):
             return
 
-        try:
-            with open(text_file, "r", encoding="utf-8") as f:
-                text_content = f.read()
+        section_text = self._get_cached_section(
+            f"{self.fight_identifier}_talks", self.current_talk_section
+        )
+        if section_text:
+            self.item_mode = False
+            self.item_text = ""
+            self.text_engine.start_text(section_text, self.fight_identifier)
+            self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = False
+            self.render_text_bbox = True
 
-            section_text = self.parse_fight_text(
-                text_content, self.fight_identifier, self.current_section
-            )
-
-            if section_text:
-                self.item_mode = False
-                self.item_text = ""
-                print("brainrot")
-                self.text_engine.start_text(section_text, self.fight_identifier)
-
-        except Exception as e:
-            print(f"[Fight] Error loading section text: {e}")
+    def start_talk_flow(self):
+        self.current_selected_btn = 2
+        self.lock_menumove = True
+        self.talk_lock_stage = 1
+        self.render_text_bbox = True
+        self.load_talk_text()
 
     def show_item_menu(self):
         self.show_item_shit = True
         self.item_mode = True
 
-        item_names = []
-        for item in self.player.items:
-            print(item["name"])
-            item_names.append(item["short_name"])
-
+        item_names = [item["short_name"] for item in self.player.items]
         self.item_text_engine.start_choices("", item_names)
 
         self.item_text = "& &".join(item_names)
@@ -373,12 +332,14 @@ class Fight:
         self.item_mode = False
         self.item_text = ""
         self.item_text_engine.finished = True
-        self.load_section_text()
+        self.load_talk_text()
 
     def update(self, dt, joystick=None):
-        self.btnHandeler.update()
+        bullet_engine = self.bullet_engine
+        module = self.module
+        btns = self.btnHandeler
 
-        self.bullet_engine.update(
+        bullet_engine.update(
             dt,
             self.player_x,
             self.player_y,
@@ -390,72 +351,85 @@ class Fight:
             on_hit=self.on_bullet_hit,
         )
 
-        if self.module is None:
+        if module is None:
             return
 
-        self.text_engine.update(dt)
-        self.hp_text_engine.update(dt)
-        self.item_text_engine.update(dt)
+        if not self.text_engine.finished:
+            self.text_engine.update(dt)
 
-        if self.current_turn == self.TURN_PLAYER and not self.lock_menumove:
-            if self.item_mode:
+        if self.item_mode and not self.item_text_engine.finished:
+            self.item_text_engine.update(dt)
+
+        if not self.hp_text_engine.finished:
+            self.hp_text_engine.update(dt)
+
+        if self.current_turn == self.TURN_PLAYER:
+            if self.lock_menumove:
+                if self.talk_lock_stage == 1 and btns.get_btn_down("z"):
+                    self.lock_menumove = False
+                    self.talk_lock_stage = 0
+                    self.current_turn = self.TURN_ENEMY
+                    self.text_engine.finished = True
+                    self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = True
+            elif self.item_mode:
                 raw_keys = pygame.key.get_pressed()
                 choice = self.item_text_engine.handle_choice_input(raw_keys, None)
 
-                if choice is not None and self.btnHandeler.get_btn_down("z"):
+                if choice is not None and btns.get_btn_down("z"):
                     self.player.handle_item_used(choice)
                     self.show_item_menu()
 
-                if self.btnHandeler.get_btn_down("x"):
+                if btns.get_btn_down("x"):
                     self.close_item_menu()
             else:
-                if self.btnHandeler.get_btn_down("left"):
+                if btns.get_btn_down("left"):
                     self.current_selected_btn -= 1
-                elif self.btnHandeler.get_btn_down("right"):
+                elif btns.get_btn_down("right"):
                     self.current_selected_btn += 1
 
                 self.current_selected_btn %= len(self.btn_images)
 
-                if self.btnHandeler.get_btn_down("z"):
+                if btns.get_btn_down("z"):
                     if self.current_selected_btn == 0 and self.monster_hp > 0:
                         self.attack_monster()
                     elif self.current_selected_btn == 1:
                         self.show_item_menu()
+                    elif self.current_selected_btn == 2:
+                        self.start_talk_flow()
 
-        if self.current_turn == self.TURN_ENEMY:
-            if self.btnHandeler.get_btn_pressed("left"):
+        elif self.current_turn == self.TURN_ENEMY:
+            self.speed_X = 0
+            self.speed_Y = 0
+
+            if btns.get_btn_pressed("left"):
                 self.speed_X = -self.player_speed
-            elif self.btnHandeler.get_btn_pressed("right"):
+            elif btns.get_btn_pressed("right"):
                 self.speed_X = self.player_speed
-            else:
-                self.speed_X = 0
 
-            if self.btnHandeler.get_btn_pressed("up"):
+            if btns.get_btn_pressed("up"):
                 self.speed_Y = -self.player_speed
-            elif self.btnHandeler.get_btn_pressed("down"):
+            elif btns.get_btn_pressed("down"):
                 self.speed_Y = self.player_speed
-            else:
-                self.speed_Y = 0
 
             self.player_x += self.speed_X * dt
             self.player_y += self.speed_Y * dt
 
-            attack_box_left = 460 + 7
-            attack_box_right = 820 - 7
-            attack_box_top = 336 + 7
-            attack_box_bottom = 696 - 7
-
-            self.player_x = max(attack_box_left, min(attack_box_right, self.player_x))
-            self.player_y = max(attack_box_top, min(attack_box_bottom, self.player_y))
+            self.player_x = max(460 + 7, min(820 - 7, self.player_x))
+            self.player_y = max(336 + 7, min(696 - 7, self.player_y))
 
         try:
-            self.module.run(self, dt, joystick)
+            module.run(self, dt, joystick)
         except Exception as e:
             print(f"[Fight] Error running fight module: {e}")
 
+        hp_text = f"{self.player.hp}/100"
+        if hp_text != self._last_hp_text:
+            self._last_hp_text = hp_text
+            self.hp_text = hp_text
+            self.hp_text_engine.start_text(hp_text, "")
+
     def attack_monster(self):
         self.current_turn = self.TURN_ENEMY
-
         self.text_engine.finished = True
         self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = True
 
@@ -466,7 +440,6 @@ class Fight:
         missing_hp_ratio = 1 - hp_ratio
 
         base = max(1, self.player_atk - self.monster_def)
-
         damage = (
             base
             * (1 + (self.player_atk / (self.player_atk + 100)))
@@ -476,12 +449,9 @@ class Fight:
         )
 
         damage = int(damage)
-        self.monster_hp -= damage
-        self.monster_hp = max(0, self.monster_hp)
-        self.hp_text = f"{self.player.hp}/number"
+        self.monster_hp = max(0, self.monster_hp - damage)
+        self.hp_text = f"{self.player.hp}/100"
         self.hp_text_dirty = True
-
-        print(f"Damage: {damage} | Monster HP: {self.monster_hp}")
 
         if self.monster_hp <= 0:
             if hasattr(self.module, "killed") and self.module.killed(self, 0.0, None) == 1:
@@ -496,12 +466,11 @@ class Fight:
         self.running = False
         self.bullet_engine.clear()
 
-        if self.module is not None:
-            if hasattr(self.module, "on_end"):
-                try:
-                    self.module.on_end(self, reason)
-                except Exception as e:
-                    print(f"[Fight] on_end error: {e}")
+        if self.module is not None and hasattr(self.module, "on_end"):
+            try:
+                self.module.on_end(self, reason)
+            except Exception as e:
+                print(f"[Fight] on_end error: {e}")
 
         self.module = None
 
@@ -549,17 +518,37 @@ class Fight:
         base = max(1, self.monster_atk - self.player_def)
         damage = max(1, int(base * (1 + self.monster_atk / (self.monster_atk + 100))))
 
-        self.player.hp -= damage
-        self.player.hp = max(0, self.player.hp)
+        self.player.hp = max(0, self.player.hp - damage)
 
-        print(f"Player hit! Damage: {damage} | Player HP: {self.player.hp}")
+    def _get_scaled_monster(self):
+        if self.monster_image is None:
+            return None
 
-    def draw_hp_label(self, screen, box_rect, hp_text):
-        if self.hp_text_engine is None:
+        if self._monster_scaled_source is self.monster_image and self._monster_scaled_cache is not None:
+            return self._monster_scaled_cache
+
+        self._monster_scaled_source = self.monster_image
+        self._monster_scaled_cache = pygame.transform.scale(
+            self.monster_image,
+            (
+                int(self.monster_image.get_width() * self.UI_SCALE),
+                int(self.monster_image.get_height() * self.UI_SCALE),
+            ),
+        )
+        return self._monster_scaled_cache
+
+    def _update_hp_label(self):
+        hp_text = f"{self.player.hp}/100"
+        if hp_text == self._hp_label_text:
             return
 
+        self._hp_label_text = hp_text
         self.hp_text_engine.start_text(hp_text, "")
-        self.hp_text_engine.char_index = 9999
+        self.hp_text_engine.char_index = 99
+        self.hp_text_engine.finished = True
+
+    def draw_hp_label(self, screen, box_rect, hp_text):
+        self._update_hp_label()
         self.hp_text_engine.draw(
             x=box_rect.right + 10,
             y=box_rect.top + 4,
@@ -574,96 +563,57 @@ class Fight:
         if screen is None:
             screen = self.screen
 
-        scale = 4
         screen.fill((0, 0, 0))
+        turn = self.current_turn
 
-        if self.current_turn == self.TURN_PLAYER:
+        if turn == self.TURN_PLAYER:
+            base_x = 40 * self.UI_SCALE
+            base_y = 145 * self.UI_SCALE
+            step_x = 95 * self.UI_SCALE
+
             for i, btn in enumerate(self.btn_images):
-                x = (40 + i * 95) * scale
-                y = 145 * scale
-
-                scaled_btn = pygame.transform.scale(
-                    btn, (btn.get_width() * scale, btn.get_height() * scale)
-                )
-                screen.blit(scaled_btn, (x, y))
+                x = base_x + i * step_x
+                screen.blit(btn, (x, base_y))
 
             for i, btn in enumerate(self.select_btn_images):
-                x = (40 + i * 95) * scale
-                y = 145 * scale
-
-                scaled_btn = pygame.transform.scale(
-                    btn, (btn.get_width() * scale, btn.get_height() * scale)
-                )
                 if self.current_selected_btn == i and not self.show_item_shit:
-                    screen.blit(scaled_btn, (x, y))
+                    x = base_x + i * step_x
+                    screen.blit(btn, (x, base_y))
 
-            self.dialogue_box.fill((0, 0, 0))
-            pygame.draw.rect(
-                self.dialogue_box, (255, 255, 255), self.dialogue_box.get_rect(), 2
-            )
-
-            dialogue_scaled = pygame.transform.scale(
-                self.dialogue_box,
-                (
-                    self.dialogue_box.get_width() * scale,
-                    self.dialogue_box.get_height() * scale,
-                ),
-            )
-            screen.blit(dialogue_scaled, (40 * scale, 84 * scale))
-
+            screen.blit(self.dialogue_box, (40 * self.UI_SCALE, 84 * self.UI_SCALE))
         else:
-            self.attack_box.fill((0, 0, 0))
-            attack_box_scaled = pygame.transform.scale(
-                self.attack_box,
-                (
-                    self.attack_box.get_width() * scale,
-                    self.attack_box.get_height() * scale,
-                ),
-            )
-            pygame.draw.rect(
-                attack_box_scaled, (255, 255, 255), attack_box_scaled.get_rect(), 2
-            )
-
-            where_to_put_me = (1280 / 2) - (self.attack_box.get_width() * scale) / 2
+            where_to_put_me = int((1280 / 2) - (self.attack_box.get_width() / 2))
             attack_box_rect = pygame.Rect(
-                int(where_to_put_me),
-                int(84 * scale),
-                self.attack_box.get_width() * scale,
-                self.attack_box.get_height() * scale,
+                where_to_put_me,
+                int(84 * self.UI_SCALE),
+                self.attack_box.get_width(),
+                self.attack_box.get_height(),
             )
-            screen.blit(attack_box_scaled, (attack_box_rect.x, attack_box_rect.y))
+            screen.blit(self.attack_box, (attack_box_rect.x, attack_box_rect.y))
 
-        if self.monster_image:
-            monster_scaled = pygame.transform.scale(
-                self.monster_image,
-                (
-                    int(self.monster_image.get_width() * scale),
-                    int(self.monster_image.get_height() * scale),
-                ),
-            )
+        monster_scaled = self._get_scaled_monster()
+        if monster_scaled:
             screen.blit(
                 monster_scaled,
-                (int(self.monster_x * scale), int(self.monster_y * scale)),
+                (int(self.monster_x * self.UI_SCALE), int(self.monster_y * self.UI_SCALE)),
             )
 
         self.bullet_engine.draw(screen)
 
-        if self.current_turn == self.TURN_ENEMY:
+        if turn == self.TURN_ENEMY:
             pygame.draw.circle(
                 screen, (0, 255, 0), (int(self.player_x), int(self.player_y)), 7
             )
-        else:
-            self.render_text_bbox = True
 
         self.draw_text(screen)
 
         total_length = 100
         hp_total_rect = pygame.Rect((10, 10), (total_length, 30))
-        hp_rect = pygame.Rect(10, 10, int((self.player.hp / total_length) * total_length), 30)
+        hp_width = int((self.player.hp / total_length) * total_length)
+        hp_rect = pygame.Rect(10, 10, hp_width, 30)
         pygame.draw.rect(screen, (255, 0, 0), hp_total_rect)
         pygame.draw.rect(screen, (240, 236, 7), hp_rect)
 
-        self.hp_text = f"{self.player.hp}/100"
         self.draw_hp_label(screen, hp_total_rect, self.hp_text)
 
     def draw_text(self, screen=None):
@@ -671,16 +621,15 @@ class Fight:
             screen = self.screen
 
         if self.item_mode:
-            if self.item_text_engine:
-                self.item_text_engine.draw(
-                    x=180,
-                    y=356,
-                    text_color=(255, 255, 255),
-                    choice_color=(180, 180, 180),
-                    highlight_color=(255, 255, 0),
-                    size=12,
-                    surface=screen,
-                )
+            self.item_text_engine.draw(
+                x=180,
+                y=356,
+                text_color=(255, 255, 255),
+                choice_color=(180, 180, 180),
+                highlight_color=(255, 255, 0),
+                size=12,
+                surface=screen,
+            )
             return
 
         if self.bbox:
