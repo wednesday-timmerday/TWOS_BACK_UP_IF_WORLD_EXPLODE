@@ -20,7 +20,10 @@ class cutscene:
         self.player.apply_spawn_point(self.world.current_level)
         self.player._reset_after_respawn()
         self.player.active_cutscene = None
+        self.player.active_fight = None
+        self.player.hp = self.player.max_hp
         return "YES"
     
     def kill_game(self):
-        sys.exit(0)
+        sys.exit(0)
+

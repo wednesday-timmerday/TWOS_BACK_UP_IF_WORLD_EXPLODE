@@ -17,6 +17,6 @@ class cutscene:
         return "YES"
     
     def fight(self):
-        if self.player.start_encounter("dummy") == 1:
-            print("s")
+        self.loader.text_engine.start_text("", "") #Clear txt
+        if self.player.start_encounter("dummy", self.loader.trigger_idx) == 1:
             return "YES"

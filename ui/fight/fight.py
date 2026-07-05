@@ -13,6 +13,16 @@ from ui.textengine.textengine import TextEngine
 
 import BtnHandeler
 
+import cutscenes.loader as CutsceneLoaderModule
+
+class dummyfight:
+    def __init__(self):
+        pass
+    def update(self, dt, x):
+        pass
+    def draw(self, screen):
+        pass
+
 
 def get_base_path() -> str:
     if hasattr(sys, "_MEIPASS"):
@@ -58,6 +68,24 @@ class Fight:
     TURN_ENEMY = 1
     UI_SCALE = 4
 
+    @property
+    def current_turn(self):
+        return self._current_turn
+
+    @current_turn.setter
+    def current_turn(self, new_turn):
+        if not hasattr(self, "_current_turn"):
+            self._current_turn = new_turn
+            return
+
+        if new_turn == self._current_turn:
+            return
+
+        self.turn_transition_active = True
+        self.turn_transition_t = 0.0
+        self.turn_transition_from = self._current_turn
+        self.turn_transition_to = new_turn
+
     def __init__(self, screen, true_screen, player, world):
         self.renderer = screen
         self.screen = true_screen
@@ -67,7 +95,16 @@ class Fight:
         self.module = None
         self.running = False
 
-        self.current_turn = self.TURN_PLAYER
+        self._current_turn = self.TURN_PLAYER
+        self.turn_transition_active = False
+        self.turn_transition_t = 0.0
+        self.turn_transition_duration = 0.5
+        self.turn_transition_from = self.TURN_PLAYER
+        self.turn_transition_to = self.TURN_PLAYER
+
+        self.black_overlay = pygame.Surface((1280,720), pygame.SRCALPHA)
+        self.death_timer = 0
+
         self.current_section = 1
         self.current_talk_section = 1
         self.current_selected_btn = 0
@@ -75,6 +112,8 @@ class Fight:
         self.text_engine = TextEngine()
         self.hp_text_engine = TextEngine()
         self.item_text_engine = TextEngine()
+
+        self.alpha = 0
 
         self.bbox = False
         self.render_text_bbox = True
@@ -108,7 +147,7 @@ class Fight:
             )
 
         self.select_btn_images = []
-        for name in ["btn_4.png", "btn_5.png", "btn_6.png"]:
+        for name in ["btn_4.png", "btn_5.png", "btn_6.png","btn_7.png", "btn_8.png", "btn_9.png"]:
             path = loader.load(name)
             img = pygame.image.load(path).convert_alpha()
             self.select_btn_images.append(
@@ -117,6 +156,15 @@ class Fight:
                     (img.get_width() * self.UI_SCALE, img.get_height() * self.UI_SCALE),
                 )
             )
+
+        # Cached bright/white versions for the tiny flash effect when switching buttons.
+        self.btn_flash_images = [self._make_white_flash(img) for img in self.btn_images]
+        self.select_btn_flash_images = [
+            self._make_white_flash(img) for img in self.select_btn_images
+        ]
+
+        self.btn_switch_flash_duration = 1.0 / 60.0
+        self.btn_switch_flash_timer = 0.0
 
         self.monster_loader = Loader("sprites/")
         self.monster_image = None
@@ -138,6 +186,11 @@ class Fight:
         self.player_atk = self.player.atk
         self.player_def = self.player.defense
         self.player_speed = 200
+
+        self.active_cutscene = False
+
+        self.dt = 0
+        self.select_btn_animation_timer = 0
 
         self.player_x, self.player_y = 533, 150 + 280
         self.speed_X, self.speed_Y = 0.0, 0.0
@@ -183,6 +236,55 @@ class Fight:
         self.pending_hat_y = 0
         self.pending_hat_id = None
         self.pending_exp_id = None
+
+        self.idx = 0
+    def _make_white_flash(self, surface):
+        flash = surface.copy()
+        flash.fill((255, 255, 255), special_flags=pygame.BLEND_RGB_MAX)
+        return flash
+
+    def _ease(self, t):
+        return t * t * (3 - 2 * t)
+
+    def _lerp(self, a, b, t):
+        return a + (b - a) * t
+
+    def _lerp_rect(self, r1, r2, t):
+        return pygame.Rect(
+            int(self._lerp(r1.x, r2.x, t)),
+            int(self._lerp(r1.y, r2.y, t)),
+            max(1, int(self._lerp(r1.w, r2.w, t))),
+            max(1, int(self._lerp(r1.h, r2.h, t))),
+        )
+
+    def _menu_box_rect(self):
+        return pygame.Rect(
+            40 * self.UI_SCALE,
+            84 * self.UI_SCALE,
+            240 * self.UI_SCALE,
+            45 * self.UI_SCALE,
+        )
+
+    def _battle_box_rect(self):
+        where_to_put_me = int((1280 / 2) - (self.attack_box.get_width() / 2))
+        return pygame.Rect(
+            where_to_put_me,
+            int(84 * self.UI_SCALE),
+            self.attack_box.get_width(),
+            self.attack_box.get_height(),
+        )
+
+    def _draw_box_transition(self, screen):
+        start_rect = self._menu_box_rect() if self.turn_transition_from == self.TURN_PLAYER else self._battle_box_rect()
+        end_rect = self._menu_box_rect() if self.turn_transition_to == self.TURN_PLAYER else self._battle_box_rect()
+
+        t = self._ease(min(1.0, self.turn_transition_t / self.turn_transition_duration))
+        rect = self._lerp_rect(start_rect, end_rect, t)
+
+        surf = pygame.Surface((rect.w, rect.h), pygame.SRCALPHA)
+        surf.fill((0, 0, 0))
+        pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 8)
+        screen.blit(surf, rect.topleft)
 
     def _load_big_text(self) -> str:
         base_path = get_base_path()
@@ -272,7 +374,7 @@ class Fight:
         self._fight_text_cache[key] = parsed
         return parsed
 
-    def load_fight(self, fight_name):
+    def load_fight(self, fight_name, idx):
         self.module = load_fight_module(fight_name)
 
         if self.module and hasattr(self.module, "init"):
@@ -280,6 +382,7 @@ class Fight:
 
         self.running = True
         self.load_section_text()
+        self.idx = idx
         return self
 
     def load_section_text(self):
@@ -338,6 +441,16 @@ class Fight:
         bullet_engine = self.bullet_engine
         module = self.module
         btns = self.btnHandeler
+        self.dt = dt
+
+        if self.btn_switch_flash_timer > 0.0:
+            self.btn_switch_flash_timer = max(0.0, self.btn_switch_flash_timer - dt)
+
+        if self.turn_transition_active:
+            self.turn_transition_t += dt
+            if self.turn_transition_t >= self.turn_transition_duration:
+                self.turn_transition_active = False
+                self._current_turn = self.turn_transition_to
 
         bullet_engine.update(
             dt,
@@ -364,58 +477,65 @@ class Fight:
             self.hp_text_engine.update(dt)
 
         if self.current_turn == self.TURN_PLAYER:
-            if self.lock_menumove:
-                if self.talk_lock_stage == 1 and btns.get_btn_down("z"):
-                    self.lock_menumove = False
-                    self.talk_lock_stage = 0
-                    self.current_turn = self.TURN_ENEMY
-                    self.text_engine.finished = True
-                    self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = True
-            elif self.item_mode:
-                raw_keys = pygame.key.get_pressed()
-                choice = self.item_text_engine.handle_choice_input(raw_keys, None)
+            if not self.turn_transition_active:
+                if self.lock_menumove:
+                    if self.talk_lock_stage == 1 and btns.get_btn_down("z"):
+                        self.lock_menumove = False
+                        self.talk_lock_stage = 0
+                        self.current_turn = self.TURN_ENEMY
+                        self.text_engine.finished = True
+                        self.text_finished_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = True
+                elif self.item_mode:
+                    raw_keys = pygame.key.get_pressed()
+                    choice = self.item_text_engine.handle_choice_input(raw_keys, None)
 
-                if choice is not None and btns.get_btn_down("z"):
-                    self.player.handle_item_used(choice)
-                    self.show_item_menu()
-
-                if btns.get_btn_down("x"):
-                    self.close_item_menu()
-            else:
-                if btns.get_btn_down("left"):
-                    self.current_selected_btn -= 1
-                elif btns.get_btn_down("right"):
-                    self.current_selected_btn += 1
-
-                self.current_selected_btn %= len(self.btn_images)
-
-                if btns.get_btn_down("z"):
-                    if self.current_selected_btn == 0 and self.monster_hp > 0:
-                        self.attack_monster()
-                    elif self.current_selected_btn == 1:
+                    if choice is not None and btns.get_btn_down("z"):
+                        self.player.handle_item_used(choice)
                         self.show_item_menu()
-                    elif self.current_selected_btn == 2:
-                        self.start_talk_flow()
+
+                    if btns.get_btn_down("x"):
+                        self.close_item_menu()
+                else:
+                    old_selected_btn = self.current_selected_btn
+
+                    if btns.get_btn_down("left"):
+                        self.current_selected_btn -= 1
+                    elif btns.get_btn_down("right"):
+                        self.current_selected_btn += 1
+
+                    self.current_selected_btn %= len(self.btn_images)
+
+                    if self.current_selected_btn != old_selected_btn:
+                        self.btn_switch_flash_timer = self.btn_switch_flash_duration
+
+                    if btns.get_btn_down("z"):
+                        if self.current_selected_btn == 0 and self.monster_hp > 0:
+                            self.attack_monster()
+                        elif self.current_selected_btn == 1:
+                            self.show_item_menu()
+                        elif self.current_selected_btn == 2:
+                            self.start_talk_flow()
 
         elif self.current_turn == self.TURN_ENEMY:
-            self.speed_X = 0
-            self.speed_Y = 0
+            if not self.turn_transition_active and self.player.hp > 0:
+                self.speed_X = 0
+                self.speed_Y = 0
 
-            if btns.get_btn_pressed("left"):
-                self.speed_X = -self.player_speed
-            elif btns.get_btn_pressed("right"):
-                self.speed_X = self.player_speed
+                if btns.get_btn_pressed("left"):
+                    self.speed_X = -self.player_speed
+                elif btns.get_btn_pressed("right"):
+                    self.speed_X = self.player_speed
 
-            if btns.get_btn_pressed("up"):
-                self.speed_Y = -self.player_speed
-            elif btns.get_btn_pressed("down"):
-                self.speed_Y = self.player_speed
+                if btns.get_btn_pressed("up"):
+                    self.speed_Y = -self.player_speed
+                elif btns.get_btn_pressed("down"):
+                    self.speed_Y = self.player_speed
 
-            self.player_x += self.speed_X * dt
-            self.player_y += self.speed_Y * dt
+                self.player_x += self.speed_X * dt
+                self.player_y += self.speed_Y * dt
 
-            self.player_x = max(460 + 7, min(820 - 7, self.player_x))
-            self.player_y = max(336 + 7, min(696 - 7, self.player_y))
+                self.player_x = max(460 + 7, min(820 - 7, self.player_x))
+                self.player_y = max(336 + 7, min(696 - 7, self.player_y))
 
         try:
             module.run(self, dt, joystick)
@@ -480,6 +600,15 @@ class Fight:
                 player.active_fight = None
                 player.frozen = False
 
+                if reason == 0: #Won!
+                    music_loader = Loader("music")
+                    
+                    music_path = music_loader.load(self.player.bg_music_name)
+                    
+                    pygame.mixer.music.load(music_path)
+                    
+                    pygame.mixer.music.play(-1)
+
                 if reason == 3:
                     if hasattr(player, "die"):
                         player.die()
@@ -538,7 +667,7 @@ class Fight:
         return self._monster_scaled_cache
 
     def _update_hp_label(self):
-        hp_text = f"{self.player.hp}/100"
+        hp_text = f"{self.player.hp}/{self.player.max_hp}"
         if hp_text == self._hp_label_text:
             return
 
@@ -564,9 +693,16 @@ class Fight:
             screen = self.screen
 
         screen.fill((0, 0, 0))
-        turn = self.current_turn
+        if self.player.hp > 0:
+            turn = self.current_turn
+        else:
+            turn = self.TURN_ENEMY
 
-        if turn == self.TURN_PLAYER:
+        if self.turn_transition_active:
+            self._draw_box_transition(screen)
+            self.bullet_engine.clear()
+            
+        elif turn == self.TURN_PLAYER:
             base_x = 40 * self.UI_SCALE
             base_y = 145 * self.UI_SCALE
             step_x = 95 * self.UI_SCALE
@@ -578,7 +714,14 @@ class Fight:
             for i, btn in enumerate(self.select_btn_images):
                 if self.current_selected_btn == i and not self.show_item_shit:
                     x = base_x + i * step_x
-                    screen.blit(btn, (x, base_y))
+                    if self.btn_switch_flash_timer > 0.0:
+                        flash_img = self.select_btn_flash_images[i]
+                        # screen.blit(flash_img, (x, base_y))
+                    else:
+                        self.select_btn_animation_timer += self.dt
+                        if i <= 2:
+                            frame = int(self.select_btn_animation_timer * 3) % 2
+                            screen.blit(self.select_btn_images[frame * 3 + i], (x, base_y))
 
             screen.blit(self.dialogue_box, (40 * self.UI_SCALE, 84 * self.UI_SCALE))
         else:
@@ -601,15 +744,47 @@ class Fight:
         self.bullet_engine.draw(screen)
 
         if turn == self.TURN_ENEMY:
-            pygame.draw.circle(
-                screen, (0, 255, 0), (int(self.player_x), int(self.player_y)), 7
-            )
+            if self.player.hp <= 0:
+                if self.alpha >= 255:
+                    self.alpha = 255
+                else:
+                    self.alpha += 127*self.dt
+
+                self.death_timer += self.dt
+                if self.death_timer >= 1.5 and not self.death_timer >= 999999999: #seconds
+                    try:
+                        self.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
+                        self.curr_animation = "Idle"
+                        self.active_cutscene.world = self.world
+                        self.active_cutscene.event = None
+                        self.active_cutscene.player = self.player
+                        self.active_cutscene.load("death", None)
+                        self.active_cutscene.trigger_idx = 999999999999999999999999
+                        self.in_death_scene = True
+                        self.death_timer = 99999999999999999999999999
+                        music_loader = Loader("music")
+                        
+                        music_path = music_loader.load(self.player.bg_music_name)
+                        
+                        pygame.mixer.music.load(music_path)
+                        
+                        pygame.mixer.music.play(-1)
+                    except Exception as e:
+                        print("Error loading cutscene:", e)
+                        self.active_cutscene = None
+                    
+            screen.blit(self.black_overlay, (0,0))
+            self.black_overlay.fill((0, 0, 0, round(self.alpha % 256)))
+            if not  self.turn_transition_active:
+                pygame.draw.circle(
+                    screen, (0, 255, 0), (int(self.player_x), int(self.player_y)), 7
+                )
 
         self.draw_text(screen)
 
         total_length = 100
         hp_total_rect = pygame.Rect((10, 10), (total_length, 30))
-        hp_width = int((self.player.hp / total_length) * total_length)
+        hp_width = int((self.player.hp / self.player.max_hp) * total_length)
         hp_rect = pygame.Rect(10, 10, hp_width, 30)
         pygame.draw.rect(screen, (255, 0, 0), hp_total_rect)
         pygame.draw.rect(screen, (240, 236, 7), hp_rect)
@@ -619,6 +794,9 @@ class Fight:
     def draw_text(self, screen=None):
         if screen is None:
             screen = self.screen
+
+        if self.turn_transition_active:
+            return
 
         if self.item_mode:
             self.item_text_engine.draw(
@@ -659,3 +837,9 @@ class Fight:
                         size=12,
                         surface=screen,
                     )
+
+        if self.active_cutscene:
+            self.active_cutscene.update(self.dt, self.player)
+            self.player._triggered_once.discard(self.idx)
+            self.active_cutscene.draw(screen)
+            self.player.active_cutscene = dummyfight()

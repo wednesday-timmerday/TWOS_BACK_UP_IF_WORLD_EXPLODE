@@ -13,7 +13,7 @@ pygame.mixer.music.load(music_path)
 pygame.mixer.music.play(-1)
 
 def run(cutscene, dt, player, world, joystick, event):
-
+    player.bg_music_name = "Ambience 01.ogg"
     def z_pressed():
 
         return pygame.key.get_pressed()[pygame.K_z] or joystick.get_button(0) or pygame.key.get_pressed()[pygame.K_y]

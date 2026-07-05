@@ -14,6 +14,15 @@ This fight would have:
 import pygame 
 import cutscenes.loader as CutsceneLoaderModule
 import random
+from assetsLoader import Loader
+
+music_loader = Loader("music")
+
+music_path = music_loader.load("hi.ogg")
+
+pygame.mixer.music.load(music_path)
+
+pygame.mixer.music.play(-1)
 
 atk_index = True
 balk_spawned = False

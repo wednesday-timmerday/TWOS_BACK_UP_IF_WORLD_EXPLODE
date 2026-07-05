@@ -13,6 +13,8 @@ from sprites.save.save import SaveOBJ
 from ui.menu.midgame import Menu
 from ui.menu.save_menu import SaveMenu
 
+import ui.fight.fight as FightModule
+
 
 def load_json_level_spec():
     level_spec_path = Loader("worlds").load("level-spec.json")
@@ -218,28 +220,13 @@ class Player:
         self.frozen = False
         self.jump_down = False
 
-        # ------------------------------------------------------------------
-        # Vertical camera: plain follow, with an offscreen "catch-up" state
-        # ------------------------------------------------------------------
-        # Normal frames: the camera simply follows the player's world_y.
-        # No lookahead, no peek-ahead-while-falling behavior.
-        #
-        # If the player falls far/fast enough that their on-screen Y
-        # position passes the bottom edge of the screen, the player
-        # freezes completely (pose AND physics hold in place) while the
-        # camera eases down over _cam_catchup_dur seconds until the
-        # player sits exactly at screen-y == 0 (the top edge). Once the
-        # ease finishes, the player unfreezes and normal follow resumes.
-        # ------------------------------------------------------------------
         self._cam_catchup_active = False
         self._cam_catchup_timer = 0.0
-        self._cam_catchup_dur = 0.4  # seconds (within 0.3-0.5s)
-        self._cam_catchup_start_y = 0.0  # world.cam_y when catch-up began
-        self._cam_catchup_target_y = 0.0  # world.cam_y so player screen-y == 0
+        self._cam_catchup_dur = 0.4 
+        self._cam_catchup_start_y = 0.0  
+        self._cam_catchup_target_y = 0.0  
 
         #  Camera override / lock -
-        #  When a cutscene, trigger, or external system wants a fixed Y,
-        #  this lock prevents the follow-camera from overwriting it next frame.
         self.camera_y_lock = False
         self.camera_y_lock_target = None
         self.camera_y_lock_speed = None
@@ -293,8 +280,10 @@ class Player:
         self.atk = 20
         self.defense = 5
         self.money = 0
-        self.hp = 100
+        self.hp = 10
+        self.max_hp = 10
         self.world = None
+        self.bg_music_name = None
         try:
             self.midgamemenu = Menu(screen, player=self)
         except Exception as e:
@@ -315,6 +304,8 @@ class Player:
                 self.items.pop(i)
                 if item["type"] == "heal":
                     self.hp += item["heal_amount"]
+                    if self.hp > self.max_hp:
+                        self.hp = self.max_hp
                 break
 
     def _death_fonts(self):
@@ -486,7 +477,7 @@ class Player:
         self._prev_z_interactable = z_pressed
         return self.z_just_pressed_interactable
 
-    def start_encounter(self, name):
+    def start_encounter(self, name, idx=-9999999):
         self.show_encounter = True
         self.can_move = False
         self.temp_timer += self.dt
@@ -496,8 +487,10 @@ class Player:
             self.curr_animation = "imnotracist"
             self.show_encounter = False
             if self.temp_timer >= 7:
-                self.active_fight = self.fight_loader.load_fight(name)
+                self.fight_loader = FightModule.Fight(self.screen, self.true_screen, self, self.world)
+                self.active_fight = self.fight_loader.load_fight(name, idx)
                 self.show_encounter = False
+                self.temp_timer = 0
                 return 1
 
     # -----------------------------
@@ -1199,6 +1192,7 @@ class Player:
         return t * t
 
     def draw(self, screen, world, true_screen):
+        self.true_screen = true_screen
         font_large, font_small = self._death_fonts()
         sw, sh = screen.get_size()
 

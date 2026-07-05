@@ -203,7 +203,7 @@ def catch_mouse(X):
         pygame.mouse.set_visible(False)
         pygame.mouse.set_pos((1280/2, 720/2))
     else:
-        pygame,mouse.set_visible(True)
+        pygame.mouse.set_visible(True)
 
 
 def save_surface_cache(filename, surface):
