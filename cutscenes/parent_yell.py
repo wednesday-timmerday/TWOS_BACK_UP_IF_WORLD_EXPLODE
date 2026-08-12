@@ -1,7 +1,8 @@
 ﻿import pygame
 import random
 from assetsLoader import Loader
-
+import pytweening
+import math
 
 
 class cutscene:
@@ -18,6 +19,8 @@ class cutscene:
 
         self.dt = 0
 
+        self.FREEDOMTIMER = 0
+
 
 
         self.show_black_screen = False
@@ -31,6 +34,11 @@ class cutscene:
         self.goto_world_wait = 0.0
 
         self.smile = pygame.image.load(Loader("cutscenes/assets").load("smile.png"))
+
+        self.hand = pygame.image.load(Loader("cutscenes/assets").load("handplaceholder.png"))
+
+        self.radius_offset = 2500 #1000 is touchy
+
 
     # ------------------------------------------------------------------
 
@@ -86,6 +94,8 @@ class cutscene:
 
             self.player.last_level = getattr(self.world, "current_level", None)
 
+            self.world._player_light_radius = 20
+
             self.world.change_level(0, self.player)
 
             self.player.apply_spawn_point(0)
@@ -139,13 +149,45 @@ class cutscene:
 
                 self.player.curr_frame = 0
 
-                self.goto_world_stage += 1
+                self.goto_world_stage += 0.25
 
+        elif s == 3.25:
+            if self._wait("goto_world_wait", 1.5):
+                self.goto_world_stage = 12
+
+        elif s == 12:
+            # Move the hands to 1200
+
+            if self.FREEDOMTIMER <= 1:
+
+                self.radius_offset = 2000 - (pytweening.easeInQuad(self.FREEDOMTIMER) * (2000-1400))
+                print(self.FREEDOMTIMER)
+                self.FREEDOMTIMER += 0.1 * self.dt # 5secs
+            else:
+                if self._wait("goto_world_wait", 1.5):
+                    self.FREEDOMTIMER = 0
+                    self.goto_world_stage = 3.5
+
+
+        elif s == 3.5:
+            # wait like 2.5 sec and move hands fast
+
+            self.radius_offset = 1400 - (pytweening.easeInQuad(self.FREEDOMTIMER) * (1400-1100))
+            print(self.FREEDOMTIMER)
+            self.FREEDOMTIMER += 1.4 * self.dt # 0.7secs
+
+            # #Might not even need this
+            # if self.FREEDOMTIMER <= 1:
+            #     self.world._player_light_radius = 100 - (pytweening.easeInQuad((self.FREEDOMTIMER)) * 80)
+            #     self.FREEDOMTIMER += 0.5 * self.dt # 2secs
+            # else:
+            #     print("FU")
 
 
         elif s == 4:
 
             if self._wait("goto_world_wait", 4.5):
+
 
                 self.show_black_screen = True
 
@@ -201,6 +243,33 @@ class cutscene:
 
 
     def draw_back(self, loader, surface):
+        if self.goto_world_stage >= 3.25:
+
+            # center_x = pygame.mouse.get_pos()[0]
+            # center_y = pygame.mouse.get_pos()[1]
+
+            # print(f"Mouse pos: {pygame.mouse.get_pos()}")
+
+            center_x = 643
+            center_y = 614
+
+            for i in range(3):
+                angle = 360 / 3 * i + 45
+                rad = math.radians(angle)
+
+                x = center_x + self.radius_offset * math.cos(rad)
+                y = center_y + self.radius_offset * math.sin(rad)
+
+                angle_correction = 180 
+                pygame_angle = -angle + angle_correction
+
+                img = pygame.transform.rotate(self.hand, pygame_angle)
+
+                rect = img.get_rect()
+                rect.center = (x, y)
+
+                surface.blit(img, rect.topleft)
+
 
         if self.show_black_screen:
             if random.randint(0, 6666) == 231: #We should change these chances... eh fuck it

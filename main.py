@@ -1,21 +1,52 @@
-﻿import ctypes  # for Windows MessageBox
+﻿import asyncio
 import gc
 import json
 import os
+import sys
 import threading
 import time
-import tkinter as tk
 import traceback
-import urllib.error
-import urllib.request  # for broadcast polling (stdlib, no extra deps)
 from pathlib import Path
-from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 import pygame
-from mpmath.function_docs import e1
-from pypresence import Presence
 
 from assetsLoader import Loader
+
+# -----------------------
+# Platform detection
+# -----------------------
+# pygbag (the pygame -> web/WASM exporter) sets sys.platform to "emscripten".
+# Use this to disable anything desktop/Windows-only (tkinter, ctypes.windll,
+# Discord RPC, raw threads, blocking network calls) when running in the browser.
+WEB_BUILD = sys.platform == "emscripten"
+IS_WINDOWS = sys.platform.startswith("win")
+
+if not WEB_BUILD:
+    import urllib.error
+    import urllib.request  # for broadcast polling (stdlib, no extra deps)
+
+    try:
+        import tkinter as tk
+        from tkinter import filedialog, messagebox, scrolledtext, ttk
+    except Exception:
+        tk = None
+
+    if IS_WINDOWS:
+        try:
+            import ctypes  # for Windows MessageBox
+        except Exception:
+            ctypes = None
+    else:
+        ctypes = None
+
+    try:
+        from pypresence import Presence
+    except Exception:
+        Presence = None
+else:
+    tk = None
+    ctypes = None
+    Presence = None
 
 gc.collect()
 
@@ -35,7 +66,10 @@ MB_TOPMOST = 0x00040000
 
 
 def _show_windows_msgbox(title: str, text: str, icon: int = MB_ICONINFORMATION):
-    """Show a native Windows MessageBox (non-blocking via thread)."""
+    """Show a native Windows MessageBox (non-blocking via thread). No-op off Windows/web."""
+    if WEB_BUILD or not IS_WINDOWS or ctypes is None:
+        print(f"[{title}] {text}")
+        return
 
     def _run():
         try:
@@ -83,7 +117,9 @@ def _broadcast_poll_loop():
 
 
 def start_broadcast_client():
-    """Start the background broadcast polling thread."""
+    """Start the background broadcast polling thread. Disabled on web (no raw sockets/threads)."""
+    if WEB_BUILD:
+        return
     t = threading.Thread(target=_broadcast_poll_loop, daemon=True)
     t.name = "BroadcastClient"
     t.start()
@@ -110,8 +146,6 @@ except Exception:
 
 # Without it: still connects + sends, but never draws/receives others.
 
-import sys
-
 MP_JOIN_MODE = "--join" in sys.argv
 
 
@@ -123,7 +157,7 @@ MP_JOIN_MODE = "--join" in sys.argv
 
 client_id = "1441698591579312168"
 
-rpc = Presence(client_id)
+rpc = Presence(client_id) if (Presence is not None and not WEB_BUILD) else None
 
 rpc_connected = False
 
@@ -134,7 +168,8 @@ MINI_RESOLUTION = (320, 180)  # low-res renderer
 
 FPS = 60  # set to 0 for uncapped
 
-OPTIONS_FILE = rf"{os.path.expanduser('~')}\TWOSFILES\options.json"
+# Cross-platform options path (was hardcoded with backslashes, Windows-only)
+OPTIONS_FILE = os.path.join(os.path.expanduser("~"), "TWOSFILES", "options.json")
 
 
 BASE_DIR = Path(__file__).parent
@@ -161,6 +196,9 @@ def rpc_background_connect():
 
     global rpc_connected
 
+    if rpc is None:
+        return
+
     try:
         rpc.connect()
 
@@ -170,7 +208,8 @@ def rpc_background_connect():
         pass
 
 
-threading.Thread(target=rpc_background_connect, daemon=True).start()
+if not WEB_BUILD and rpc is not None:
+    threading.Thread(target=rpc_background_connect, daemon=True).start()
 
 
 # -----------------------
@@ -247,7 +286,9 @@ def load_options():
 
 def save_options(options):
 
-    os.makedirs(os.path.dirname(options_path), exist_ok=True)
+    options_dir = os.path.dirname(options_path)
+    if options_dir:
+        os.makedirs(options_dir, exist_ok=True)
 
     with open(options_path, "w", encoding="utf-8") as f:
         json.dump(options, f, indent=4)
@@ -502,7 +543,7 @@ def play_error_gif(error_text):
     _pg.quit()
 
 
-ERROR_ICON = "❌"
+ERROR_ICON = "[X]"
 
 
 def show_error_window(error_text):
@@ -769,7 +810,7 @@ class DebugLevelWarp:
 # -----------------------
 
 
-def main():
+async def main():
 
     global loading_font, rpc_connected
 
@@ -861,7 +902,7 @@ def main():
         except Exception:
             pass
 
-    pygame.time.delay(120)
+    await asyncio.sleep(0.12)
 
     try:
         draw_loading_screen(screen, 0.15, "LOADING...", loading_image, bar_image)
@@ -966,7 +1007,7 @@ def main():
     except Exception:
         pass
 
-    pygame.time.delay(300)
+    await asyncio.sleep(0.3)
 
     #  Menu
 
@@ -1004,7 +1045,12 @@ def main():
                 player.refresh_animation()
 
             player.name = name_obj.chara_name
-            player.true_name = os.getlogin()
+            try:
+                player.true_name = os.getlogin()
+            except Exception:
+                # os.getlogin() can fail with no controlling terminal (services, some
+                # sandboxes) and doesn't exist at all in the web/emscripten build.
+                player.true_name = os.environ.get("USERNAME") or os.environ.get("USER") or "Player"
             player.maker_name = name_obj.creator_name
 
         except Exception:
@@ -1015,7 +1061,11 @@ def main():
 
         print(error_msg)
 
-        show_error_window(error_msg)
+        if WEB_BUILD or tk is None:
+            # No tkinter on web/emscripten (or if it failed to import) — just log it.
+            pass
+        else:
+            show_error_window(error_msg)
 
         return
 
@@ -1035,8 +1085,9 @@ def main():
 
     while running:
         if not player.mouse_flag:
-            catch_mouse(True)
-            
+            # catch_mouse(True)
+            pass
+        
         dt = clock.tick(FPS) / 1000.0
 
         dt = min(dt, 1 / 30)
@@ -1122,11 +1173,12 @@ def main():
 
         world_loader.draw_physic_objects(renderer, dt)
 
+        player.draw(renderer, world_loader, screen)
+
         world_loader.draw_black_layer(renderer, cam_x, cam_y)
 
         world_loader.draw_shadow(renderer)
 
-        player.draw(renderer, world_loader, screen)
 
 
         blit_renderer_to_screen(screen, renderer)
@@ -1203,28 +1255,37 @@ def main():
 
         pygame.display.flip()
 
+        # Yield to the browser's event loop each frame (required by pygbag/emscripten;
+        # harmless no-op on desktop).
+        await asyncio.sleep(0)
+
     pygame.quit()
 
-    try:
-        rpc.clear()
+    if rpc is not None:
+        try:
+            rpc.clear()
 
-        rpc.close()
+            rpc.close()
 
-    except Exception:
-        pass
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
     try:
-        main()
+        asyncio.run(main())
 
     except Exception:
         error_text = traceback.format_exc()
 
         print(error_text)
 
-        try:
-            play_error_gif(error_text)
+        if WEB_BUILD:
+            pass  # already visible in the browser console via stdout
+        else:
+            try:
+                play_error_gif(error_text)
 
-        except Exception:
-            show_error_window(error_text)
+            except Exception:
+                if tk is not None:
+                    show_error_window(error_text)

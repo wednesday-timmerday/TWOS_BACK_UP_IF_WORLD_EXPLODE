@@ -1016,5 +1016,13 @@
         "id": "158c86ce-a29a-4bc3-a44a-33ae0f0a678f"
       }
     ]
+  },
+  "level_10": {
+    "coll_layers": [2],
+    "enemies": [],
+    "triggers": [],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": []
   }
 }

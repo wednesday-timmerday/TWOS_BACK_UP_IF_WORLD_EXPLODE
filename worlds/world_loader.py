@@ -1,9 +1,7 @@
-﻿# THIS FUCKING THING SEEMS TO BE A FUCKING https://www.youtube.com/watch?v=imH2hItIFlk
-
-
-import json
+﻿import json
 import math
 import os
+import re
 from collections import OrderedDict, deque
 
 import numpy as np
@@ -28,29 +26,17 @@ def load_settings():
         return {"fullscreen": False, "master_volume": 0.5}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Dynamic Enemy Loader
-# ─────────────────────────────────────────────────────────────────────────────
-
 _enemy_class_cache = {}
+
+_TOKEN_RE = re.compile(r"^([a-zA-Z]+)(\d+)$")
 
 
 def get_enemy_class(enemy_type_name, *args, **kwargs):
-    """
-    Dynamically load and instantiate an enemy class.
-
-    Tries to find a class in sprites/{enemy_name}/{enemy_name}.py
-    Falls back to SaveOBJ for "save" type, or BaseEnemyModule.EnemyBase as last resort.
-
-    Returns: instantiated enemy object or None if failed
-    """
     enemy_type_name = enemy_type_name.lower().strip()
 
-    # Special case: SaveOBJ
     if enemy_type_name == "save":
         return SaveOBJ()
 
-    # Check cache first
     if enemy_type_name in _enemy_class_cache:
         enemy_class = _enemy_class_cache[enemy_type_name]
         try:
@@ -67,7 +53,6 @@ def get_enemy_class(enemy_type_name, *args, **kwargs):
             print(f"[get_enemy_class] Failed to instantiate cached class '{enemy_type_name}': {e}")
             return None
 
-    # Try to dynamically import the enemy class
     try:
         sprites_path = os.path.join(os.path.dirname(__file__), "..", "sprites", enemy_type_name)
         module_path = os.path.join(sprites_path, f"{enemy_type_name}.py")
@@ -82,7 +67,6 @@ def get_enemy_class(enemy_type_name, *args, **kwargs):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        # Try to find a class with a matching name (case-insensitive)
         enemy_class = None
         for attr_name in dir(module):
             attr = getattr(module, attr_name)
@@ -90,7 +74,6 @@ def get_enemy_class(enemy_type_name, *args, **kwargs):
                 enemy_class = attr
                 break
 
-        # If exact match not found, try first uppercase letter
         if not enemy_class:
             class_name = enemy_type_name[0].upper() + enemy_type_name[1:]
             if hasattr(module, class_name):
@@ -100,10 +83,8 @@ def get_enemy_class(enemy_type_name, *args, **kwargs):
             print(f"[get_enemy_class] No suitable class found in {module_path}")
             return None
 
-        # Cache it
         _enemy_class_cache[enemy_type_name] = enemy_class
 
-        # Instantiate with appropriate arguments
         if enemy_type_name == "lantern" or enemy_type_name == "hammer":
             return enemy_class(args[0] if args else kwargs.get("world"))
         elif enemy_type_name == "spike":
@@ -125,12 +106,11 @@ class World_loader:
 
         self.platforms = []
 
-        # -------------------------
-        # Chunk streaming / memory limits
-        # -------------------------
+        self.tileset_path = Loader("tilesets").load(".")
+
         self.MAX_CHUNK_CACHE = 16
         self.MAX_COLLISION_WIDTH = 8192
-        self.chunk_cache = OrderedDict()  # (layer_idx, chunk_idx) -> surface
+        self.chunk_cache = OrderedDict()
         self.collision_mask_downsample = 1
         self.prefetch_queue = deque()
         self.PREFETCH_PER_FRAME = 5
@@ -139,9 +119,6 @@ class World_loader:
         self._chunks_loaded_total = 0
         self.visible_chunk_keys = set()
 
-        # -------------------------
-        # Screen / camera
-        # -------------------------
         self.Screen_resolution = screen_size
         self.cam_x = 0
         self.cam_y = 0
@@ -149,67 +126,36 @@ class World_loader:
         self._last_cam_x = 0
         self._last_cam_y = 0
 
-        # -------------------------
-        # Layers & world
-        # -------------------------
         self.layers = []
         self.scaled_layers = []
         self.layer_info = []
-        self.static_background = None  # optimized pre-rendered static layers
+        self.static_background = None
         self.layer_length = 0
-        self.layer_height = screen_size[1]  # full world height, updated in load_layers
+        self.layer_height = screen_size[1]
 
-        # -------------------------
-        # Entities & physics
-        # -------------------------
+        self.known_sets = []
+
         self.enemies = []
         self.all_physic_objects = []
 
-        # -------------------------
-        # Object state management
-        # -------------------------
         self.object_state_manager = ObjectStateManager()
 
-        # Player reference
         self.player = player
 
-        # -------------------------
-        # Lighting
-        #
-        # Masks are generated on-demand and cached per (radius, alpha) pair via
-        # _get_light_mask(). This means every light source can have its own
-        # radius without any per-frame cost after the first render.
-        #
-        # Player light radius can be changed at runtime:
-        #   world._player_light_radius = 60
-        #   world._light_dirty = True
-        #
-        # Extra light sources support a per-source radius + alpha:
-        #   world.add_light_source(obj, radius=160, offset=(0,-20), alpha=120)
-        # -------------------------
         self.light_sources = []
         self.current_light_source = 1
 
-        # Player light radius in pixels (full diameter = radius * 2)
         self._player_light_radius = 100
 
-        # Cache: (radius, alpha) -> darkened mask surface
         self._light_mask_cache = {}
 
-        # Pre-warm the player light mask so the first frame is instant
         self._big_light_mask_dark = self._get_light_mask(self._player_light_radius)
 
-        self._cached_dark_base = None  # dark base blit (no lights)
+        self._cached_dark_base = None
         self._last_light_render = None
 
-        # -------------------------
-        # Settings
-        # -------------------------
         self.settings = load_settings()
 
-        # -------------------------
-        # Level / spec
-        # -------------------------
         self.level_spec_loader = Loader("worlds")
         self.level_spec_path = self.level_spec_loader.load("level-spec.json")
         self.current_level = 0
@@ -222,9 +168,6 @@ class World_loader:
 
         self.level_data = self.world_data.get(f"level_{self.current_level}", {})
 
-        # -------------------------
-        # Save data
-        # -------------------------
         self.save_obj = SaveOBJ()
         try:
             self.save_data = self.save_obj.load_save()
@@ -247,11 +190,9 @@ class World_loader:
         self._light_fps = 60
         self._light_dirty = True
 
-        # -------------------------
-        # Music
-        # -------------------------
-        music_path = f"music/{self.current_level}/BG_MC.mp3"
-        if os.path.exists(music_path):
+        music_loader = Loader(f"music/{self.current_level}")
+        music_path = music_loader.load("BG_MC.mp3")
+        if music_path and os.path.exists(music_path):
             try:
                 self.Music = pygame.mixer.Sound(music_path)
                 self.Music.set_volume(self.settings.get("master_volume", 0.5))
@@ -259,9 +200,6 @@ class World_loader:
             except Exception:
                 pass
 
-        # -------------------------
-        # TIMER STUFF
-        # -------------------------
         self.Time_left_in_timer_that_times_the_time_in_a_timely_manner = 0.0
         self.is_timer_active = False
         self.time_to_timer = 0.0
@@ -270,10 +208,9 @@ class World_loader:
         self.font_path = self.font_loader.load("PixelFont.ttf")
         self.timer_font = pygame.font.Font(self.font_path, 12)
 
-        # -------------------------
-        # Load world layers
-        # -------------------------
         self.PARALLAX_LAYER_0 = 0.3
+
+        self.PINK_TILE = (255, 0, 255, 255)
 
         self.load_layers()
 
@@ -284,7 +221,6 @@ class World_loader:
 
         self.load_enemies()
 
-        # Some shadow platform stuff
         self.shadow_platform_editor_open = False
 
         level_key = f"level_{getattr(self, 'current_level', self.current_level or 0)}"
@@ -295,45 +231,24 @@ class World_loader:
         box = (60, 0, 200, 7)
         self.boxEngine.create_box(box)
 
-        self.actually_show_timer = True  # true by default
+        self.actually_show_timer = True
 
 
         self.layer_h = 0
-    # -------------------------
-    # Update physics
-    # -------------------------
 
     def update_physics(self, dt):
         if self.is_timer_active and self.level_data.get("timer", None) is not None:
             self.Time_left_in_timer_that_times_the_time_in_a_timely_manner += dt
 
-        """Update all physics engines at fixed step."""
         for engine in self.all_physic_objects:
             try:
                 engine.update(dt, self.player)
             except Exception as e:
                 print("Physics update error:", e)
 
-    # -------------------------
-    # Lighting helpers
-    # -------------------------
-
     def _get_light_mask(self, radius: int, alpha: int = 200) -> pygame.Surface:
-        """
-        Return a cached darkened light mask for the given radius and alpha.
-
-        Masks are created once per unique (radius, alpha) pair and reused
-        on every subsequent call — zero extra cost at runtime.
-
-        radius - light radius in pixels (full radius, not half-radius)
-        alpha  - BLEND_RGBA_MULT value applied to the raw mask.
-                 Lower alpha = stronger light cutout (brighter light).
-                 Range 0-255. Typical values: 120 (bright) – 200 (dim).
-        """
         key = (radius, alpha)
         if key not in self._light_mask_cache:
-            # _create_light_mask expects a "half-radius" value because it
-            # doubles it internally to get the surface size.
             raw = self._create_light_mask(radius // 2)
             dark = raw.copy()
             dark.fill((0, 0, 0, alpha), special_flags=pygame.BLEND_RGBA_MULT)
@@ -341,30 +256,6 @@ class World_loader:
         return self._light_mask_cache[key]
 
     def add_light_source(self, obj, radius, offset=(0, -30), alpha=150):
-        """
-        Add a dynamic light source to the world.
-
-        obj    - the object emitting light (needs world_x / world_y)
-        radius - light radius in pixels. Each unique radius gets its own
-                 cached mask, so different sizes are completely free after
-                 the first frame they appear.
-        offset - (x, y) pixel offset from the object's world_x/world_y.
-                 e.g. offset=(0, -32) shifts the light 32 px upward.
-        alpha  - controls brightness: lower = brighter cutout (120 = bright
-                 lantern, 180 = dim candle). Default 150.
-
-        Examples
-        --------
-        # Wide, bright lantern
-        world.add_light_source(lantern, radius=160, offset=(0, -20), alpha=120)
-
-        # Tiny dim candle
-        world.add_light_source(candle, radius=40, offset=(0, -10), alpha=185)
-
-        # Change player light radius at runtime (e.g. entering a dark cave)
-        # world._player_light_radius = 60
-        # world._light_dirty = True
-        """
         print("yuh")
         print(offset)
         self.light_sources.append({
@@ -374,9 +265,145 @@ class World_loader:
             "alpha": alpha,
         })
 
-    # -------------------------
-    # Load layers
-    # -------------------------
+    def _find_world_file(self):
+        loader = Loader(f"worlds/{self.current_level}")
+        path = loader.load(f"{self.current_level}.world")
+        if path and os.path.exists(path):
+            return path
+        return None
+
+    def load_world_file(self, path):
+        with open(path, "r", encoding="utf-8") as f:
+            raw_lines = f.readlines()
+
+        meta = {"layers": {}}
+        current_layer = None
+        buffer = ""
+
+        for line in raw_lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            elif line.startswith("TOTAL_LAYERS"):
+                meta["total_layers"] = int(line.split("=", 1)[1].split("#")[0].strip())
+            elif line.startswith("TILE_W"):
+                meta["tile_w"] = int(line.split("=", 1)[1].split("#")[0].strip())
+            elif line.startswith("TILE_H"):
+                meta["tile_h"] = int(line.split("=", 1)[1].split("#")[0].strip())
+            elif line.startswith("WORLD_W"):
+                meta["world_w"] = int(line.split("=", 1)[1].split("#")[0].strip())
+            elif line.startswith("WORLD_H"):
+                meta["world_h"] = int(line.split("=", 1)[1].split("#")[0].strip())
+            elif line.upper().startswith("LAYER") and line.endswith(":"):
+                if current_layer is not None:
+                    meta["layers"][current_layer] = buffer
+                current_layer = line[:-1].upper()
+                buffer = ""
+            elif current_layer is not None:
+                buffer += line.split("#")[0].strip()
+
+        if current_layer is not None:
+            meta["layers"][current_layer] = buffer
+
+        for key, raw in meta["layers"].items():
+            meta["layers"][key] = [t for t in raw.split("$") if t != ""]
+
+        return meta
+
+    def _load_tileset(self, image_name, tile_w, tile_h):
+
+        img_path = image_name
+
+        if not img_path or not os.path.exists(img_path):
+            raise FileNotFoundError(f"Tileset image not found: {image_name}")
+
+        tileset = pygame.image.load(img_path).convert_alpha()
+        cols = max(1, tileset.get_width() // tile_w)
+        rows = max(1, tileset.get_height() // tile_h)
+
+        tiles = []
+        for row in range(rows):
+            for col in range(cols):
+                rect = pygame.Rect(col * tile_w, row * tile_h, tile_w, tile_h)
+                tiles.append(tileset.subsurface(rect).copy())
+
+        return tiles
+
+    def _load_all_tilesets(self, tile_w, tile_h):
+        tilesets = {}
+        for fname in os.listdir(self.tileset_path):
+            if not fname.lower().endswith(".png"):
+                continue
+            letter = os.path.splitext(fname)[0]
+            img_path = os.path.join(self.tileset_path, fname)
+            tilesets[letter] = self._load_tileset(img_path, tile_w, tile_h)
+        return tilesets
+
+    def _render_world_layer(self, tokens, tilesets, world_w, world_h, tile_w, tile_h):
+        surf = pygame.Surface((world_w * tile_w, world_h * tile_h), pygame.SRCALPHA)
+        total_tiles = world_w * world_h
+
+        for i in range(total_tiles):
+            x = (i % world_w) * tile_w
+            y = (i // world_w) * tile_h
+
+            token = tokens[i] if i < len(tokens) else "0"
+
+            if token != "0":
+                m = _TOKEN_RE.match(token)
+                if not m:
+                    pygame.draw.rect(surf, self.PINK_TILE, (x, y, tile_w, tile_h))
+                else:
+                    letter, idx = m.group(1), int(m.group(2))
+                    tiles = tilesets.get(letter)
+
+                    if tiles and 0 <= idx < len(tiles):
+                        surf.blit(tiles[idx], (x, y))
+                    else:
+                        pygame.draw.rect(surf, self.PINK_TILE, (x, y, tile_w, tile_h))
+
+            pygame.draw.rect(surf, (255, 20, 147), (x, y, 2, 2))
+
+        return surf
+
+    def _load_layers_from_world_file(self, path):
+        data = self.load_world_file(path)
+
+        self.known_sets = os.listdir(self.tileset_path)
+
+        tile_w = data["tile_w"]
+        tile_h = data["tile_h"]
+        world_w = data["world_w"]
+        world_h = data["world_h"]
+
+        tilesets = self._load_all_tilesets(tile_w, tile_h)
+
+        for n in range(1, data["total_layers"] + 1):
+            key = f"LAYER{n}"
+            tokens = data["layers"].get(key, [])
+            surf = self._render_world_layer(tokens, tilesets, world_w, world_h, tile_w, tile_h)
+
+            path_name = f"{n}.png"
+            self.layers.append(surf)
+            self.layer_info.append({"type": "full", "surface": surf, "path": path_name})
+            self.scaled_layers.append((path_name, surf))
+
+        if self.layer_info:
+            w = world_w * tile_w
+            h = world_h * tile_h
+            self.layer_length = w
+            self.layer_height = h
+            self.max_cam_x = max(0, w - self.Screen_resolution[0])
+            self.max_cam_y = max(0, h - self.Screen_resolution[1])
+        else:
+            self.max_cam_x = self.max_cam_y = 0
+
+        self._render_static_background()
+        self._render_collision_background()
+
+        print(f"Loaded {len(self.layer_info)} world-file layers for level {self.current_level}")
+        print(f"World size: {self.layer_length} x {self.layer_height}, max_cam: ({self.max_cam_x}, {self.max_cam_y})")
 
     def load_layers(self):
         self.level_data = self.world_data.get(f"level_{self.current_level}", {})
@@ -384,6 +411,11 @@ class World_loader:
         self.layer_info.clear()
         self.layers.clear()
         self.scaled_layers.clear()
+
+        world_file = self._find_world_file()
+        if world_file:
+            self._load_layers_from_world_file(world_file)
+            return
 
         layer_paths = []
         loader = Loader(f"worlds/{self.current_level}")
@@ -393,6 +425,8 @@ class World_loader:
                 n
                 for n in os.listdir(loader.load("."))
                 if os.path.isfile(os.path.join(loader.load("."), n))
+                and n.lower().endswith(".png")
+                and n[:-4].isdigit()
             ]
         )
 
@@ -408,7 +442,6 @@ class World_loader:
             print("kqqw")
 
         for path in layer_paths:
-            # Collision layers are heavy — defer them until mask creation.
             if path in coll_layer_names:
                 img_path = loader.load(path)
                 if img_path and os.path.exists(img_path):
@@ -431,7 +464,6 @@ class World_loader:
                     print(f"Failed to load full layer {img_path}: {e}")
                     img = None
 
-            # Fallback to chunked layer
             if img is None:
                 chunk_loader = Loader(f"worlds/{self.current_level}_chunks")
                 base_name = path[:-4] if path.lower().endswith(".png") else path
@@ -492,7 +524,6 @@ class World_loader:
             self.layer_info.append({"type": "full", "surface": img, "path": path})
             self.scaled_layers.append((path, img))
 
-        # Compute world size from first non-deferred layer
         if self.layer_info:
             first_info = next(
                 (i for i in self.layer_info if i.get("type") != "deferred"),
@@ -510,13 +541,12 @@ class World_loader:
                 h = self.Screen_resolution[1]
 
             self.layer_length = w
-            self.layer_height = h  # FULL world height, not just screen height
+            self.layer_height = h
             self.max_cam_x = max(0, w - self.Screen_resolution[0])
             self.max_cam_y = max(0, h - self.Screen_resolution[1])
         else:
             self.max_cam_x = self.max_cam_y = 0
 
-        # Preload first couple of chunks for a smooth initial frame
         for idx, info in enumerate(self.layer_info):
             if info["type"] == "chunks":
                 preloads = min(len(info["chunks"]), 2)
@@ -529,13 +559,9 @@ class World_loader:
         print(f"Loaded {len(self.layer_info)} layer metadata entries for level {self.current_level}")
         print(f"World size: {self.layer_length} x {self.layer_height}, max_cam: ({self.max_cam_x}, {self.max_cam_y})")
 
-    # -------------------------
-    # Pre-render static layers
-    # -------------------------
-
     def _render_static_background(self):
         total_width = self.layer_length
-        total_height = self.layer_height  # full world height
+        total_height = self.layer_height
 
         coll_layer_names = {
             f"{i}.png" for i in self.level_data.get("coll_layers", [3, 4])
@@ -570,7 +596,7 @@ class World_loader:
 
     def _render_collision_background(self):
         total_width = self.layer_length
-        total_height = self.layer_height  # full world height
+        total_height = self.layer_height
 
         coll_layer_names = {
             f"{i}.png" for i in self.level_data.get("coll_layers", [3, 4])
@@ -595,19 +621,9 @@ class World_loader:
                         self.collision_background.blit(surf, (total, 0))
                     total += cw
 
-    # -------------------------
-    # Chunk caching (LRU)
-    # -------------------------
-
     def _get_chunk_surface(self, layer_idx, chunk_idx):
-        """
-        Returns a scaled surface for the chunk (target height = screen height).
-        Caches surfaces in info['scaled_chunks'] and also maintains an LRU
-        chunk_cache that will evict the oldest entries to free memory.
-        """
         key = (layer_idx, chunk_idx)
 
-        # Fast LRU hit
         if key in self.chunk_cache:
             surf = self.chunk_cache.pop(key)
             self.chunk_cache[key] = surf
@@ -621,14 +637,12 @@ class World_loader:
         if info["type"] != "chunks":
             return None
 
-        # If we already created this scaled chunk, use it
         scaled_list = info.get("scaled_chunks")
         if scaled_list and scaled_list[chunk_idx] is not None:
             surf = scaled_list[chunk_idx]
             self.chunk_cache[key] = surf
             return surf
 
-        # Create scaled chunk now
         try:
             path = info["chunks"][chunk_idx]
             img = pygame.image.load(path).convert_alpha()
@@ -647,7 +661,6 @@ class World_loader:
 
         self.chunk_cache[key] = surf
 
-        # LRU eviction
         while len(self.chunk_cache) > self.MAX_CHUNK_CACHE:
             try:
                 oldest_key, _ = next(iter(self.chunk_cache.items()))
@@ -684,7 +697,6 @@ class World_loader:
             count += 1
 
     def load_enemies(self):
-        """Laadt alle enemies en physics-objecten voor de huidige level_data."""
         self.enemies.clear()
         self.all_physic_objects.clear()
         self.object_state_manager.clear()
@@ -720,9 +732,6 @@ class World_loader:
             y = enemy_data.get("y", enemy_data.get("position", [0, 0])[1])
             object_id = enemy_data.get("id", None)
 
-            # -------------------------
-            # Physics objects
-            # -------------------------
             if enemy_type.startswith("physics_obj_"):
                 phys_name = enemy_type.replace("physics_obj_", "")
                 try:
@@ -744,9 +753,6 @@ class World_loader:
                     print(f"[load_enemies] Failed to spawn physics object '{phys_name}': {e}")
                     continue
 
-            # -------------------------
-            # Non-physics enemies
-            # -------------------------
             else:
                 try:
                     if enemy_type in ("lantern", "hammer", "shadowrock"):
@@ -772,10 +778,6 @@ class World_loader:
 
         self.save_obj.apply_object_states(self)
 
-    # -------------------------
-    # Collision mask builders
-    # -------------------------
-
     def build_collision_mask(self):
         if not self.scaled_layers:
             self.collision_mask = pygame.Mask((0, 0))
@@ -799,13 +801,11 @@ class World_loader:
             self.collision_mask = pygame.Mask((0, 0))
             return
 
-        # Load deferred collision layers
         for info in self.layer_info:
             if info.get("type") == "deferred":
                 p = info.get("img_path")
                 try:
                     surf = pygame.image.load(p).convert_alpha()
-                    # Scale to match layer_height (full world height)
                     target_h = self.layer_height
                     if surf.get_height() != target_h:
                         scale_factor = target_h / surf.get_height()
@@ -817,7 +817,6 @@ class World_loader:
                     info["type"] = "full"
                     info["surface"] = None
 
-        # Figure out total world dimensions for the mask
         first_info = next(
             (i for i in self.layer_info if i.get("type") == "full" and i.get("surface")),
             None
@@ -830,7 +829,7 @@ class World_loader:
             if first_info.get("type") == "chunks"
             else (first_info["surface"].get_width() if first_info.get("surface") else self.layer_length)
         )
-        target_h = self.layer_height  # full world height, NOT just screen height
+        target_h = self.layer_height
 
         downsample = 1
         if total_w > self.MAX_COLLISION_WIDTH:
@@ -893,14 +892,6 @@ class World_loader:
 
         self._render_collision_background()
 
-    # -------------------------
-    # Create pre-rendered light mask
-    #
-    # NOTE: Call _get_light_mask() instead of this directly.
-    # This method creates a raw (un-darkened) circular falloff surface.
-    # radius here is HALF the desired light diameter (surface = radius*2 square).
-    # -------------------------
-
     def _create_light_mask(self, radius):
         size = radius * 2
         mask = pygame.Surface((size, size), pygame.SRCALPHA)
@@ -920,37 +911,12 @@ class World_loader:
 
         return mask.convert_alpha()
 
-    # -------------------------
-    # Camera
-    # -------------------------
-
     def update_camera(self, player_x, player_y=None):
-        """
-        Updates cam_x to follow player_x every frame.
-        cam_y does NOT move automatically — call scroll_cam_y() to move it.
-        player_y is accepted for signature compatibility but ignored.
-        """
         half_width = self.Screen_resolution[0] / 2.0
         self.cam_x = max(0.0, min(float(self.max_cam_x), float(player_x) - half_width))
         self.Cam_locked = self.cam_x <= 0 or self.cam_x >= self.max_cam_x
 
     def scroll_cam_y(self, target_y, speed=None):
-        """
-        Move cam_y toward target_y (a world-space Y coordinate to centre on).
-
-        speed - pixels per frame to lerp at. None = snap instantly.
-
-        Examples
-        --------
-        # Snap to a fixed scroll position (e.g. entering a lower section)
-        world.scroll_cam_y(600)
-
-        # Smoothly follow the player downward at 4 px/frame
-        world.scroll_cam_y(player.world_y, speed=4)
-
-        # Reset back to top of world
-        world.scroll_cam_y(0)
-        """
         half_height = self.Screen_resolution[1] / 2.0
         desired = max(0.0, min(float(self.max_cam_y), float(target_y) - half_height))
 
@@ -960,13 +926,8 @@ class World_loader:
             diff = desired - self.cam_y
             step = math.copysign(min(abs(diff), float(speed)), diff)
             self.cam_y += step
-        
-    # -------------------------
-    # Draw black layer with lights
-    # -------------------------
 
     def draw_black_layer(self, screen, player_or_x, player_y=None):
-        # Skip entirely if lighting disabled
         if not self.light_sources and self.current_light_source == 1:
             return
 
@@ -986,16 +947,14 @@ class World_loader:
             cx = int(player_or_x - self.cam_x)
             cy = int((player_y or 0) - self.cam_y)
 
-        screen_w, screen_h = self.Screen_resolution
+        screen_w, screen_h = screen.get_size()
 
-        # Player light
         player_mask = self._get_light_mask(self._player_light_radius)
         cull = self._player_light_radius * 2
         if -cull < cx < screen_w + cull and -cull < cy < screen_h + cull:
             rect = player_mask.get_rect(center=(cx, cy))
             self._light_overlay.blit(player_mask, rect, special_flags=pygame.BLEND_RGBA_SUB)
 
-        # Other light sources
         for light in self.light_sources:
             obj = light.get("obj")
             if not obj:
@@ -1019,10 +978,6 @@ class World_loader:
 
         screen.blit(self._light_overlay, (0, 0))
 
-    # -------------------------
-    # Draw world
-    # -------------------------
-
     def draw_world(self, screen, player_x, player_y):
         self.screen = screen
         self.update_camera(player_x, player_y)
@@ -1034,7 +989,6 @@ class World_loader:
             abs(cam_x - self._last_cam_x) > 8 or abs(cam_y - self._last_cam_y) > 8
         )
 
-        # Far parallax background — both X and Y get parallax treatment
         if self.static_bg_far:
             visible_x = int(cam_x * self.PARALLAX_LAYER_0)
             visible_y = int(cam_y * self.PARALLAX_LAYER_0)
@@ -1044,11 +998,9 @@ class World_loader:
             )
             screen.blit(self.static_bg_far, (0, 0), area=clip_rect)
 
-        # Near background — scrolls 1:1 with world
         if self.static_bg_near:
             screen.blit(self.static_bg_near, (-cam_x, -cam_y))
 
-        # Collision/foreground layer — also scrolls 1:1
         if hasattr(self, "collision_background") and self.collision_background:
             screen.blit(self.collision_background, (-cam_x, -cam_y))
 
@@ -1066,7 +1018,6 @@ class World_loader:
         cam_y_min = cam_y - margin
         cam_y_max = cam_y + screen_h + margin
 
-        # Draw enemies
         for enemy in self.enemies:
             ex = getattr(enemy, "world_x", 0)
             ey = getattr(enemy, "world_y", 0)
@@ -1074,7 +1025,6 @@ class World_loader:
                 if hasattr(enemy, "draw_in_world"):
                     enemy.draw_in_world(screen, cam_x, cam_y)
 
-        # Draw physics objects
         for obj in self.all_physic_objects:
             ox = getattr(obj, "world_x", 0)
             oy = getattr(obj, "world_y", 0)
@@ -1113,10 +1063,6 @@ class World_loader:
             and self.actually_show_timer
         ):
             screen.blit(shit_to_render, (10, 10))
-
-    # -------------------------
-    # Collision query
-    # -------------------------
 
     def check_collision(self, rect: pygame.Rect) -> bool:
         if not hasattr(self, "collision_mask"):
@@ -1174,7 +1120,6 @@ class World_loader:
         self.current_level = level_id
         self.light_sources = []
 
-        # Clear mask cache — radii may differ between levels
         self._light_mask_cache = {}
         self._big_light_mask_dark = self._get_light_mask(self._player_light_radius)
 

@@ -337,18 +337,22 @@ class Player:
                         n
                         for n in os.listdir(sprite_path)
                         if os.path.isfile(os.path.join(sprite_path, n))
+                        and n.lower().startswith(anim_name.lower() + "_")
+                        and n.lower().endswith(".png")
                     ]
                 )
             except Exception:
                 total_frames = 0
 
-            for i in range(1, total_frames):
+            for i in range(1, total_frames + 1):
+                img = None
                 try:
                     path = sprite_loader.load(f"{anim_name}/{anim_name}_{i}.png")
                     img = pygame.image.load(path).convert_alpha()
                 except Exception as e:
                     print(f"Error loading frame {i} for animation {anim_name}: {e}")
-                frames.append(img)
+                if img is not None:
+                    frames.append(img)
 
             self.animations[anim_name] = frames
             self.animations_left[anim_name] = [
@@ -365,12 +369,14 @@ class Player:
                         n
                         for n in os.listdir(sprite_path)
                         if os.path.isfile(os.path.join(sprite_path, n))
+                        and n.lower().startswith(sfx_name.lower() + "_")
+                        and n.lower().endswith(".ogg")
                     ]
                 )
             except Exception:
                 total_sfx = 0
 
-            for i in range(1, total_sfx):
+            for i in range(1, total_sfx + 1):
                 try:
                     path = sfx_loader.load(f"{sfx_name}/{sfx_name}_{i}.ogg")
                     sfx.append(pygame.mixer.Sound(path))
@@ -1332,6 +1338,7 @@ class Player:
             round(float_center_x - cam_x),
             round(float_bottom_y - cam_y),
         )
+        print(draw_rect.x)
         if self.curr_animation == "imnotracist":
             screen.fill((0, 0, 0))
         try:
