@@ -344,26 +344,29 @@ class World_loader:
         surf = pygame.Surface((world_w * tile_w, world_h * tile_h), pygame.SRCALPHA)
         total_tiles = world_w * world_h
 
-        for i in range(total_tiles):
-            x = (i % world_w) * tile_w
-            y = (i // world_w) * tile_h
+        for x in range(world_w):
+            for y in range(world_h):
+                i = x * world_h + y
 
-            token = tokens[i] if i < len(tokens) else "0"
+                screen_x = x * tile_w
+                screen_y = y * tile_h
 
-            if token != "0":
-                m = _TOKEN_RE.match(token)
-                if not m:
-                    pygame.draw.rect(surf, self.PINK_TILE, (x, y, tile_w, tile_h))
-                else:
-                    letter, idx = m.group(1), int(m.group(2))
-                    tiles = tilesets.get(letter)
+                token = tokens[i] if i < len(tokens) else "0"
 
-                    if tiles and 0 <= idx < len(tiles):
-                        surf.blit(tiles[idx], (x, y))
+                if token != "0":
+                    m = _TOKEN_RE.match(token)
+
+                    if not m:
+                        pygame.draw.rect(surf,self.PINK_TILE,(screen_x, screen_y, tile_w, tile_h))
                     else:
-                        pygame.draw.rect(surf, self.PINK_TILE, (x, y, tile_w, tile_h))
+                        letter, idx = m.group(1), int(m.group(2))
+                        tiles = tilesets.get(letter)
 
-            pygame.draw.rect(surf, (255, 20, 147), (x, y, 2, 2))
+                        if tiles and 0 <= idx < len(tiles):
+                            surf.blit(tiles[idx], (screen_x, screen_y))
+                        else:
+                            pygame.draw.rect(surf,self.PINK_TILE,(screen_x, screen_y, tile_w, tile_h))
+
 
         return surf
 

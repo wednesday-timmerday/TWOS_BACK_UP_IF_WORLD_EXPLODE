@@ -1,15 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_all
 
-hiddenimports = []
+datas = [('cutscenes', 'cutscenes'), ('music', 'music'), ('sprites', 'sprites'), ('worlds', 'worlds'), ('icon', 'icon'), ('ui', 'ui'), ('interactables', 'interactables'), ('multiplayer', 'multiplayer'), ('songs', 'songs')]
+binaries = []
+hiddenimports = ['pytweening']
 hiddenimports += collect_submodules('sprites.physic_obj')
+tmp_ret = collect_all('pytweening')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
-    datas=[('cutscenes', 'cutscenes'), ('music', 'music'), ('sprites', 'sprites'), ('worlds', 'worlds'), ('icon', 'icon'), ('ui', 'ui'), ('interactables', 'interactables'), ('multiplayer', 'multiplayer'), ('songs', 'songs')],
+    binaries=binaries,
+    datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
@@ -23,20 +28,26 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='windows',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='windows',
 )

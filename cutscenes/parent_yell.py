@@ -39,6 +39,19 @@ class cutscene:
 
         self.radius_offset = 2500 #1000 is touchy
 
+        self.goreimgs = []
+
+        for i in range(6):
+            img = pygame.image.load(Loader("cutscenes/assets/parent_yell").load(f"gore_img_{i+1}.png"))
+            print(img)
+            self.goreimgs.append(img)
+
+        self.total_frames_per_gore = 3
+
+        self.frame_counter = 0
+
+        self.clicksfx = pygame.mixer.Sound(Loader("cutscenes/assets/parent_yell").load("klik.wav"))
+
 
     # ------------------------------------------------------------------
 
@@ -94,7 +107,6 @@ class cutscene:
 
             self.player.last_level = getattr(self.world, "current_level", None)
 
-            self.world._player_light_radius = 20
 
             self.world.change_level(0, self.player)
 
@@ -149,7 +161,7 @@ class cutscene:
 
                 self.player.curr_frame = 0
 
-                self.goto_world_stage += 0.25
+                self.goto_world_stage += 1
 
         elif s == 3.25:
             if self._wait("goto_world_wait", 1.5):
@@ -205,7 +217,7 @@ class cutscene:
 
         elif s == 5:
 
-            if self._wait("goto_world_wait", 2.0):
+            if self._wait("goto_world_wait", 1/6*self.total_frames_per_gore):
 
                 self.show_black_screen = False
 
@@ -263,7 +275,7 @@ class cutscene:
                 angle_correction = 180 
                 pygame_angle = -angle + angle_correction
 
-                img = pygame.transform.rotate(self.hand, pygame_angle)
+                img = self.hand
 
                 rect = img.get_rect()
                 rect.center = (x, y)
@@ -272,14 +284,13 @@ class cutscene:
 
 
         if self.show_black_screen:
-            if random.randint(0, 6666) == 231: #We should change these chances... eh fuck it
+            if random.randint(0, 3) == 4: #We should change these chances... eh fuck it
                 surface.blit(self.smile, (0, 0))
             else:
-                pygame.draw.rect(
-    
-                    surface, (0, 0, 0),
-    
-                    (0, 0, surface.get_width(), surface.get_height())
-    
-                )
+                surface.blit(self.goreimgs[math.floor(self.frame_counter/self.total_frames_per_gore)], (0,0))
+                if not math.floor(self.frame_counter/self.total_frames_per_gore) == 5:
+                    self.frame_counter += 1 
 
+                if (self.frame_counter + 1) % self.total_frames_per_gore == 0:
+                    print("yes")
+                    pygame.mixer.Sound.play(self.clicksfx)

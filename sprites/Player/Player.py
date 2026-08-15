@@ -1338,7 +1338,6 @@ class Player:
             round(float_center_x - cam_x),
             round(float_bottom_y - cam_y),
         )
-        print(draw_rect.x)
         if self.curr_animation == "imnotracist":
             screen.fill((0, 0, 0))
         try:

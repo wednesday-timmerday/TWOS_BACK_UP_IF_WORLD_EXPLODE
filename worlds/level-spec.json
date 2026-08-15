@@ -315,7 +315,7 @@
         "y": 127,
         "w": 22,
         "h": 36,
-        "name": "cutscene(Credits)",
+        "name": "interactable(t_books_r1)",
         "id": "9eaf3c8e-47e2-4f6c-8171-edc3224e0985"
       },
       {
@@ -324,7 +324,7 @@
         "y": 148,
         "w": 26,
         "h": 8,
-        "name": "cutscene(Wake_up)",
+        "name": "cutscene(Wake)",
         "id": "4f95df9e-de08-47a2-a844-8fe121a59fa9"
       }
     ],
@@ -386,8 +386,8 @@
       {
         "type": "door_home",
         "position": [
-          157,
-          159
+          182,
+          158
         ],
         "id": "a0b29e79-2a13-4a1b-b319-969f00b6ae3f"
       }
@@ -413,8 +413,8 @@
       },
       {
         "type": "trigger",
-        "x": 42,
-        "y": 143,
+        "x": 9,
+        "y": 144,
         "w": 135,
         "h": 20,
         "name": "interactable(tf)",
@@ -1018,7 +1018,9 @@
     ]
   },
   "level_10": {
-    "coll_layers": [2],
+    "coll_layers": [
+      2
+    ],
     "enemies": [],
     "triggers": [],
     "invis_walls": [],
