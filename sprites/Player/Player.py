@@ -961,11 +961,12 @@ class Player:
             elif (
                 (player_screen_y > screen_h or player_screen_y < 0)
                 and (world.cam_y != 0 or player_screen_y > screen_h)
+                and world.layer_height != screen_h
                 and not self.freeze_frame_active
                 and not self.death_walk_active
                 and self.collision_enabled
             ):
-                if not (world.cam_y + screen_h) == world.layer_height:
+                if  not (world.cam_y + screen_h) == world.layer_height:
                     self.frozen = True
                 self._cam_catchup_active = True
                 self._cam_catchup_timer = 0.0

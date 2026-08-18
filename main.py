@@ -1169,9 +1169,9 @@ async def main():
 
         cam_x, cam_y = get_cam_target(player)
 
-        world_loader.draw_world(renderer, cam_x, cam_y)
+        world_loader.draw_world(screen, renderer, cam_x, cam_y)
 
-        world_loader.draw_physic_objects(renderer, dt)
+        world_loader.draw_physic_objects(renderer, dt) #?
 
         player.draw(renderer, world_loader, screen)
 

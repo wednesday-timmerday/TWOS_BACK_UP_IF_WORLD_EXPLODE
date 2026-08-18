@@ -112,7 +112,7 @@ class cutscene:
 
                 print(self.hand_y)
 
-                self.hand_y = -1449 + -pytweening.easeInSine(self.vol_timer * 2) * 580
+                self.hand_y = -1449 + -pytweening.easeInSine(self.vol_timer * 2) * 580 # -999999999 if dissapear NIG-
                 self.world._player_light_radius = 20 + pytweening.easeInCirc(self.vol_timer) * 120
     
                 self.vol_timer += 0.7 * self.dt 

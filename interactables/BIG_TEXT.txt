@@ -1,5 +1,6 @@
 t_flowey_r1 =
             []
+            {check_if_ut}
             * The painting reminds you of a&game you used to play.
             * Despite its age,&it is still a fun game.
             ENDOFCONVERSATION
@@ -37,17 +38,17 @@ q_gate_r2_1 =
 
 t_gate_r2_1 =
             []
-            * You listen closely
+            * CHARA_NAME listens closely
             * .^wait250.^wait250.
-            * Your sister is sleeping
+            * CHARA_NAME's sister is sleeping
             * After all, ^wait250its wayy past bedtime
 
 t_gate_r2_2 =
             []
-            * You listen closely
+            * CHARA_NAME listens closely
             * .^wait250.^wait250.
-            * Your brother seems to be playing that&stupid little anime game about&joining literature clubs
-            * You wonder why he keeps playing&that game
+            * CHARA_NAME's brother seems to be playing that&stupid little anime game about&joining literature clubs
+            * CHARA_NAME wonders why he keeps playing&that game
             ENDOFCONVERSATION
 
 q_gate_r1_idfk =

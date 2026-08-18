@@ -981,7 +981,7 @@ class World_loader:
 
         screen.blit(self._light_overlay, (0, 0))
 
-    def draw_world(self, screen, player_x, player_y):
+    def draw_world(self, true_screen, screen, player_x, player_y):
         self.screen = screen
         self.update_camera(player_x, player_y)
 
@@ -1033,7 +1033,7 @@ class World_loader:
             oy = getattr(obj, "world_y", 0)
             if cam_x_min < ox < cam_x_max and cam_y_min < oy < cam_y_max:
                 if hasattr(obj, "draw_in_world"):
-                    obj.draw_in_world(screen, cam_x, cam_y)
+                    obj.draw_in_world(true_screen, cam_x, cam_y)
 
         for platform in self.platforms:
             screen.blit(

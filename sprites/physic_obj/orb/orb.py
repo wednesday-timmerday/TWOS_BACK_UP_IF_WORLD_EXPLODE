@@ -104,7 +104,7 @@ class PhysicObject(StateSerializable):
 
         self._load_cutscene_triggers()
 
-        world_loader.add_light_source(self, 38, offset=(0, self.height//2))
+        world_loader.add_light_source(self, 38, offset=(0, self.height//4))
 
     
 
@@ -303,7 +303,7 @@ class PhysicObject(StateSerializable):
 
         rect = self.rotated_image.get_rect(
 
-            center=(self.world_x - cam_x, self.world_y - cam_y)
+            center=((self.world_x - cam_x) * 4, (self.world_y - cam_y)*4)
 
         )
 

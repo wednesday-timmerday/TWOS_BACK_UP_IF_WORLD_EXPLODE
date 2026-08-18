@@ -181,15 +181,21 @@ class PhysicEngine:
     def draw(self, screen, world_x, world_y):
         if not self.object:
             return
-
+    
         cx = int(self.object.world_x - world_x)
         cy = int(self.object.world_y - world_y)
 
-        rotated_image = pygame.transform.rotate(self.object_image, -self.object.angle)
-        new_rect = rotated_image.get_rect(center=(cx, cy))
-        screen.blit(rotated_image, new_rect.topleft)
-
+        snapped_angle = round(self.object.angle / 45) * 45
+    
+        if snapped_angle != getattr(self, "_last_drawn_angle", None):
+            self._cached_rotated = pygame.transform.rotate(self.object_image, -snapped_angle)
+            self._last_drawn_angle = snapped_angle
+    
+        new_rect = self._cached_rotated.get_rect(center=(cx, cy))
+        screen.blit(self._cached_rotated, new_rect.topleft)
+    
         if DEBUG_HITBOX:
             pygame.draw.circle(screen, (0, 255, 0), (cx, cy), self.phys_radius, 1)
             pygame.draw.circle(screen, (255, 0, 0), (cx, cy), 1)
-
+
+

@@ -11,4 +11,3 @@
         self.loader = loader
 
         self.dt = 0
-

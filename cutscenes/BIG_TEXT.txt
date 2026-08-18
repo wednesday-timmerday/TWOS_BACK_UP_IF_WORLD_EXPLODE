@@ -13,6 +13,7 @@ parent_yell =
             CHARA_NAME * Lets just go to bed.
             {kill_music}
             {goto_world}
+            DONTADDIDX
             ENDOFCONVERSATION
 
 1 =
