@@ -145,7 +145,7 @@ class World_loader:
         self.light_sources = []
         self.current_light_source = 1
 
-        self._player_light_radius = 100
+        self._player_light_radius = 20 #100 if norm
 
         self._light_mask_cache = {}
 
@@ -222,7 +222,7 @@ class World_loader:
         self.load_enemies()
 
         self.shadow_platform_editor_open = False
-
+        
         level_key = f"level_{getattr(self, 'current_level', self.current_level or 0)}"
         self.triggers = self.player.level_spec.get(level_key, {}).get("triggers", [])
         print(self.triggers)

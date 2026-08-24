@@ -257,7 +257,7 @@ class NameScreen:
             elif name in ("A", "AAAAAAA", "HUMAN", "PERSON"):
                 self.text_engine.start_text('Not very creative,^wait500 are you?')
 
-            elif name in ("TIGO", "JORIS", "QUINTEN", "CARPET", "JOSIAH", "EVERAN", "AMY"):
+            elif name in ("TIGO", "JORIS", "QUINTEN", "CARPET", "JOSIAH", "EVERAN", "AMY", "ETHAN"):
                 self.text_engine.start_text('Ah yes, ^wait250my creators')
 
             else:
@@ -349,8 +349,10 @@ class NameScreen:
         return False
 
     # --------------------------------------------------
-
+    
     def draw_alfabet(self):
+        padding = 8  # space between glyph edge and cursor box
+    
         # draw letters
         for idx, letter in enumerate(self.alfabet):
             x = idx % self.grid_cols
@@ -359,45 +361,47 @@ class NameScreen:
             pos_y = self.start_y + y * self.cell_size
             text = self.font.render(letter, False, (255, 255, 255))
             self.screen.blit(text, (pos_x, pos_y))
-
+    
         # draw buttons
         for i, btn in enumerate(self.buttons):
             pos_x = self.start_x + i * self.cell_size + (200 * i)  # keep offset
             pos_y = self.start_y + self.button_row * self.cell_size
             text = self.font.render(btn, False, (255, 255, 255))
             self.screen.blit(text, (pos_x, pos_y))
-
+    
         # draw typed letters
         for i, letter in enumerate(self.selected_letters):
             pos_x = 200 + i * self.cell_size
             pos_y = 150
             text = self.font.render(letter, False, (255, 255, 255))
             self.screen.blit(text, (pos_x, pos_y))
-
+    
         # draw underscore placeholders
         for i in range(len(self.selected_letters), self.max_letters):
             pos_x = 200 + i * self.cell_size
             pos_y = 150
             text = self.font.render("_", False, (255, 255, 255))
             self.screen.blit(text, (pos_x, pos_y))
-
-        # --- draw cursor ---
+    
+        # --- draw cursor (sized to wrap around whatever label it's on) ---
         if self.cursor_y == self.button_row:
-            # buttons row: apply same offset as the button text
-            cursor_x_pos = self.start_x + self.cursor_x * self.cell_size + (200 * self.cursor_x)
-            cursor_y_pos = self.start_y + self.cursor_y * self.cell_size
+            # over a button
+            label = self.buttons[self.cursor_x]
+            pos_x = self.start_x + self.cursor_x * self.cell_size + (200 * self.cursor_x)
+            pos_y = self.start_y + self.cursor_y * self.cell_size
         else:
-            cursor_x_pos = self.start_x + self.cursor_x * self.cell_size
-            cursor_y_pos = self.start_y + self.cursor_y * self.cell_size
-
-        cursor = pygame.Rect(
-            cursor_x_pos,
-            cursor_y_pos,
-            35,
-            35
-        )
+            # over a letter
+            label = self.alfabet[self.cursor_y * self.grid_cols + self.cursor_x]
+            pos_x = self.start_x + self.cursor_x * self.cell_size
+            pos_y = self.start_y + self.cursor_y * self.cell_size
+    
+        text_w, text_h = self.font.size(label)
+        center_x = pos_x + text_w / 2 - 3
+        center_y = pos_y + text_h / 2 + 2
+    
+        cursor = pygame.Rect(0, 0, text_w + padding, text_h + padding)
+        cursor.center = (center_x, center_y)
         pygame.draw.rect(self.screen, (255, 0, 0), cursor, 3)
-
     # --------------------------------------------------
 
     def update_cursor(self, dt):

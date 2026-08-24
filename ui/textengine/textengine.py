@@ -3,7 +3,6 @@ import re
 import random
 import math
 import json
-import locale
 
 import pygame
 from googletrans import Translator
@@ -70,8 +69,6 @@ class TextEngine:
 
         # Image support
         self.image_cache = {}
-
-        print(locale.getdefaultlocale())
 
     # -----------------------------
     # Parse tags

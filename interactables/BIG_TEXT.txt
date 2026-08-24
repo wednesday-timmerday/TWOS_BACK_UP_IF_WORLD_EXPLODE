@@ -47,8 +47,9 @@ t_gate_r2_2 =
             []
             * CHARA_NAME listens closely
             * .^wait250.^wait250.
-            * CHARA_NAME's brother seems to be playing that&stupid little anime game about&joining literature clubs
-            * CHARA_NAME wonders why he keeps playing&that game
+            * CHARA_NAME's brother is playing that&stupid anime game
+            * Was it "doka doka"?
+            * I dont remember.
             ENDOFCONVERSATION
 
 q_gate_r1_idfk =
@@ -69,7 +70,7 @@ the_man =
     []
     {(1 0)}
     The man: * How did you get here??
-    The man: * Congrats ig
+    The man: * Congrats on reaching this... place.
     The man: * ...
     The man: * ^special^shake2shoo!^endspecial
     The man: * Go now

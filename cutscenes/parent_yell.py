@@ -46,7 +46,7 @@ class cutscene:
             print(img)
             self.goreimgs.append(img)
 
-        self.total_frames_per_gore = 60
+        self.total_frames_per_gore = 2
 
         self.frame_counter = 0
 

@@ -308,6 +308,7 @@ def init_pygame(options):
     os.environ["SDL_VIDEO_X11_FORCE_EGL"] = "0"
 
     pygame.init()
+    pygame.mixer.init()
 
     try:
         pygame.mixer.init()
