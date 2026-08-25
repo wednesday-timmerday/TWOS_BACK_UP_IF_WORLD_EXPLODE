@@ -31,7 +31,7 @@ parent_yell =
     {(0 0.5)}
     shadowrock: * Who do you think&you are?
     shadowrock: * Geez, why the&long face?
-    (CHOICE) What will you say; Got an F for my math test; My grand-pa died;
+    (CHOICE) What will you say; Got an F for my math test; My grand-pa died
     (BRANCH) Got an F for my math test
     {(0 0.5)}
     shadowrock: * I can smell the lie&from over here
