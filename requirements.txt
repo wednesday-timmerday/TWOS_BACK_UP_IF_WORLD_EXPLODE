@@ -16,7 +16,7 @@ pyqt6_sip==13.11.1
 pyvirtualcam==0.15.0
 reportlab==4.5.0
 Requests==2.34.2
-scipy==1.18.1
+scipy
 sounddevice==0.5.5
 sympy==1.14.0
 trimesh==4.10.1
