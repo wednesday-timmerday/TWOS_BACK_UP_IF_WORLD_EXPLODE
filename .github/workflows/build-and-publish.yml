@@ -27,7 +27,7 @@ jobs:
           --clean --name "windows" main.py
 
       - name: Publish to itch.io
-        uses: manleydev/butler-publish-itchio-action@v1
+        uses: manleydev/butler-publish-itchio-action@v1.0.3
         env:
           BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
           CHANNEL: windows
