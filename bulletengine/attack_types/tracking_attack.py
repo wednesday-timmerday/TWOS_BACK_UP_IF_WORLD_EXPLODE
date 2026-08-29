@@ -1,4 +1,4 @@
-﻿"""Tracking attack - bullets follow the player."""
+"""Tracking attack - bullets follow the player."""
 
 import math
 from .base_attack import BaseAttackType

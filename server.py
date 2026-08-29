@@ -1,4 +1,4 @@
-﻿# signaling_server.py
+# signaling_server.py
 import asyncio
 import json
 from aiohttp import web, WSMsgType

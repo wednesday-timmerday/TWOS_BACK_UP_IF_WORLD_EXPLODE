@@ -1,4 +1,4 @@
-﻿from pydub import AudioSegment
+from pydub import AudioSegment
 import os
 
 INPUT_FOLDER = "music"

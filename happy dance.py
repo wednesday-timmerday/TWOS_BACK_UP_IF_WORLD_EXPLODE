@@ -1,4 +1,4 @@
-﻿import os
+import os
 import json
 import shutil
 from groq import Groq  # OfficiÃ«le Groq API-client

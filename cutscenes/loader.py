@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 import importlib.util
 import os
 import sys

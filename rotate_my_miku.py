@@ -1,4 +1,4 @@
-﻿from PIL import Image
+from PIL import Image
 
 img = Image.open("sprites/Player/animation_frames/lebreah/Idle/Idle_1.png")
 

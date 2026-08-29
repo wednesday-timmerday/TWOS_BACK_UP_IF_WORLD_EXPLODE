@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 
 class Interactable:
     def __init__(self, player, world, loader):

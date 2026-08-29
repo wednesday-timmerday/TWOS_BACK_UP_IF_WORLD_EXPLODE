@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 
 # def run(cutscene, dt, player, world, joystick, event):
 

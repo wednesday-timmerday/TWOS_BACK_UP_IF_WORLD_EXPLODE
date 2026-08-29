@@ -1,4 +1,4 @@
-﻿"""Homing attack - bullets track the player."""
+"""Homing attack - bullets track the player."""
 
 import math
 from .base_attack import BaseAttackType

@@ -1,4 +1,4 @@
-﻿from sprites.base_enemy import EnemyBase
+from sprites.base_enemy import EnemyBase
 import pygame   
 
 class CoolEffect(EnemyBase):

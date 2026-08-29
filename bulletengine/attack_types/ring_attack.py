@@ -1,4 +1,4 @@
-﻿"""Ring attack - dense concentric circles."""
+"""Ring attack - dense concentric circles."""
 
 from .base_attack import BaseAttackType
 

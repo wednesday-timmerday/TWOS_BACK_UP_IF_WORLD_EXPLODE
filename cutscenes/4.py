@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 
 class cutscene:
     def __init__(self, player, world, loader):

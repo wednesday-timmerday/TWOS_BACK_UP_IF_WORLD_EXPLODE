@@ -1,4 +1,4 @@
-﻿import importlib.util
+import importlib.util
 import math
 import os
 import sys

@@ -1,4 +1,4 @@
-﻿from assetsLoader import Loader
+from assetsLoader import Loader
 
 import pygame 
 import pytweening

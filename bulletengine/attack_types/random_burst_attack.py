@@ -1,4 +1,4 @@
-﻿"""Random burst attack - chaotic unpredictable fire."""
+"""Random burst attack - chaotic unpredictable fire."""
 
 import random
 from .base_attack import BaseAttackType

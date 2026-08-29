@@ -1,4 +1,4 @@
-﻿# Create mappings.txt
+# Create mappings.txt
 
 with open("mappings.txt", "w") as f:
     # Lowercase letters

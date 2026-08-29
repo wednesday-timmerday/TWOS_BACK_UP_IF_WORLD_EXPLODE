@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 import os
 import json
 import cutscenes.loader as CutsceneLoaderModule

@@ -1,4 +1,4 @@
-﻿# cutscenes/pan_camera_to_2000.py
+# cutscenes/pan_camera_to_2000.py
 import pygame
 import types
 

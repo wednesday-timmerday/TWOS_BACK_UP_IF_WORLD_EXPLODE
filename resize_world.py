@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Kaart Ontwerper - Maak voor- en achterkant kaarten, exporteer als dubbelzijdig PDF
 Vereisten: pip install reportlab Pillow

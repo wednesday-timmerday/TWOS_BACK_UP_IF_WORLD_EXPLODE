@@ -1,1 +1,1 @@
-﻿#! Maybe we use dis, idfk
+#! Maybe we use dis, idfk

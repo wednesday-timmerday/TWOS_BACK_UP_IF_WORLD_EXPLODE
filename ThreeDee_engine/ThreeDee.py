@@ -1,4 +1,4 @@
-﻿# ThreeDee_engine/ThreeDee.py
+# ThreeDee_engine/ThreeDee.py
 
 #
 

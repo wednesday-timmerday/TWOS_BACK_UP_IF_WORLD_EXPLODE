@@ -1,4 +1,4 @@
-﻿"""Base class for all attack types."""
+"""Base class for all attack types."""
 
 
 class BaseAttackType:

@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 from assetsLoader import Loader
 from ui.textengine.textengine import TextEngine
 from ui.textengine.textengine import TextEngine as TXT1

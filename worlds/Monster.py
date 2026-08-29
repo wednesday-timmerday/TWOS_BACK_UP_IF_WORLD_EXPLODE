@@ -1,4 +1,4 @@
-﻿ #! Gekke oude code
+ #! Gekke oude code
 
 import pygame
 from sprites.blobtigoo.blobtigoo import Blobtigoo

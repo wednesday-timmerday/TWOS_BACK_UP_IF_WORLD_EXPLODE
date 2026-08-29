@@ -1,4 +1,4 @@
-﻿import sys, os
+import sys, os
 
 class Loader:
     def __init__(self, base_path):

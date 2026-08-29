@@ -1,4 +1,4 @@
-﻿"""
+"""
 TWOS Multiplayer Server
 -----------------------
 Run:  python multiplayer/server.py

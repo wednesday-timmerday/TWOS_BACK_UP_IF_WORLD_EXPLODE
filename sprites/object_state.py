@@ -1,4 +1,4 @@
-﻿"""
+"""
 Object State Management System
 
 Handles serialization, deserialization, and tracking of object state

@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 from assetsLoader import Loader
 
 music_loader = Loader("music")

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Multi-threaded game manager.
 Handles separate threads for physics, world updates, RPC, and enemy rendering.
 """

@@ -1,4 +1,4 @@
-﻿import json
+import json
 import uuid
 
 FILE_PATH = "worlds/level-spec.json"  # change this to your filename

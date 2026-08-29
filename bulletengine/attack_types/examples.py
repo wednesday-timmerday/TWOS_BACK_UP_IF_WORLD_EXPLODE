@@ -1,4 +1,4 @@
-﻿"""QUICK START: Per-Attack Updates + Homing Bullets"""
+"""QUICK START: Per-Attack Updates + Homing Bullets"""
 
 # ============================================================
 # EXAMPLE 1: SIMPLE PER-ATTACK UPDATE

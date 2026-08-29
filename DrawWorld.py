@@ -1,4 +1,4 @@
-﻿"""
+"""
 DrawWorld editor â€” fixed edition
 
 Fixes:

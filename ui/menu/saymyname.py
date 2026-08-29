@@ -1,4 +1,4 @@
-﻿print("Baumkuchen")
+print("Baumkuchen")
 import pygame
 import string
 import json

@@ -1,4 +1,4 @@
-﻿"""Spiral attack - rotating pattern emanating from center."""
+"""Spiral attack - rotating pattern emanating from center."""
 
 import math
 from .base_attack import BaseAttackType

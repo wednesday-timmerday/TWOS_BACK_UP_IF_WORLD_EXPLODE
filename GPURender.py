@@ -1,4 +1,4 @@
-﻿"""
+"""
 
 GPU Render Helper for Pyglet 2.x
 

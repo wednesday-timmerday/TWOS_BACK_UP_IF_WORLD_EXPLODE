@@ -1,4 +1,4 @@
-﻿"""
+"""
 TWOS Multiplayer Client
 -----------------------
 Drop-in component used by main.py.

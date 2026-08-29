@@ -1,4 +1,4 @@
-﻿import sounddevice as sd
+import sounddevice as sd
 import numpy as np
 from scipy.signal import butter, lfilter
 import time

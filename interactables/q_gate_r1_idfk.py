@@ -1,4 +1,4 @@
-﻿class Interactable:
+class Interactable:
     def __init__(self, player, world, loader):
         self.dialogue_id = "q_gate_r1_idfk"
         self.player = player

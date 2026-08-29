@@ -1,4 +1,4 @@
-﻿class cutscene:
+class cutscene:
     def __init__(self, player, world, loader):
         self.dialogue_id = "room_idfkanymore_tutor_shit_i_forgot"
         self.player = player

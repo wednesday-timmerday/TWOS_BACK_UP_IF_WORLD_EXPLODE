@@ -1,4 +1,4 @@
-﻿import os
+import os
 import pygame
 import math
 

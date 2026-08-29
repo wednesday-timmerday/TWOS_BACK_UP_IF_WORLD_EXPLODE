@@ -1,4 +1,4 @@
-﻿"""Wave attack - sweeping beam pattern."""
+"""Wave attack - sweeping beam pattern."""
 
 import math
 from .base_attack import BaseAttackType

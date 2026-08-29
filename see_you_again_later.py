@@ -1,4 +1,4 @@
-﻿import random
+import random
 import sympy as sp
 
 x = sp.Symbol('x')

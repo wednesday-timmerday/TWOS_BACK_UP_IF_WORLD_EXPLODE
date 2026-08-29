@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 import argparse, math, re
 from typing import Dict, List, Optional, Tuple
 import numpy as np
