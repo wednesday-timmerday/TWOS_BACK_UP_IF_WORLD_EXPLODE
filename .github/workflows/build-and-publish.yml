@@ -1,0 +1,36 @@
+name: Build Windows and publish to itch
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build with PyInstaller
+        run: >
+          pyinstaller --noconfirm --hidden-import=pytweening --collect-all=pytweening
+          --add-data "cutscenes;cutscenes" --collect-submodules sprites.physic_obj
+          --add-data "music;music" --add-data "sprites;sprites" --add-data "worlds;worlds"
+          --add-data "icon;icon" --add-data "ui;ui" --add-data "interactables;interactables"
+          --add-data "multiplayer;multiplayer" --add-data "songs;songs"
+          --clean --name "windows" main.py
+
+      - name: Publish to itch.io
+        uses: manleydev/butler-publish-itchio-action@v1
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          CHANNEL: windows
+          ITCH_GAME: twos-playtestig
+          ITCH_USER: twosgroup
+          PACKAGE: dist/windows

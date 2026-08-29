@@ -1,4 +1,5 @@
-﻿import pygame
+﻿print("Baumkuchen")
+import pygame
 import string
 import json
 import os
@@ -7,9 +8,11 @@ import ui.textengine.textengine as TextEngine
 import sys
 import math
 import atexit
-import cv2
+# import cv2
 import numpy as np
 import pytweening
+print("Baumkuchen2")
+
 
 
 class NameScreen:
@@ -20,12 +23,14 @@ class NameScreen:
         self.font_loader = Loader("ui/menu")
         self.file_loader = Loader(f"{os.path.expanduser('~')}/TWOSFILES/")
         self.toby_loader = Loader("ui")
+        print("go")
 
         self.font_path = self.font_loader.load("PixelFont.ttf")
         self.font = pygame.font.Font(self.font_path, 24)
 
         self.text_engine = TextEngine.TextEngine()
         self.teto_text_engine = TextEngine.TextEngine(font="tobytank.ttf")
+        print("ready?")
 
         self.step = -2
         self.dialog_index = 0
