@@ -26,11 +26,17 @@ jobs:
           --add-data "multiplayer;multiplayer" --add-data "songs;songs"
           --clean --name "windows" main.py
 
+      - name: Install butler
+        run: |
+          curl -L -o butler.zip https://broth.itch.zone/butler/windows-amd64/LATEST/archive/default
+          Expand-Archive butler.zip -DestinationPath butler
+        shell: pwsh
+
       - name: Publish to itch.io
-        uses: manleydev/butler-publish-itchio-action@v1.0.3
+        run: |
+          .\butler\butler.exe push dist/windows $env:ITCH_USER/$env:ITCH_GAME`:windows
+        shell: pwsh
         env:
-          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
-          CHANNEL: windows
-          ITCH_GAME: twos-playtestig
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
           ITCH_USER: twosgroup
-          PACKAGE: dist/windows
+          ITCH_GAME: twos-playtestig
