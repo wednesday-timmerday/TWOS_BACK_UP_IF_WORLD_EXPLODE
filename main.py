@@ -1249,16 +1249,14 @@ async def main():
                 420, 300, surface=player.midgamemenu.true_screen, size=14
             )
 
+        
+
         # Draw debug level warp popup
 
         if debug_warp_popup.active:
             debug_warp_popup.draw()
 
         pygame.display.flip()
-
-        # Yield to the browser's event loop each frame (required by pygbag/emscripten;
-        # harmless no-op on desktop).
-        await asyncio.sleep(0)
 
     pygame.quit()
 
