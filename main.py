@@ -7,8 +7,10 @@ import threading
 import time
 import traceback
 from pathlib import Path
+import math
 
 import pygame
+from pygame.constants import K_ESCAPE
 
 from assetsLoader import Loader
 
@@ -1084,6 +1086,10 @@ async def main():
 
     debug_warp_popup = DebugLevelWarp(screen)
 
+    escape_timer = 0
+
+    escape_active = False
+
     while running:
         if not player.mouse_flag:
             # catch_mouse(True)
@@ -1109,6 +1115,18 @@ async def main():
                     debug_warp_popup.set_levels(get_available_levels())
 
                     debug_warp_popup.open()
+
+        keys = pygame.key.get_pressed()
+        
+
+        if keys[pygame.K_ESCAPE]:
+            escape_timer += dt
+            escape_active = True
+            if escape_timer >= 3.0:
+                running = False
+        else:
+            escape_timer = 0.0
+            escape_active = False
 
         # Debug level warp popup input
 
@@ -1211,6 +1229,11 @@ async def main():
 
             except Exception:
                 last_fps_text = None
+
+        
+        escape_text = loading_font.render(f"EXITING{'.'*math.ceil(escape_timer)}", True, (255,255,255))
+        if escape_active:
+            screen.blit(escape_text, (10,10))
 
         world_loader.draw_timer(screen)
 
