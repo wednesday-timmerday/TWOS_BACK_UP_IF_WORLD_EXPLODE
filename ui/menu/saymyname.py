@@ -140,18 +140,22 @@ class NameScreen:
                 "How would you call&this ^wait1000\"thing\"?"
             ]
 
-        # return [
-        #     ""
-        # ]
         return [
-            "Are you^wait1000 there?",
-            "Can you^wait1000 hear me?",
-            "Great",
-            "Perfect",
-            "Excellent",
-            "Let's start",
+            "Did it^wait1000 work?",
+            'Do you^wait1000 hear me?',
+            "Doesn't matter.",
+            "Let's start^wait1000 the test",
             "How would you call&this ^wait1000\"thing\"?"
         ]
+        # return [
+        #     "Are you^wait1000 there?",
+        #     "Can you^wait1000 hear me?",
+        #     "Great",
+        #     "Perfect",
+        #     "Excellent",
+        #     "Let's start",
+        #     "How would you call&this ^wait1000\"thing\"?"
+        # ]
 
     # --------------------------------------------------
     # quit-count persistence
@@ -344,6 +348,8 @@ class NameScreen:
     def draw_creator_prompt(self, dt):
         self.text_engine.update(dt)
         self.teto_text_engine.update(dt)
+
+        
 
         if not self._dialog_started:
             self.text_engine.start_text(
