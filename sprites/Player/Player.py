@@ -9,9 +9,8 @@ import cutscenes.loader as CutsceneLoaderModule
 import interactables.loader as InteractableModule
 from assetsLoader import Loader
 from BtnHandeler import btnHandeler
-from sprites.save.save import SaveOBJ
 from ui.menu.midgame import Menu
-from ui.menu.save_menu import SaveMenu
+from sprites.save.save import SaveOBJ
 
 import ui.fight.fight as FightModule
 
@@ -157,7 +156,6 @@ class Player:
 
         #  Save / menu -
         self.save_obj = SaveOBJ()
-        self.save_menu = SaveMenu()
         self.in_save_menu = False
         self._prev_z = False
         self._saving = False
@@ -222,9 +220,9 @@ class Player:
 
         self._cam_catchup_active = False
         self._cam_catchup_timer = 0.0
-        self._cam_catchup_dur = 0.4 
-        self._cam_catchup_start_y = 0.0  
-        self._cam_catchup_target_y = 0.0  
+        self._cam_catchup_dur = 0.4
+        self._cam_catchup_start_y = 0.0
+        self._cam_catchup_target_y = 0.0
 
         #  Camera override / lock -
         self.camera_y_lock = False
@@ -242,7 +240,7 @@ class Player:
 
         #  Load save -
         try:
-            loaded = self.save_obj.load_save()
+            loaded = None
         except Exception:
             loaded = None
 
@@ -296,8 +294,8 @@ class Player:
     # -
     # Private helpers
     # -
-    # 
-     
+    #
+
     def handle_item_used(self, item_name):
         for i, item in enumerate(self.items):
             if item["short_name"] == item_name:
@@ -539,6 +537,7 @@ class Player:
         self.dt = dt
         self.fight_loader = fight_loader
         self.world = world
+        self.save_obj.save_state(self, self.world)
         if self.respawn_protect_timer > 0.0:
             self.respawn_protect_timer = max(0.0, self.respawn_protect_timer - dt)
 
@@ -673,7 +672,7 @@ class Player:
 
         controls_allowed = (
             self.can_move
-            and not self.save_menu.visible
+            # and not self.save_menu.visible
             and not self.active_fight
             and not self.freeze_frame_active
             and not self.death_walk_active
@@ -976,13 +975,13 @@ class Player:
                     # fell below screen
 
                     # Do a check to determine final target_y
-                    
+
                     self._cam_catchup_target_y = which_screen_in
-            
+
                 else:
                     # went above screen
                     self._cam_catchup_target_y = which_screen_in - screen_h
-            
+
             else:
                 pass
 
@@ -1011,24 +1010,8 @@ class Player:
         # -- Save menu (Z key) ---------------------------------------------
         z_pressed = self.btnhandeler.get_btn_pressed("z")
         z_just_pressed = z_pressed and not self._prev_z
-        if (
-            z_just_pressed
-            and not self.save_menu.visible
-            and not self.freeze_frame_active
-        ):
-            self.save_menu.show()
         self._prev_z = z_pressed
 
-        if self.save_menu.visible and not self.freeze_frame_active:
-            self.in_save_menu = True
-            action = self.save_menu.handle_input(keys)
-            if action == "Save" and not self._saving:
-                self._saving = True
-            if action is None:
-                self._saving = False
-            return
-        else:
-            self.in_save_menu = False
 
         # -- Triggers ------------------------------------------------------
         if (
@@ -1404,11 +1387,5 @@ class Player:
 
         if self.show_encounter:
             screen.blit(self.encounter_image, (draw_rect.x + 10, draw_rect.y - 10))
-
-        if self.save_menu.visible:
-            try:
-                self.save_menu.draw(screen)
-            except Exception:
-                pass
 
         self.midgamemenu.draw(screen, true_screen)

@@ -709,14 +709,14 @@ class World_loader:
         level_enemies = self.level_data.get("enemies", [])
         level_platform = self.level_data.get("platforms", [])
 
-        save = self.save_obj._full_save
-        if save:
-            level_id = save.get("current_level", self.current_level)
-            levels = save.get("levels", {})
-            dyn_key = f"level_{level_id}_dynamic"
-            if dyn_key in levels:
-                print(f"[load_enemies] Loaded enemies from save: {dyn_key}")
-                level_enemies = levels[dyn_key]
+        # save = self.save_obj._full_save
+        # if save:
+        #     level_id = save.get("current_level", self.current_level)
+        #     levels = save.get("levels", {})
+        #     dyn_key = f"level_{level_id}_dynamic"
+        #     if dyn_key in levels:
+        #         print(f"[load_enemies] Loaded enemies from save: {dyn_key}")
+        #         level_enemies = levels[dyn_key]
 
         for platform_data in level_platform:
             platformx = platform_data.get("x", 0)
@@ -779,7 +779,7 @@ class World_loader:
                 self.object_state_manager.register_object(enemy, object_id)
                 self.enemies.append(enemy)
 
-        self.save_obj.apply_object_states(self)
+        # self.save_obj.apply_object_states(self)
 
     def build_collision_mask(self):
         if not self.scaled_layers:
@@ -1115,7 +1115,8 @@ class World_loader:
 
     def change_level(self, level_id, player):
         try:
-            self.save_obj.save_game(self, player, False)
+            # self.save_obj.save_game(self, player, False)
+            pass
         except Exception as e:
             print(f"Warning: Failed to save state when switching levels: {e}")
 

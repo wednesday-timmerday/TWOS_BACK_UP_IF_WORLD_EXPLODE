@@ -88,7 +88,7 @@ class NameScreen:
         # self.webcam_size = (target_w, target_h)  # preserves the webcam's aspect ratio
 
         self.button_row = self.grid_rows
-        self.buttons = ["Back", "KASANDEEH TEEHTOE"]
+        self.buttons = ["Back", "Next"]
 
         self.chara_name = "Gaster"
         self.creator_name = "Player"
