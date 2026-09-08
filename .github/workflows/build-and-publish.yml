@@ -49,11 +49,14 @@ jobs:
           DISCORD_ROLE_ID: ${{ secrets.DISCORD_ROLE_ID }}
         run: |
           $body = @{
-            content = "<@&$env:DISCORD_ROLE_ID> NEW LANCERY TWOS PLAYTEST! https://twosgroup.itch.io/twos-playtestig/"
+            content = "<@$env:DISCORD_ROLE_ID> **NEW LANCERY TWOS PLAYTEST!**`nhttps://twosgroup.itch.io/twos-playtestig/"
             allowed_mentions = @{
-              roles = @($env:DISCORD_ROLE_ID)
+              parse = @("roles")
             }
           } | ConvertTo-Json -Depth 5
+
+          Write-Host "Discord payload:"
+          Write-Host $body
 
           Invoke-RestMethod `
             -Uri $env:DISCORD_WEBHOOK_URL `
