@@ -2,7 +2,7 @@ import json
 import math
 import os
 import random
-
+import ast
 import pygame
 
 import cutscenes.loader as CutsceneLoaderModule
@@ -120,7 +120,7 @@ class Player:
         self.speed_y = 0.0
         self.dir = 0  # 0 = right, 1 = left
         self.on_ground = False
-        self.can_move = False  # we set this to false bcz of the frame-1 bug, in later build we need to check if the first cutscene has triggered
+        self.can_move = True #False  # we set this to false bcz of the frame-1 bug, in later build we need to check if the first cutscene has triggered
         self.dt = 0.0
         self.set_step_height_for_snapping = 5
 
@@ -239,28 +239,18 @@ class Player:
             print(e)
 
         #  Load save -
+        self.save_path = os.path.join(os.path.expanduser("~"), "TWOSFILES", "0.save") #RELEASE THE FILES
         try:
-            loaded = None
-        except Exception:
-            loaded = None
-
-        if loaded and isinstance(loaded, tuple):
-            if len(loaded) >= 3:
-                x, y, triggered_once = loaded[:3]
-                try:
-                    self.world_x, self.world_y = float(x), float(y)
-                except Exception:
-                    pass
-                try:
-                    self._triggered_once = set(str(i) for i in triggered_once)
-                except Exception:
-                    self._triggered_once = set()
-            if len(loaded) >= 4:
-                try:
-                    self._deactivated_walls = set(str(w) for w in loaded[3])
-                except Exception:
-                    pass
-
+            with open(self.save_path, "r") as save:
+                self.loaded = ast.literal_eval(save.read())
+                print(f"JAR-JAR {self.loaded['player_x']}")
+                self.world_x = self.loaded['player_x']
+                self.world_y = self.loaded['player_y']
+                self._triggered_once = self.loaded["triggered_idx"]
+                
+        except Exception: #hmm yes
+            self.loaded = None
+        
         self.offset_x = 0
         self.offset_y = 0
         self.dash_active = False
@@ -272,7 +262,7 @@ class Player:
         self.in_death_scene = False
         self.fight_loader = None
         self.show_encounter = False
-        self.encounter_image = pygame.image.load(sprite_loader.load("encounter/!.png"))
+        self.encounter_image = pygame.image.load(sprite_loader.load("encounter/!.png")) #?
         self.temp_timer = 0.0
         self.incutscene = False
         self.atk = 20
@@ -289,7 +279,10 @@ class Player:
 
         self.mouse_flag = False
         self.btnhandeler = btnHandeler()
-        self.items = [{"name": "dog", "short_name": "dog", "type": "heal", "heal_amount": 9999999999999999999999999999999999999999999999}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
+        if self.loaded:
+            self.items = self.loaded["items"]
+        else:
+            self.items = [{"name": "dog", "short_name": "dog", "type": "heal", "heal_amount": 9999999999999999999999999999999999999999999999}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
         self.name = "micheal jackson"
     # -
     # Private helpers
@@ -441,6 +434,7 @@ class Player:
 
     def apply_spawn_point(self, level_target):
         print("run")
+        
         level_key = f"level_{level_target}"
         level_data = self.level_spec.get(level_key, {})
         came_from = str(self.last_level) if self.last_level is not None else None
@@ -450,12 +444,16 @@ class Player:
                 self.world_x = float(sp.get("pos_x", 160))
                 self.world_y = float(sp.get("pos_y", 0))
                 self.speed_y = 0.0
+                self.save_obj.save_state(self, self.world) #Save state, keep this one
+                print('saved!')
                 return
 
         # fallback
         self.world_x = 160.0
         self.world_y = 0.0
         self.speed_y = 0.0
+        self.save_obj.save_state(self, self.world) #Save state, keep this one
+        print('saved!')
 
     def add_deact(self, name):
         if name:
@@ -537,7 +535,7 @@ class Player:
         self.dt = dt
         self.fight_loader = fight_loader
         self.world = world
-        self.save_obj.save_state(self, self.world)
+
         if self.respawn_protect_timer > 0.0:
             self.respawn_protect_timer = max(0.0, self.respawn_protect_timer - dt)
 
@@ -660,6 +658,8 @@ class Player:
 
         self.image = self.image_left if self.dir else self.image_right
         self.rect.size = self.image.get_size()
+
+        print(self.world_x)
 
         #  Input -------------------------------
         keys = pygame.key.get_pressed()
@@ -1115,12 +1115,7 @@ class Player:
 
                     elif name.startswith("goto("):
                         level_target = name[5:-1]
-                        print("GO TO LEVEL:", level_target)
-                        self.last_level = getattr(world, "current_level", None)
-                        world.change_level(level_target, self)
-                        self.apply_spawn_point(level_target)
-                        if self.active_cutscene:
-                            self.active_cutscene = None
+                        self.change_level(level_target)
 
                     elif name.startswith("fight("):
                         name = name[6:-1]
@@ -1180,6 +1175,15 @@ class Player:
 
     def _ease_in_quad(self, t):
         return t * t
+
+    def change_level(self, level_target):
+        print("GO TO LEVEL:", level_target)
+        self.last_level = getattr(self.world, "current_level", None)
+        self.apply_spawn_point(level_target)
+        self.world.change_level(level_target, self) #Save
+        #I HATE MY LIFE RAAHHHHHHHH
+        if self.active_cutscene:
+            self.active_cutscene = None
 
     def draw(self, screen, world, true_screen):
         self.true_screen = true_screen

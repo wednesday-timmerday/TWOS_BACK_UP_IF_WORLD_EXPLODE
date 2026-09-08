@@ -40,3 +40,23 @@ jobs:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
           ITCH_USER: twosgroup
           ITCH_GAME: twos-playtestig
+
+      - name: Notify Discord
+        if: success()
+        shell: pwsh
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_ROLE_ID: ${{ secrets.DISCORD_ROLE_ID }}
+        run: |
+          $body = @{
+            content = "<@&$env:DISCORD_ROLE_ID> NEW LANCER PLAYTEST!\nhttps://twosgroup.itch.io/twos-playtestig/"
+            allowed_mentions = @{
+              roles = @($env:DISCORD_ROLE_ID)
+            }
+          } | ConvertTo-Json -Depth 5
+
+          Invoke-RestMethod `
+            -Uri $env:DISCORD_WEBHOOK_URL `
+            -Method Post `
+            -ContentType "application/json" `
+            -Body $body

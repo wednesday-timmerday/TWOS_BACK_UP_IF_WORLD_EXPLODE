@@ -159,6 +159,12 @@ class World_loader:
         self.level_spec_loader = Loader("worlds")
         self.level_spec_path = self.level_spec_loader.load("level-spec.json")
         self.current_level = 0
+        if self.player.loaded:
+            print("melt")
+            print(self.current_level)
+            self._player_light_radius = self.player.loaded["playerlightradius"]
+            self.cam_x = self.player.loaded.get("worldcamx", self.cam_x)
+            self.cam_y = self.player.loaded.get("worldcamy", self.cam_y)
 
         if self.level_spec_path and os.path.exists(self.level_spec_path):
             with open(self.level_spec_path, "r", encoding="utf-8") as f:
@@ -222,19 +228,20 @@ class World_loader:
         self.load_enemies()
 
         self.shadow_platform_editor_open = False
-        
+
         level_key = f"level_{getattr(self, 'current_level', self.current_level or 0)}"
         self.triggers = self.player.level_spec.get(level_key, {}).get("triggers", [])
-        print(self.triggers)
-
         self.boxEngine = ui.boxEngine.boxengine.BoxEngine(self)
         box = (60, 0, 200, 7)
         self.boxEngine.create_box(box)
 
         self.actually_show_timer = True
 
-
         self.layer_h = 0
+
+        if self.player.loaded:
+            self.change_level(self.player.loaded["currlevel"], self.player)
+            self.cam_y = max(0.0, min(float(self.max_cam_y), float(self.cam_y)))
 
     def update_physics(self, dt):
         if self.is_timer_active and self.level_data.get("timer", None) is not None:
@@ -982,6 +989,7 @@ class World_loader:
         screen.blit(self._light_overlay, (0, 0))
 
     def draw_world(self, true_screen, screen, player_x, player_y):
+        print(self.current_level)
         self.screen = screen
         self.update_camera(player_x, player_y)
 
@@ -1115,7 +1123,6 @@ class World_loader:
 
     def change_level(self, level_id, player):
         try:
-            # self.save_obj.save_game(self, player, False)
             pass
         except Exception as e:
             print(f"Warning: Failed to save state when switching levels: {e}")
