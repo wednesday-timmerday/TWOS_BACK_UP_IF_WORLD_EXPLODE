@@ -49,7 +49,7 @@ jobs:
           DISCORD_ROLE_ID: ${{ secrets.DISCORD_ROLE_ID }}
         run: |
           $body = @{
-            content = "<@$env:DISCORD_ROLE_ID> **NEW LANCERY TWOS PLAYTEST!**`nhttps://twosgroup.itch.io/twos-playtestig/"
+            content = "<@$env:DISCORD_ROLE_ID> **NEW ENTITY DETECTED!!**(twos playtest)`nhttps://twosgroup.itch.io/twos-playtestig/"
             allowed_mentions = @{
               parse = @("roles")
             }
