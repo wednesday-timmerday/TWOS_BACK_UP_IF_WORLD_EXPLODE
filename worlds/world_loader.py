@@ -231,6 +231,10 @@ class World_loader:
 
         level_key = f"level_{getattr(self, 'current_level', self.current_level or 0)}"
         self.triggers = self.player.level_spec.get(level_key, {}).get("triggers", [])
+        if self.player.level_spec.get(level_key, {}).get("top", "") == "True":
+            self.istopdown = True
+        else:
+            self.istopdown = False
         self.boxEngine = ui.boxEngine.boxengine.BoxEngine(self)
         box = (60, 0, 200, 7)
         self.boxEngine.create_box(box)
@@ -1151,6 +1155,10 @@ class World_loader:
 
         level_key = f"level_{getattr(self, 'current_level', self.current_level or 0)}"
         self.triggers = self.player.level_spec.get(level_key, {}).get("triggers", [])
+        if self.player.level_spec.get(level_key, {}).get("top", "") == "True":
+            self.istopdown = True
+        else:
+            self.istopdown = False
         print(self.triggers)
 
         self.boxEngine.refresh()

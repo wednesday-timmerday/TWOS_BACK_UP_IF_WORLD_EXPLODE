@@ -1,0 +1,53 @@
+{
+  "Chez": 
+    {
+      "name": "Chez",
+      "short_name": "Ch",
+      "type": "heal",
+      "heal_amount": 12
+    }
+  ,
+  "default": {
+    "name": "default",
+    "short_name": "def",
+    "type": "heal",
+    "heal_amount": -12
+  },
+  "ice cream": {
+    "name": "ice cream",
+    "short_name": "ice",
+    "type": "heal",
+    "heal_amount": 99999999999999999999999999999999
+  },
+  "donut": {
+    "name": "donut",
+    "short_name": "don.",
+    "type": "heal",
+    "heal_amount": 10
+  },
+  "donut": {
+    "name": "donut",
+    "short_name": "don.",
+    "type": "heal",
+    "heal_amount": 10
+  },
+  "tea": {
+    "name": "tea",
+    "short_name": "tea",
+    "type": "heal",
+    "heal_amount": 10
+  },
+  "apple": {
+    "name": "apple",
+    "short_name": "app.",
+    "type": "def",
+    "defense_amount": 120
+  },
+  "bag of nuh": {
+    "name": "apple",
+    "short_name": "app.",
+    "type": "def",
+    "defense_amount": 120
+  }
+
+}

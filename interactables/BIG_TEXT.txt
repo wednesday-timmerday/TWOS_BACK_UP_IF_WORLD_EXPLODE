@@ -69,7 +69,7 @@ the_man =
     []
     {(1 0)}
     The man: * How did you get here??
-    The man: * Congrats on reaching this... place.
+    The man: * Congrats on reaching this... &place.
     The man: * ...
     The man: * ^special^shake2shoo!^endspecial
     The man: * Go now

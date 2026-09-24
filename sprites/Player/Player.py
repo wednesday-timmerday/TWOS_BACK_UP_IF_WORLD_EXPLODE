@@ -283,11 +283,18 @@ class Player:
             self.items = self.loaded["items"]
         else:
             self.items = [{"name": "dog", "short_name": "dog", "type": "heal", "heal_amount": 9999999999999999999999999999999999999999999999}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
+            self.give_self_item("Chez")
+            print(self.items)
         self.name = "micheal jackson"
     # -
     # Private helpers
     # -
     #
+
+    def give_self_item(self, itemname):
+        with open(Loader("sprites/Player").load("ITEMSPECS.json"), "r") as file:
+            all_items = json.load(file)
+            self.items.append(all_items[itemname])
 
     def handle_item_used(self, item_name):
         for i, item in enumerate(self.items):
@@ -659,8 +666,6 @@ class Player:
         self.image = self.image_left if self.dir else self.image_right
         self.rect.size = self.image.get_size()
 
-        print(self.world_x)
-
         #  Input -------------------------------
         keys = pygame.key.get_pressed()
         axis_x = 0.0
@@ -734,6 +739,13 @@ class Player:
                     self.curr_frame = min(
                         self.curr_frame, len(self.animations["Idle"]) - 1
                     )
+                    
+                if self.world.istopdown and  self.btnhandeler.get_btn_pressed("up"):
+                    print("ues")
+                    self.world_y -= self.speed * dt
+                elif self.world.istopdown and  self.btnhandeler.get_btn_pressed("down"):
+                    print("ues")
+                    self.world_y += self.speed * dt
 
                 if self.btnhandeler.get_btn_pressed("e") or (
                     self.joystick and self.joystick.get_button(2)
@@ -809,7 +821,7 @@ class Player:
                 self.coyote_timer = 0.0
 
         # -- Normal jump ---------------------------------------------------
-        if controls_allowed and not wall_jumped:
+        if controls_allowed and not wall_jumped and not self.world.istopdown:
             if (
                 self.jump_buffer_timer > 0.0
                 and self.coyote_timer > 0.0
@@ -840,9 +852,9 @@ class Player:
                     gravity = gravity_jump_release
                 self.speed_y += gravity * dt
             else:
-                if self.on_ground:
+                if self.on_ground  and not self.world.istopdown:
                     self.speed_y = min(self.speed_y + gravity_fall * dt, 60.0)
-                else:
+                elif not self.world.istopdown:
                     self.speed_y += gravity_fall * dt
 
             if (not self.on_ground) and self.speed_y > 0:
