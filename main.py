@@ -52,7 +52,6 @@ else:
 
 gc.collect()
 
-
 # -----------------------
 # Broadcast client config
 # -----------------------
@@ -238,7 +237,7 @@ def load_json_cache(filename):
             return json.load(f)
 
     return None
-    
+
 def catch_mouse(X):
     if X:
         pygame.mouse.set_visible(False)
@@ -820,7 +819,7 @@ async def main():
     options = load_options()
 
     screen, fps_font, renderer = init_pygame(options)
-    
+
     catch_mouse(True)
 
     # ── Start broadcast client (polls server, pops MessageBox on new messages)
@@ -1094,7 +1093,7 @@ async def main():
         if not player.mouse_flag:
             # catch_mouse(True)
             pass
-        
+
         dt = clock.tick(FPS) / 1000.0
 
         dt = min(dt, 1 / 30)
@@ -1117,7 +1116,7 @@ async def main():
                     debug_warp_popup.open()
 
         keys = pygame.key.get_pressed()
-        
+
 
         if keys[pygame.K_ESCAPE]:
             escape_timer += dt
@@ -1230,7 +1229,7 @@ async def main():
             except Exception:
                 last_fps_text = None
 
-        
+
         escape_text = loading_font.render(f"EXITING{'.'*math.ceil(escape_timer)}", True, (255,255,255))
         if escape_active:
             screen.blit(escape_text, (10,10))
@@ -1272,7 +1271,7 @@ async def main():
                 420, 300, surface=player.midgamemenu.true_screen, size=14
             )
 
-        
+
 
         # Draw debug level warp popup
 
