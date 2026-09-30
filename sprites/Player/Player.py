@@ -441,25 +441,27 @@ class Player:
 
     def apply_spawn_point(self, level_target):
         print("run")
-        
+    
         level_key = f"level_{level_target}"
         level_data = self.level_spec.get(level_key, {})
         came_from = str(self.last_level) if self.last_level is not None else None
 
+        self.save_obj.save_state(self, self.world)
+    
         for sp in level_data.get("save_points", []):
             if sp.get("type") == "spawn" and str(sp.get("came_from")) == came_from:
                 self.world_x = float(sp.get("pos_x", 160))
                 self.world_y = float(sp.get("pos_y", 0))
                 self.speed_y = 0.0
-                self.save_obj.save_state(self, self.world) #Save state, keep this one
+                self.world.change_level(level_target, self)
                 print('saved!')
                 return
-
+    
         # fallback
         self.world_x = 160.0
         self.world_y = 0.0
         self.speed_y = 0.0
-        self.save_obj.save_state(self, self.world) #Save state, keep this one
+        self.world.change_level(level_target, self)
         print('saved!')
 
     def add_deact(self, name):
@@ -1192,7 +1194,6 @@ class Player:
         print("GO TO LEVEL:", level_target)
         self.last_level = getattr(self.world, "current_level", None)
         self.apply_spawn_point(level_target)
-        self.world.change_level(level_target, self) #Save
         #I HATE MY LIFE RAAHHHHHHHH
         if self.active_cutscene:
             self.active_cutscene = None

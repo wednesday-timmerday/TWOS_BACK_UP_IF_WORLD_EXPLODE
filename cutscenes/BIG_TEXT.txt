@@ -13,6 +13,10 @@ parent_yell =
             CHARA_NAME * Lets just go to bed.
             {kill_music}
             {goto_world}
+            mom: * LEO, wake up!
+            mom: * Your dad and I... have something&to talk about...
+            mom: * If you could just come downstairs?
+            {trigger_trip_and_fall}
             DONTADDIDX
             ENDOFCONVERSATION
 

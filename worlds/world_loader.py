@@ -787,6 +787,8 @@ class World_loader:
                 enemy.world_x = x
                 enemy.world_y = y
                 enemy.pos = [x, y]
+                enemy.id = object_id
+                enemy.type = enemy_type
                 self.object_state_manager.register_object(enemy, object_id)
                 self.enemies.append(enemy)
 
@@ -993,7 +995,7 @@ class World_loader:
         screen.blit(self._light_overlay, (0, 0))
 
     def draw_world(self, true_screen, screen, player_x, player_y):
-        print(self.current_level)
+        # print(self.enemies)
         self.screen = screen
         self.update_camera(player_x, player_y)
 
@@ -1126,6 +1128,7 @@ class World_loader:
                 print("Physic draw error:", e)
 
     def change_level(self, level_id, player):
+        print("E")
         try:
             pass
         except Exception as e:
