@@ -260,7 +260,7 @@
     ]
   },
   "level_0": {
-    "top": "True",
+    "top": "False",
     "coll_layers": [
       1
     ],
@@ -1021,6 +1021,17 @@
   "level_10": {
     "coll_layers": [
       2
+    ],
+    "enemies": [],
+    "triggers": [],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": []
+  },
+  "level_12": {
+    "top": "True",
+    "coll_layers": [
+      1
     ],
     "enemies": [],
     "triggers": [],

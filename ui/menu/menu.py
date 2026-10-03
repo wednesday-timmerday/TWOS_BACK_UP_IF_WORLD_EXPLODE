@@ -6,12 +6,9 @@ import sys
 import time
 import threading
 import numpy as np
-from datetime import datetime, date, timedelta
 
 import requests
 import pytz
-from astral.sun import sun
-from astral import LocationInfo
 
 from assetsLoader import Loader
 from BtnHandeler import btnHandeler
@@ -122,8 +119,6 @@ class Menu:
         self.btnhandler = btnHandeler()
 
 
-        # Kick off a background location fetch immediately
-        threading.Thread(target=self._background_location_fetch, daemon=True).start()
 
     # ─── Asset loading ──────────────────────────────────────────────────────────
 
@@ -329,100 +324,6 @@ class Menu:
             self.joystick    = None
             self.joystick_id = None
 
-    # ─── Location / sun ─────────────────────────────────────────────────────────
-
-    def _background_location_fetch(self):
-        for _ in range(2):
-            try:
-                loc = self._fetch_location_once()
-                if loc:
-                    with self.location_lock:
-                        self.cached_location     = loc
-                        self.last_location_fetch = time.time()
-                    self._recompute_sun()
-                    return
-            except Exception:
-                pass
-            time.sleep(1)
-
-        with self.location_lock:
-            self.last_location_fetch = time.time()
-
-    def _fetch_location_once(self):
-        try:
-            data = requests.get("http://ip-api.com/json/", timeout=4).json()
-            return (
-                data.get("city", "Unknown"),
-                data.get("country", "Unknown"),
-                data.get("lat", 0.0),
-                data.get("lon", 0.0),
-                data.get("timezone"),
-            )
-        except Exception:
-            return None
-
-    def _periodic_location_and_sun_refresh(self):
-        now = time.time()
-        with self.location_lock:
-            last_loc = self.last_location_fetch
-
-        if last_loc is None or (now - last_loc) > self.LOCATION_REFRESH_INTERVAL:
-            threading.Thread(target=self._background_location_fetch, daemon=True).start()
-
-        if self.last_sun_calc is None or (now - self.last_sun_calc) > self.SUNS_CALC_INTERVAL:
-            try:
-                self._recompute_sun()
-            except Exception as e:
-                print("Sun recompute failed:", e)
-
-    def _recompute_sun(self):
-        with self.location_lock:
-            loc = self.cached_location
-
-        if not loc:
-            self.cached_sun      = None
-            self.cached_sun_date = None
-            self.last_sun_calc   = time.time()
-            return
-
-        city, country, lat, lon, tz_name = loc
-
-        tz = pytz.utc
-        if tz_name:
-            try:
-                tz = pytz.timezone(tz_name)
-            except Exception:
-                pass
-
-        location = LocationInfo(city or "Unknown", country or "Unknown", tz.zone, lat, lon)
-        today = date.today()
-
-        self.cached_sun      = sun(location.observer, date=today, tzinfo=tz)
-        self.cached_sun_date = today
-        self.last_sun_calc   = time.time()
-
-    def is_sun_down(self):
-        if self.cached_sun is None:
-            with self.location_lock:
-                if self.cached_location is None:
-                    return False
-            try:
-                self._recompute_sun()
-            except Exception:
-                return False
-
-        if self.cached_sun is None:
-            return False
-
-        tz      = self.cached_sun["sunrise"].tzinfo or pytz.utc
-        now     = datetime.now(tz)
-        sunrise = self.cached_sun.get("sunrise")
-        sunset  = self.cached_sun.get("sunset")
-
-        if sunrise is None or sunset is None:
-            return False
-
-        return (now < sunrise) or (now > sunset)
 
     # ─── Main draw loop ─────────────────────────────────────────────────────────
 
@@ -461,7 +362,6 @@ class Menu:
 
             # Draw
             if self.InSettings:
-                self._periodic_location_and_sun_refresh()
                 self.draw_settings(screen)
             else:
                 self.draw_menu(screen)
@@ -795,6 +695,9 @@ class Menu:
         # self._draw_sun_or_moon(screen, screen_width)
         self._draw_day_label(screen)
 
+    def _draw_day_label(self, screen):
+        
+
     def _draw_inline_slider(self, screen, slider_name, label_surface, text_x, text_y):
         padding  = 20
         slider_x = text_x + label_surface.get_width() + padding
@@ -846,14 +749,6 @@ class Menu:
                 center_x - self.moon.get_width()  // 2,
                 center_y - self.moon.get_height() // 2,
             ))
-
-    def _draw_day_label(self, screen):
-        day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        day_short = day_names[datetime.now().weekday()][:3]
-        surface   = self.font.render(day_short, True, (255, 255, 255))
-        x = screen.get_width() // 2 - surface.get_width() // 2
-        y = 150 - self.big_sun.get_height() // 2
-        screen.blit(surface, (x, y))
 
     # ─── Slider mouse handling ──────────────────────────────────────────────────
 
