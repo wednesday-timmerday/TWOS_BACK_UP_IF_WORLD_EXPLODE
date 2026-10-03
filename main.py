@@ -1121,7 +1121,7 @@ async def main():
         if keys[pygame.K_ESCAPE]:
             escape_timer += dt
             escape_active = True
-            if escape_timer >= 3.0:
+            if escape_timer >= 1.5:
                 running = False
         else:
             escape_timer = 0.0

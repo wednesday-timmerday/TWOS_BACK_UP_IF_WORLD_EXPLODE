@@ -272,6 +272,8 @@ class Player:
         self.max_hp = 10
         self.world = None
         self.bg_music_name = None
+        self.external_triggers = []
+        
         try:
             self.midgamemenu = Menu(screen, player=self)
         except Exception as e:
@@ -448,7 +450,7 @@ class Player:
 
         self.save_obj.save_state(self, self.world)
     
-        for sp in level_data.get("save_points", []):
+        for sp in level_data.get("save_points", []) + self.external_points:
             if sp.get("type") == "spawn" and str(sp.get("came_from")) == came_from:
                 self.world_x = float(sp.get("pos_x", 160))
                 self.world_y = float(sp.get("pos_y", 0))
@@ -1040,7 +1042,8 @@ class Player:
                 self._current_level = current_level_num
                 self._in_triggers = set()
 
-            triggers = self.level_spec.get(level_key, {}).get("triggers", [])
+            triggers = self.level_spec.get(level_key, {}).get("triggers", []) + self.external_triggers
+            print(triggers)
             player_rect = pygame.Rect(hb.x, hb.y, hb.width, hb.height)
             current_collisions = set()
 

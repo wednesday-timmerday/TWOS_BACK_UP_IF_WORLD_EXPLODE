@@ -5,7 +5,6 @@ import math
 import json
 
 import pygame
-from googletrans import Translator
 
 from assetsLoader import Loader
 
@@ -183,12 +182,6 @@ class TextEngine:
         # If there is no text, finish immediately so choice menus can render on frame 1.
         if not self.parsed_text:
             self.finished = True
-
-    async def translate_shit(self, input):
-        async with Translator() as translator:
-            result = await translator.translate(input, dest="en")
-            return result
-
     def start_choices(self, text, choices, origin="ui"):
         self.start_text(text, origin)
         self.choices = choices

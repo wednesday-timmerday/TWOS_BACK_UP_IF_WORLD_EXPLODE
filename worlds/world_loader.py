@@ -136,6 +136,7 @@ class World_loader:
         self.known_sets = []
 
         self.enemies = []
+        self.world_objects = []
         self.all_physic_objects = []
 
         self.object_state_manager = ObjectStateManager()
@@ -311,6 +312,17 @@ class World_loader:
                     meta["layers"][current_layer] = buffer
                 current_layer = line[:-1].upper()
                 buffer = ""
+            elif line.startswith("OBJECTS"):
+                meta["objects"] = line.split("=", 1)[1].split("#")[0].strip()
+                print(meta["objects"])
+            elif line.startswith("TRIGGERS"):
+                meta["triggers"] = line.split("=", 1)[1].split("#")[0].strip()
+            elif line.startswith("SPAWN_X"):
+                meta["spawn_x"] = int(line.split("=", 1)[1].split("#")[0].strip())
+            elif line.startswith("SPAWN_Y"):
+                meta["spawn_y"] = int(line.split("=", 1)[1].split("#")[0].strip())
+            elif line.startswith("TOP"):
+                meta["top"] = int(line.split("=", 1)[1].split("#")[0].strip())
             elif current_layer is not None:
                 buffer += line.split("#")[0].strip()
 
@@ -391,6 +403,11 @@ class World_loader:
         world_w = data["world_w"]
         world_h = data["world_h"]
 
+        self.world_objects = json.loads(data.get("objects", "[]"))
+        print(self.world_objects)
+
+        self.player.external_triggers = json.loads(data['triggers'])
+
         tilesets = self._load_all_tilesets(tile_w, tile_h)
 
         for n in range(1, data["total_layers"] + 1):
@@ -421,6 +438,7 @@ class World_loader:
 
     def load_layers(self):
         self.level_data = self.world_data.get(f"level_{self.current_level}", {})
+        self.world_objects = []
 
         self.layer_info.clear()
         self.layers.clear()
@@ -712,12 +730,13 @@ class World_loader:
 
     def load_enemies(self):
         self.enemies.clear()
+        self.platforms.clear()
         self.all_physic_objects.clear()
         self.object_state_manager.clear()
 
         self.level_data = self.world_data.get(f"level_{self.current_level}", {})
 
-        level_enemies = self.level_data.get("enemies", [])
+        level_enemies = list(self.level_data.get("enemies", [])) + list(self.world_objects)
         level_platform = self.level_data.get("platforms", [])
 
         # save = self.save_obj._full_save
@@ -995,7 +1014,6 @@ class World_loader:
         screen.blit(self._light_overlay, (0, 0))
 
     def draw_world(self, true_screen, screen, player_x, player_y):
-        # print(self.enemies)
         self.screen = screen
         self.update_camera(player_x, player_y)
 
