@@ -449,8 +449,10 @@ class Player:
         came_from = str(self.last_level) if self.last_level is not None else None
 
         self.save_obj.save_state(self, self.world)
+
+        list = level_data.get("save_points", []) # + self.external_points
     
-        for sp in level_data.get("save_points", []) + self.external_points:
+        for sp in list:
             if sp.get("type") == "spawn" and str(sp.get("came_from")) == came_from:
                 self.world_x = float(sp.get("pos_x", 160))
                 self.world_y = float(sp.get("pos_y", 0))
