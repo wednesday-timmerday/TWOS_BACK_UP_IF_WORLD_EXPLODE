@@ -25,7 +25,7 @@ class cutscene:
 
         self.slide_t = 0.0
         self.slide_start_x = 0
-        self.slide_distance = 80
+        self.slide_distance = 50
         self.slide_duration = 0.8
         self.show_black = True
         self.smile = pygame.image.load(Loader("cutscenes/assets").load("smile.png"))
@@ -39,12 +39,16 @@ class cutscene:
             print(img)
             self.goreimgs.append(img)
 
-        self.total_frames_per_gore = 2
+        self.total_frames_per_gore = 4
         self.frame_counter = 0
 
         self.clicksfx = pygame.mixer.Sound(Loader("cutscenes/assets/parent_yell").load("klik.wav"))
 
         self.itswarm = True
+
+        self.fade_alpha = 0
+        self.fade_t = 0.0
+        self.fade_duration = 1.0
 
     def _wait(self, timer_attr, seconds):
         current = getattr(self, timer_attr, 0.0)
@@ -63,6 +67,7 @@ class cutscene:
 
     def goto_world(self):
         if self.itswarm:
+            self.fade_t = 0
             self.loader.text_engine.start_text("", "")
             self.player.last_level = getattr(self.world, "current_level", None)
             self.world.change_level(0, self.player)
@@ -70,14 +75,19 @@ class cutscene:
             self.player.curr_animation = "sleep"
             self.player.dir = 0
             self.itswarm = False
-            
-        if self._wait("goto_world_wait", 4.5):
-            return "YES"
+            self.player.render_offset_x += 7
+
+        #s
+        self.fade_t = min(self.fade_t + self.dt / self.fade_duration, 1.0)
+        self.fade_alpha = 255 - int(255 * pytweening.easeInQuad(self.fade_t))
+        if self.fade_t >= 1.0:
+            if self._wait("goto_world_wait", 4.5):
+                return "YES"
 
     def trigger_trip_and_fall(self):
         s = self.goto_world_stage
 
-        self.loader.text_engine.start_text("", "") #Clear text
+        self.loader.text_engine.start_text("", "")
 
         if s == 1:
             self.player.world_x = 303 + random.randint(-self.x_offset_range, self.x_offset_range)
@@ -113,7 +123,9 @@ class cutscene:
                 self.goto_world_stage = 3
 
         elif s == 3:
-            if self._wait("goto_world_wait", 0):
+            self.fade_t = min(self.fade_t + self.dt / self.fade_duration, 1.0)
+            self.fade_alpha = int(255 * pytweening.easeInQuad(self.fade_t))
+            if self.fade_t >= 1.0:
                 self.goto_world_stage = 4
 
         elif s == 3.25:
@@ -143,13 +155,15 @@ class cutscene:
                 self.world.change_level(3, self.player)
                 self.player.apply_spawn_point(3)
                 self.show_black = True
+                self.player.render_offset_x = 0
+                self.fade_alpha = 0
+                self.fade_t = 0.0
                 self.goto_world_stage = 50
-                
+
         elif s == 50:
-            if self._wait("goto_world_wait", 0.75):
+            if self._wait("goto_world_wait", 4):
                 self.goto_world_stage = 5
                 self.show_black = False
-                
 
         elif s == 5:
             if self._wait("goto_world_wait", 1 / 6 * self.total_frames_per_gore):
@@ -167,7 +181,10 @@ class cutscene:
     def kill_music(self):
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
-        return "YES"
+        self.fade_t = min(self.fade_t + self.dt / self.fade_duration, 1.0)
+        self.fade_alpha = int(255 * pytweening.easeInQuad(self.fade_t))
+        if self.fade_t >= 1.0:
+            return "YES"
 
     def draw_back(self, loader, surface):
         if self.goto_world_stage >= 3.25:
@@ -199,3 +216,9 @@ class cutscene:
 
             if self.show_black:
                 surface.fill((0, 0, 0))
+
+        if self.fade_alpha > 0:
+            overlay = pygame.Surface(surface.get_size())
+            overlay.fill((0, 0, 0))
+            overlay.set_alpha(self.fade_alpha)
+            surface.blit(overlay, (0, 0))

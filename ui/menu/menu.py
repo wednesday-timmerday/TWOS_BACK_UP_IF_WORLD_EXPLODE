@@ -19,7 +19,7 @@ from BtnHandeler import btnHandeler
 OPTIONS_FILE = rf"{os.path.expanduser('~')}\TWOSFILES\options.json"
 
 DEFAULT_OPTIONS = {
-    "fullscreen": False,
+    "fullscreen": True,
     "master_volume": 0.5,
     "debug": 0.0,
 }
@@ -73,6 +73,8 @@ class Menu:
         self.running = True
         self.menu_rects = []
 
+
+        self.weekday = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",)[time.localtime().tm_wday]
         # Settings state
         self.InSettings = False
         self.selected_setting = 0
@@ -159,11 +161,11 @@ class Menu:
             self.font = pygame.font.SysFont("Arial", 30)
 
         try:
-            music_path = Loader("music").load("TitleV2.mp3")
+            music_path = Loader("music").load("TitleV3.ogg")
             if music_path and os.path.exists(music_path):
                 pygame.mixer.music.load(music_path)
         except Exception as e:
-            print("Could not load music:", e)
+            raise(KeyError)
 
         pygame.mixer.music.set_volume(self.settings.get("master_volume", 0.5))
 
@@ -341,7 +343,7 @@ class Menu:
 
             screen.fill((0, 0, 127))
 
-            mouse_pos = pygame.mouse.get_pos()
+            mouse_pos = (-10000,0)
 
             # Highlight hovered menu/settings items
             for i, rect in enumerate(self.menu_rects):
@@ -696,7 +698,10 @@ class Menu:
         self._draw_day_label(screen)
 
     def _draw_day_label(self, screen):
-        
+        surface = self.font.render(self.weekday, True, (255, 255, 255))
+        x = screen.get_width() // 2 - surface.get_width() // 2
+        y = 150 - self.big_sun.get_height() // 2
+        screen.blit(surface, (x, y))
 
     def _draw_inline_slider(self, screen, slider_name, label_surface, text_x, text_y):
         padding  = 20

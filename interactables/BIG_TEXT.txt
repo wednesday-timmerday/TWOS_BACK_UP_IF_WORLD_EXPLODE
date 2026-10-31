@@ -12,12 +12,12 @@ t_clothing_r1 =
 
 t_books_r1 =
            []
-           * It's just an bookshelf
+           * It's just a bookshelf.
            ENDOFCONVERSATION
 
 t_gate_r2_1 =
             []
-            * It's a large door
+            * It's a large door.
             ENDOFCONVERSATION
 
 q_gate_r1 =
@@ -37,18 +37,15 @@ q_gate_r2_1 =
 
 t_gate_r2_1 =
             []
-            * CHARA_NAME listens closely
+            * CHARA_NAME listens closely.
             * .^wait250.^wait250.
-            * CHARA_NAME's sister is sleeping
-            * After all, ^wait250its wayy past bedtime
+            * There is no sound.
 
 t_gate_r2_2 =
             []
-            * CHARA_NAME listens closely
+            * CHARA_NAME listens closely.
             * .^wait250.^wait250.
-            * CHARA_NAME's brother is playing that&stupid anime game
-            * Was it "doka doka"?
-            * CHARA_NAME doesn't remember.
+            * CHARA_NAME's brother is playing a game.
             ENDOFCONVERSATION
 
 q_gate_r1_idfk =
@@ -59,22 +56,30 @@ q_gate_r1_idfk =
 arrow_r1_1 = 
     []
     {(1 0)}
-    * You look at the arrow
-    * You think really hard
+    * You look at the arrow.
+    * You think really hard.
     * .^wait1250.^wait1250.^wait1250
-    * The arrows might lead to a place
+    * The arrows might lead to a place.
     ENDOFCONVERSATION
 
-the_man =
+the_man_old =
     []
     {(1 0)}
-    The man: * How did you get here??
+    The man: * How did you get here?
     The man: * Congrats on reaching this... &place.
     The man: * ...
     The man: * ^special^shake2shoo!^endspecial
-    The man: * Go now
+    The man: * Go. now.
     ENDOFCONVERSATION
 
+the_man = 
+    []
+    {(1 0)}
+    The man: * And so we meet again.
+    The man: * It's been a while, no?
+    The man: * Still friends with her?
+    The man: * No?
+    
 tutor_r8_dummy =
     []
     {(1 0)}

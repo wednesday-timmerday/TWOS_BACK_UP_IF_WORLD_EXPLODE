@@ -229,6 +229,9 @@ class Player:
         self.camera_y_lock_target = None
         self.camera_y_lock_speed = None
 
+
+        self.can_dash = False
+
         #  Joystick
         self.joystick = None
         try:
@@ -247,12 +250,16 @@ class Player:
                 self.world_x = self.loaded['player_x']
                 self.world_y = self.loaded['player_y']
                 self._triggered_once = self.loaded["triggered_idx"]
+                self.can_dash = self.loaded["player_can_dash"]
+                self.world.change_level(self.loaded["currlevel"], self)
                 
         except Exception: #hmm yes
             self.loaded = None
         
         self.offset_x = 0
         self.offset_y = 0
+        self.render_offset_x = 0
+        self.render_offset_y = 0
         self.dash_active = False
         self.dash_timer = 0.0
         self.dash_duration = 0.3
@@ -273,6 +280,9 @@ class Player:
         self.world = None
         self.bg_music_name = None
         self.external_triggers = []
+        self.external_points = []
+        self.can_jump = False
+        self.can_wall_jump = False
         
         try:
             self.midgamemenu = Menu(screen, player=self)
@@ -283,6 +293,8 @@ class Player:
         self.btnhandeler = btnHandeler()
         if self.loaded:
             self.items = self.loaded["items"]
+            self.can_jump = self.loaded["player_can_jump"]
+            self.can_wall_jump = self.loaded["player_can_wall_jump"]
         else:
             self.items = [{"name": "dog", "short_name": "dog", "type": "heal", "heal_amount": 9999999999999999999999999999999999999999999999}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
             self.give_self_item("Chez")
@@ -448,7 +460,8 @@ class Player:
         level_data = self.level_spec.get(level_key, {})
         came_from = str(self.last_level) if self.last_level is not None else None
 
-        self.save_obj.save_state(self, self.world)
+        self.world.change_level(level_target, self)
+        print(f"{self.external_points} E")
 
         list = level_data.get("save_points", []) # + self.external_points
     
@@ -457,16 +470,14 @@ class Player:
                 self.world_x = float(sp.get("pos_x", 160))
                 self.world_y = float(sp.get("pos_y", 0))
                 self.speed_y = 0.0
-                self.world.change_level(level_target, self)
-                print('saved!')
+                self.save_obj.save_state(self, self.world)
                 return
     
         # fallback
         self.world_x = 160.0
         self.world_y = 0.0
         self.speed_y = 0.0
-        self.world.change_level(level_target, self)
-        print('saved!')
+        self.save_obj.save_state(self, self.world)
 
     def add_deact(self, name):
         if name:
@@ -700,7 +711,11 @@ class Player:
         )
 
         # -- Wall touch probes ---------------------------------------------
-        if not ignore_collisions and not self._cam_catchup_active:
+        if (
+            not ignore_collisions
+            and not self._cam_catchup_active
+            and not self.world.istopdown
+        ):
             self.wall_jump_dir_lock_timer = max(0.0, self.wall_jump_dir_lock_timer - dt)
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
             left_probe = pygame.Rect(
@@ -724,6 +739,7 @@ class Player:
 
         # -- Horizontal movement -------------------------------------------
         dx = 0.0
+        td_dy = 0.0
         world.is_timer_active = False
         if controls_allowed:
             if self.wall_jump_dir_lock_timer > 0.0:
@@ -745,17 +761,14 @@ class Player:
                     self.curr_frame = min(
                         self.curr_frame, len(self.animations["Idle"]) - 1
                     )
-                    
-                if self.world.istopdown and  self.btnhandeler.get_btn_pressed("up"):
-                    print("ues")
-                    self.world_y -= self.speed * dt
-                elif self.world.istopdown and  self.btnhandeler.get_btn_pressed("down"):
-                    print("ues")
-                    self.world_y += self.speed * dt
 
-                if self.btnhandeler.get_btn_pressed("e") or (
-                    self.joystick and self.joystick.get_button(2)
-                ):
+                if self.world.istopdown:
+                    if self.btnhandeler.get_btn_pressed("up"):
+                        td_dy = -self.speed * dt
+                    elif self.btnhandeler.get_btn_pressed("down"):
+                        td_dy = self.speed * dt
+
+                if (self.btnhandeler.get_btn_pressed("e") or (self.joystick and self.joystick.get_button(2))) and self.can_dash:
                     if self.dash_cooldown_timer_time == False:
                         self.dash_active = True
 
@@ -780,9 +793,9 @@ class Player:
 
         # -- Jump input ----------------------------------------------------
         try:
-            self.jump_down = self.btnhandeler.get_btn_pressed("up") or (
+            self.jump_down = (self.btnhandeler.get_btn_pressed("up") or (
                 self.joystick and self.joystick.get_button(0)
-            )
+            )) and self.can_jump
         except Exception:
             self.jump_down = False
 
@@ -805,7 +818,9 @@ class Player:
             controls_allowed
             and jump_just_pressed
             and not self.on_ground
+            and not self.world.istopdown
             and self.wall_jump_dir_lock_timer <= 0.0
+            and self.can_wall_jump
         ):
             if self.touching_wall_left:
                 self.speed_y = self.wall_jump_y
@@ -873,7 +888,7 @@ class Player:
                 ):
                     self.speed_y = min(self.speed_y, self.wall_slide_max_fall)
 
-            dy = self.speed_y * dt
+            dy = td_dy if self.world.istopdown else self.speed_y * dt
 
             # -- Horizontal collision + step-up --------------------------------
             if ignore_collisions:
@@ -889,7 +904,7 @@ class Player:
                     world, h_test, deactivated=deact
                 ):
                     self.world_x += dx
-                elif dx != 0:
+                elif dx != 0 and not self.world.istopdown:
                     for step in range(1, 6):
                         move_test = pygame.Rect(
                             int(self.world_x + dx + hbx),
@@ -929,7 +944,7 @@ class Player:
                 if check_collision_including_invis(world, v_test, deactivated=deact):
                     self.world_y = pre_move_y
                     self.speed_y = 0.0
-                    landed = dy > 0
+                    landed = dy > 0 and not self.world.istopdown
                 else:
                     self.world_y += dy
 
@@ -1004,7 +1019,11 @@ class Player:
                 pass
 
         # -- Re-probe walls after move -------------------------------------
-        if not ignore_collisions and not self._cam_catchup_active:
+        if (
+            not ignore_collisions
+            and not self._cam_catchup_active
+            and not self.world.istopdown
+        ):
             side_probe_h = max(1, hb.height - self.set_step_height_for_snapping)
             left_probe = pygame.Rect(
                 int(self.world_x + hbx - 1), int(self.world_y + hby), 1, side_probe_h
@@ -1337,8 +1356,8 @@ class Player:
         self.rect.size = self.image.get_size()
         draw_rect = self.rect.copy()
 
-        float_center_x = self.world_x + self.hitbox_offset_x + self.hit_box.width / 2.0
-        float_bottom_y = self.world_y + self.hitbox_offset_y + self.hit_box.height
+        float_center_x = self.world_x + self.hitbox_offset_x + self.hit_box.width / 2.0 + self.render_offset_x
+        float_bottom_y = self.world_y + self.hitbox_offset_y + self.hit_box.height + self.render_offset_y
 
         draw_rect.midbottom = (
             round(float_center_x - cam_x),

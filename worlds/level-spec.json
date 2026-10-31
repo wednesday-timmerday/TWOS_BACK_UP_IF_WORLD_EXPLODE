@@ -227,13 +227,6 @@
     ],
     "invis_walls": [
       [
-        634,
-        -13,
-        9,
-        177,
-        ""
-      ],
-      [
         0,
         -3,
         8,
@@ -1021,6 +1014,16 @@
   "level_10": {
     "coll_layers": [
       2
+    ],
+    "enemies": [],
+    "triggers": [],
+    "invis_walls": [],
+    "platforms": [],
+    "save_points": []
+  },
+  "level_15": {
+    "coll_layers": [
+      0
     ],
     "enemies": [],
     "triggers": [],

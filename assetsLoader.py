@@ -1,4 +1,6 @@
-import sys, os
+import os
+import sys
+
 
 class Loader:
     def __init__(self, base_path):
@@ -21,7 +23,7 @@ class Loader:
         relative to the loader's base_path or an absolute path.
         """
         import pygame
-        # If caller passed a full path, use it directly
+
         if os.path.isabs(filename) or os.path.sep in filename or "/" in filename:
             path = filename
         else:
@@ -43,7 +45,6 @@ class Loader:
         except Exception:
             out = surf
 
-        # store converted surface for reuse
         try:
             self._surface_cache[cache_key] = out
         except Exception:
@@ -55,7 +56,3 @@ class Loader:
         with open(full_path, "w") as f:
             f.write(data)
         return True
-
-
-
-

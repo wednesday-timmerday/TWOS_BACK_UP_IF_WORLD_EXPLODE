@@ -13,7 +13,7 @@ parent_yell =
             CHARA_NAME * Lets just go to bed.
             {kill_music}
             {goto_world}
-            mom: * LEO, wake up!
+            mom: * CHARA_NAME, wake up!
             mom: * Your dad and I... have something&to talk about...
             mom: * If you could just come downstairs?
             {trigger_trip_and_fall}
@@ -23,15 +23,15 @@ parent_yell =
 1 =
     [shadowrock]
     {(0 0.5)}
-    shadowrock: * Hey there, looks like&you're new around here
-    shadowrock: * I'm a shadowrock,^wait250 just&an shadowrock
-    shadowrock: * You're confused arent&'cha^wait250, well ill help you in your&adventure
-    shadowrock: * Normally, you can&skip this text animation with [x]^wait250,&and go further with [z]
+    shadowrock: * Hey there, looks like&you're new around here.
+    shadowrock: * I'm a shadowrock,^wait250 just&an shadowrock.
+    shadowrock: * You're confused arent&'cha^wait250, well i'll help you in your&adventure.
+    shadowrock: * Normally, you can&skip this text animation with [x]^wait250,&and go further with [z].
     shadowrock: * Go ahead, ^wait250try it out!
     {(1 0)}
     shadowrock: * It's really fun
     {(0 1.0)}
-    shadowrock: * Oh no no no ^wait425, you&cant skip ^special^color(255,0,0)^shake6MY^endspecial text idiot
+    shadowrock: * Oh no no no ^wait425, you&cant skip ^special^color(255,0,0)^shake6MY^endspecial text idiot.
     {(0 0.5)}
     shadowrock: * Who do you think&you are?
     shadowrock: * Geez, why the&long face?
@@ -69,7 +69,7 @@ parent_yell =
     Mr. Tutorion: * So that means you&gotta need a tutorial frooom!!!&MR TUUUTORIOOON!!!!!
     (CHOICE) Right?; Yes!; No.
     (BRANCH) Yes!
-    Mr. Tutorion: * Alright then!&lets start
+    Mr. Tutorion: * Alright then!&lets start!
     (ENDBRANCH)
     (BRANCH) No.
     Mr Tutorion: * Well you don’t have&a choice.
@@ -78,7 +78,7 @@ parent_yell =
     {(1 0)}
     {Move_cam_1}
     Mr Tutorion: * See that orb&over there?
-    Mr. Tutorion: * If you want to&make progress you gotta push it&into the pit
+    Mr. Tutorion: * If you want to&make progress you gotta push it&into the pit,
     Mr. Tutorion: * And its also the&only good lightsource here
     {Move_cam_2}
     {(0 0.5)}
@@ -122,9 +122,9 @@ parent_yell =
     {move_tutor}
     {really_move_tutor}
     Mr. Tutorion: * Hah!&              * Did you really think this&was water?
-    Mr. Tutorion: * It's just an blue block
+    Mr. Tutorion: * It's just an blue block!
     Mr. Tutorion: * (I dont really know why&that's here)
-    Mr. Tutorion: * Err, ^wait250 lets continue
+    Mr. Tutorion: * Err, ^wait250 lets continue.
     DONTADDIDX
     ENDOFCONVERSATION
 

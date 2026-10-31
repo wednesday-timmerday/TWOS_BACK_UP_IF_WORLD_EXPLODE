@@ -1,31 +1,26 @@
 import asyncio
 import gc
 import json
+import math
 import os
 import sys
 import threading
 import time
 import traceback
 from pathlib import Path
-import math
 
 import pygame
-from pygame.constants import K_ESCAPE
 
 from assetsLoader import Loader
 
-# -----------------------
-# Platform detection
-# -----------------------
 # pygbag (the pygame -> web/WASM exporter) sets sys.platform to "emscripten".
-# Use this to disable anything desktop/Windows-only (tkinter, ctypes.windll,
-# Discord RPC, raw threads, blocking network calls) when running in the browser.
+# Used to disable anything desktop/Windows-only when running in the browser.
 WEB_BUILD = sys.platform == "emscripten"
 IS_WINDOWS = sys.platform.startswith("win")
 
 if not WEB_BUILD:
     import urllib.error
-    import urllib.request  # for broadcast polling (stdlib, no extra deps)
+    import urllib.request
 
     try:
         import tkinter as tk
@@ -35,7 +30,7 @@ if not WEB_BUILD:
 
     if IS_WINDOWS:
         try:
-            import ctypes  # for Windows MessageBox
+            import ctypes
         except Exception:
             ctypes = None
     else:
@@ -52,13 +47,9 @@ else:
 
 gc.collect()
 
-# -----------------------
-# Broadcast client config
-# -----------------------
 BROADCAST_SERVER_URL = "http://dormoticz.duckdns.org:5050/"
-BROADCAST_POLL_INTERVAL = 10  # seconds between polls
+BROADCAST_POLL_INTERVAL = 10
 
-# MessageBox constants (Win32)
 MB_OK = 0x00000000
 MB_ICONINFORMATION = 0x00000040
 MB_ICONWARNING = 0x00000030
@@ -84,11 +75,7 @@ def _show_windows_msgbox(title: str, text: str, icon: int = MB_ICONINFORMATION):
 
 
 def _broadcast_poll_loop():
-    """
-    Background thread: polls the broadcast server every
-    BROADCAST_POLL_INTERVAL seconds and pops a MessageBox for
-    any new message the player hasn't seen yet.
-    """
+    """Poll the broadcast server and pop a MessageBox for any unseen message."""
     last_seen_id = 0
 
     while True:
@@ -103,34 +90,26 @@ def _broadcast_poll_loop():
                 msg_text = msg.get("text", "")
                 if msg_id > last_seen_id:
                     last_seen_id = msg_id
-                    # Show on the main thread isn't required — MessageBoxW is thread-safe
                     _show_windows_msgbox(
                         "Message from the developer", msg_text, MB_ICONINFORMATION
                     )
 
         except urllib.error.URLError:
-            # Server unreachable — silently ignore, try again next cycle
             pass
         except Exception:
-            pass  # Never crash the game over a broadcast failure
+            pass
 
         time.sleep(BROADCAST_POLL_INTERVAL)
 
 
 def start_broadcast_client():
-    """Start the background broadcast polling thread. Disabled on web (no raw sockets/threads)."""
+    """Start the background broadcast polling thread. Disabled on web."""
     if WEB_BUILD:
         return
     t = threading.Thread(target=_broadcast_poll_loop, daemon=True)
     t.name = "BroadcastClient"
     t.start()
 
-
-# -----------------------
-
-# Multiplayer (optional)
-
-# -----------------------
 
 try:
     from multiplayer.multiplayer import MP as _MP
@@ -144,17 +123,8 @@ except Exception:
 
 
 # --join flag: full multiplayer (render + listen).
-
 # Without it: still connects + sends, but never draws/receives others.
-
 MP_JOIN_MODE = "--join" in sys.argv
-
-
-# -----------------------
-
-# Config / Globals
-
-# -----------------------
 
 client_id = "1441698591579312168"
 
@@ -162,39 +132,22 @@ rpc = Presence(client_id) if (Presence is not None and not WEB_BUILD) else None
 
 rpc_connected = False
 
+SCREEN_RESOLUTION = (1280, 720)
+MINI_RESOLUTION = (320, 180)
+FPS = 60  # 0 for uncapped
 
-SCREEN_RESOLUTION = (1280, 720)  # actual window size
-
-MINI_RESOLUTION = (320, 180)  # low-res renderer
-
-FPS = 60  # set to 0 for uncapped
-
-# Cross-platform options path (was hardcoded with backslashes, Windows-only)
 OPTIONS_FILE = os.path.join(os.path.expanduser("~"), "TWOSFILES", "options.json")
 
-
 BASE_DIR = Path(__file__).parent
-
 CACHE_DIR = BASE_DIR / "cache"
 
-
 LOADING_SCALE = 10
-
 loading_font = None
-
 
 DEBUG_FORCE_RED_SQUARE = False
 
 
-# -----------------------
-
-# Background RPC connect
-
-# -----------------------
-
-
 def rpc_background_connect():
-
     global rpc_connected
 
     if rpc is None:
@@ -202,9 +155,7 @@ def rpc_background_connect():
 
     try:
         rpc.connect()
-
         rpc_connected = True
-
     except Exception:
         pass
 
@@ -213,15 +164,7 @@ if not WEB_BUILD and rpc is not None:
     threading.Thread(target=rpc_background_connect, daemon=True).start()
 
 
-# -----------------------
-
-# Cache helpers
-
-# -----------------------
-
-
 def save_json_cache(filename, data):
-
     CACHE_DIR.mkdir(exist_ok=True)
 
     with open(CACHE_DIR / filename, "w", encoding="utf-8") as f:
@@ -229,7 +172,6 @@ def save_json_cache(filename, data):
 
 
 def load_json_cache(filename):
-
     path = CACHE_DIR / filename
 
     if path.exists():
@@ -238,23 +180,22 @@ def load_json_cache(filename):
 
     return None
 
+
 def catch_mouse(X):
     if X:
         pygame.mouse.set_visible(False)
-        pygame.mouse.set_pos((1280/2, 720/2))
+        pygame.mouse.set_pos((1280 / 2, 720 / 2))
     else:
         pygame.mouse.set_visible(True)
 
 
 def save_surface_cache(filename, surface):
-
     CACHE_DIR.mkdir(exist_ok=True)
 
     pygame.image.save(surface, str(CACHE_DIR / filename))
 
 
 def load_surface_cache(filename):
-
     path = CACHE_DIR / filename
 
     if path.exists():
@@ -263,17 +204,10 @@ def load_surface_cache(filename):
     return None
 
 
-# -----------------------
-
-# Options
-
-# -----------------------
-
 options_path = OPTIONS_FILE
 
 
 def load_options():
-
     if options_path and os.path.exists(options_path):
         try:
             with open(options_path, "r", encoding="utf-8") as f:
@@ -286,7 +220,6 @@ def load_options():
 
 
 def save_options(options):
-
     options_dir = os.path.dirname(options_path)
     if options_dir:
         os.makedirs(options_dir, exist_ok=True)
@@ -295,17 +228,8 @@ def save_options(options):
         json.dump(options, f, indent=4)
 
 
-# -----------------------
-
-# Init pygame
-
-# -----------------------
-
-
 def init_pygame(options):
-
     os.environ["SDL_RENDER_VSYNC"] = "0"
-
     os.environ["SDL_VIDEO_X11_FORCE_EGL"] = "0"
 
     pygame.init()
@@ -313,7 +237,6 @@ def init_pygame(options):
 
     try:
         pygame.mixer.init()
-
     except Exception:
         pass
 
@@ -329,17 +252,15 @@ def init_pygame(options):
     screen = pygame.display.set_mode(SCREEN_RESOLUTION, flags, vsync=1)
 
     pygame.display.set_caption("The Weight of Shadows")
-    pygame.mouse.set_visible(False) # Hide cursor
+    pygame.mouse.set_visible(False)
     renderer = pygame.Surface(MINI_RESOLUTION)
 
     try:
         icon_loader = Loader("icon")
-
         icon_path = icon_loader.load("lantern.png")
 
         if icon_path and os.path.exists(icon_path):
             icon_surface = pygame.image.load(icon_path).convert_alpha()
-
             pygame.display.set_icon(icon_surface)
 
     except Exception:
@@ -350,27 +271,16 @@ def init_pygame(options):
     return screen, fps_font, renderer
 
 
-# -----------------------
-
-# Loading screen
-
-# -----------------------
-
-
 def draw_loading_screen_old(surface, progress, text="Loading..."):
-
     surface.fill((30, 30, 30))
 
-    font = pygame.font.SysFont("Arial", 32, bold=True)
-
+    font = pygame.font.SysFont("Arial", 50, bold=True)
     label = font.render(text, True, (255, 200, 50))
 
     surface.blit(label, (surface.get_width() // 2 - label.get_width() // 2, 140))
 
     bar_w, bar_h = 500, 40
-
     x = surface.get_width() // 2 - bar_w // 2
-
     y = 220
 
     pygame.draw.rect(surface, (100, 100, 100), (x, y, bar_w, bar_h), border_radius=10)
@@ -386,7 +296,6 @@ def draw_loading_screen_old(surface, progress, text="Loading..."):
         )
 
     dot_font = pygame.font.SysFont("Arial", 28)
-
     dot_label = dot_font.render("." * (int(time.time() * 2) % 4), True, (255, 200, 50))
 
     surface.blit(
@@ -397,7 +306,6 @@ def draw_loading_screen_old(surface, progress, text="Loading..."):
 def draw_loading_screen(
     surface, progress, text="LOADING...", inside_img=None, outline_img=None
 ):
-
     global loading_font
 
     progress = max(0.0, min(1.0, progress))
@@ -407,12 +315,10 @@ def draw_loading_screen(
     if loading_font is None:
         try:
             fl = Loader("ui/menu")
-
             fp = fl.load("loadmenufont.ttf")
 
             if fp and os.path.exists(fp):
-                loading_font = pygame.font.Font(fp, 32)
-
+                loading_font = pygame.font.Font(fp, 54)
             else:
                 loading_font = pygame.font.SysFont("Arial", 32, bold=True)
 
@@ -425,21 +331,20 @@ def draw_loading_screen(
 
     if not inside_img or not outline_img:
         draw_loading_screen_old(surface, progress, text)
-
         return
 
-    bar_w, bar_h = inside_img.get_size()
+    out_w, out_h = outline_img.get_size()
+    in_w, in_h = inside_img.get_size()
 
-    bar_x = surface.get_width() // 2 - bar_w // 2
+    bar_x = surface.get_width() // 2 - out_w // 2
+    bar_y = surface.get_height() // 2 - out_h // 2 + 8
 
-    bar_y = surface.get_height() // 2 - bar_h // 2
-
-    fill_w = int(bar_w * progress)
+    fill_w = int(in_w * progress)
 
     surface.blit(outline_img, (bar_x, bar_y))
 
     if fill_w > 0:
-        source_rect = pygame.Rect(0, 0, fill_w, bar_h)
+        source_rect = pygame.Rect(0, 0, fill_w, in_h)
 
         surface.blit(
             inside_img,
@@ -448,77 +353,55 @@ def draw_loading_screen(
         )
 
 
-# -----------------------
-
-# Error GIF / window
-
-# -----------------------
-
-
 def play_error_gif(error_text):
-
     import pygame as _pg
     from PIL import Image, ImageSequence
 
     _pg.quit()
-
     _pg.init()
 
     try:
         _pg.mixer.init()
-
     except Exception:
         pass
 
     _pg.font.init()
 
     screen = _pg.display.set_mode((1080, 720))
-
     _pg.display.set_caption("Dog is sleepy")
 
     loader = Loader("ui/error")
-
     gif_path = loader.load("eepy.gif")
-
     music_path = loader.load("thatstoobad.mp3")
 
     try:
         if music_path and os.path.exists(music_path):
             _pg.mixer.music.load(music_path)
-
             _pg.mixer.music.play(-1)
-
     except Exception:
         pass
 
     gif = Image.open(gif_path)
 
     frames = []
-
     durations = []
 
     for frame in ImageSequence.Iterator(gif):
         frame = frame.convert("RGBA")
-
         data = frame.tobytes()
-
         py_frame = _pg.image.fromstring(data, frame.size, frame.mode)
 
         frames.append(py_frame)
-
         durations.append(frame.info.get("duration", 100))
 
     clock = _pg.time.Clock()
 
     frame_index = 0
-
     running = True
-
     timer = 0
 
     while running:
         dt = clock.tick(60)
-
         timer += dt
 
         for event in _pg.event.get():
@@ -527,18 +410,15 @@ def play_error_gif(error_text):
 
         if timer >= durations[frame_index]:
             timer = 0
-
             frame_index = (frame_index + 1) % len(frames)
 
         screen.fill((0, 0, 0))
-
         screen.blit(frames[frame_index], frames[frame_index].get_rect())
 
         _pg.display.flip()
 
     try:
         _pg.mixer.music.stop()
-
     except Exception:
         pass
 
@@ -549,33 +429,24 @@ ERROR_ICON = "[X]"
 
 
 def show_error_window(error_text):
-
     root = tk.Tk()
-
     root.title("MAN, I REALLY FUCKED UP")
-
     root.geometry("750x950")
-
     root.configure(bg="#1e1e1e")
-
     root.resizable(True, True)
 
     style = ttk.Style()
 
     try:
         style.theme_use("clam")
-
     except Exception:
         pass
 
     style.configure("TFrame", background="#1e1e1e")
-
     style.configure(
         "TLabel", background="#1e1e1e", foreground="#ffffff", font=("Segoe UI", 11)
     )
-
     style.configure("Header.TLabel", font=("Segoe UI", 15, "bold"))
-
     style.configure(
         "TButton",
         background="#3c3c3c",
@@ -583,17 +454,14 @@ def show_error_window(error_text):
         font=("Segoe UI", 10),
         padding=6,
     )
-
     style.map("TButton", background=[("active", "#505050")])
 
     frame = ttk.Frame(root)
-
     frame.pack(fill="both", expand=True, padx=15, pady=15)
 
     header = ttk.Label(
         frame, text=f"{ERROR_ICON} I AM BAD AT CODING", style="Header.TLabel"
     )
-
     header.pack(anchor="w", pady=(0, 10))
 
     text_box = scrolledtext.ScrolledText(
@@ -604,27 +472,20 @@ def show_error_window(error_text):
         foreground="#d4d4d4",
         insertbackground="white",
     )
-
     text_box.insert(tk.END, error_text)
-
     text_box.config(state=tk.DISABLED)
-
     text_box.pack(fill="both", expand=True)
 
     button_frame = ttk.Frame(frame)
-
     button_frame.pack(fill="x", pady=10)
 
     def copy_to_clipboard():
-
         root.clipboard_clear()
-
         root.clipboard_append(error_text)
 
         messagebox.showinfo("Copied", "The full traceback has been copied!")
 
     def save_error():
-
         filename = filedialog.asksaveasfilename(
             initialfile="error_log.txt",
             defaultextension=".txt",
@@ -640,35 +501,23 @@ def show_error_window(error_text):
     ttk.Button(button_frame, text="Copy", command=copy_to_clipboard).pack(
         side="left", padx=5
     )
-
     ttk.Button(button_frame, text="Save", command=save_error).pack(side="left", padx=5)
 
     root.mainloop()
 
 
-# -----------------------
-
-# Small helpers
-
-# -----------------------
-
-
 class TobyRadiationFoxLocal:
     def __init__(self):
-
         self.surface = pygame.Surface((64, 64), pygame.SRCALPHA)
 
     def get_surface(self):
-
         return self.surface
 
     def set_surface(self, surface):
-
         self.surface = surface
 
 
 def safe_load_image(path):
-
     try:
         if path and os.path.exists(path):
             return pygame.image.load(path).convert_alpha()
@@ -680,22 +529,14 @@ def safe_load_image(path):
 
 
 def blit_renderer_to_screen(screen, renderer):
-
     pygame.transform.scale(renderer, SCREEN_RESOLUTION, screen)
 
 
 def get_cam_target(player):
-
     cx = player.world_x + player.hitbox_offset_x + player.hit_box.width / 2.0
-
     cy = player.world_y + player.hitbox_offset_y + player.hit_box.height / 2.0
 
     return cx, cy
-
-
-# -----------------------
-# Debug Level Warp Popup
-# -----------------------
 
 
 def get_available_levels():
@@ -805,15 +646,7 @@ class DebugLevelWarp:
             inst_y += 20
 
 
-# -----------------------
-
-# MAIN
-
-# -----------------------
-
-
 async def main():
-
     global loading_font, rpc_connected
 
     options = load_options()
@@ -822,10 +655,7 @@ async def main():
 
     catch_mouse(True)
 
-    # ── Start broadcast client (polls server, pops MessageBox on new messages)
     start_broadcast_client()
-
-    #  Loading bar assets
 
     loader = Loader("ui/menu/images_for_load_img_i_guess_idk")
 
@@ -833,18 +663,15 @@ async def main():
 
     try:
         loading_path = loader.load("loadthingy.png")
-
     except Exception:
         pass
 
     try:
         bar_path = loader.load("outlining.png")
-
     except Exception:
         pass
 
     loading_image = safe_load_image(loading_path)
-
     bar_image = safe_load_image(bar_path)
 
     if loading_image:
@@ -856,7 +683,6 @@ async def main():
                     int(loading_image.get_height() * LOADING_SCALE),
                 ),
             )
-
         except Exception:
             pass
 
@@ -869,21 +695,17 @@ async def main():
                     int(bar_image.get_height() * LOADING_SCALE),
                 ),
             )
-
         except Exception:
             pass
 
     try:
         draw_loading_screen(screen, 0.0, "LOADING...", loading_image, bar_image)
-
         pygame.display.flip()
-
     except Exception:
         pass
 
     try:
         from ui.tobytank.toby import TobyRadiationFox as ImportedToby
-
     except Exception:
         ImportedToby = None
 
@@ -895,7 +717,6 @@ async def main():
 
             try:
                 toby.draw(screen)
-
             except Exception:
                 pass
 
@@ -908,16 +729,13 @@ async def main():
 
     try:
         draw_loading_screen(screen, 0.15, "LOADING...", loading_image, bar_image)
-
         pygame.display.flip()
-
     except Exception:
         pass
 
     clock = pygame.time.Clock()
 
     dt = clock.tick(FPS) / 1000.0
-
     dt = min(dt, 0.125)
 
     try:
@@ -926,9 +744,7 @@ async def main():
 
     except Exception:
         Menu = None
-
         save_options = lambda x: None
-
         saymyname = None
 
     menu_obj = Menu(options) if Menu else None
@@ -938,15 +754,12 @@ async def main():
     if rpc_connected:
         try:
             rpc.update(state="In Menu")
-
         except Exception:
             pass
 
     try:
         draw_loading_screen(screen, 0.35, "LOADING...", loading_image, bar_image)
-
         pygame.display.flip()
-
     except Exception:
         pass
 
@@ -956,28 +769,22 @@ async def main():
 
     except Exception as e:
         print(f"Error importing Player module: {e}")
-
         PlayerModule = None
 
     try:
-        player = PlayerModule.Player(screen=screen)  # if PlayerModule else None
-
+        player = PlayerModule.Player(screen=screen)
     except Exception as e:
         print(f"Error initializing player: {e}")
 
     try:
         draw_loading_screen(screen, 0.55, "LOADING...", loading_image, bar_image)
-
         pygame.display.flip()
-
     except Exception:
         pass
 
     try:
         draw_loading_screen(screen, 0.75, "LOADING...", loading_image, bar_image)
-
         pygame.display.flip()
-
     except Exception:
         pass
 
@@ -986,7 +793,6 @@ async def main():
 
     except Exception as e:
         print(e)
-
         WorldModule = None
 
     world_data = load_json_cache("world.json")
@@ -994,7 +800,6 @@ async def main():
     try:
         world_loader = WorldModule(MINI_RESOLUTION, player)
         fight_loader = FightModule.Fight(renderer, screen, player, world_loader)
-
     except Exception as e:
         print(e)
 
@@ -1003,15 +808,11 @@ async def main():
 
     try:
         draw_loading_screen(screen, 1.0, "READY", loading_image, bar_image)
-
         pygame.display.flip()
-
     except Exception:
         pass
 
     await asyncio.sleep(0.3)
-
-    #  Menu
 
     menu_result = None
 
@@ -1021,7 +822,6 @@ async def main():
 
         except Exception:
             traceback.print_exc()
-
             menu_result = None
 
     if menu_result == "reset" and PlayerModule:
@@ -1031,11 +831,8 @@ async def main():
 
     try:
         save_options(options)
-
     except Exception:
         pass
-
-    #  Name screen
 
     if name_obj:
         try:
@@ -1043,16 +840,16 @@ async def main():
 
             if getattr(name_obj, "chara_name", "") == "LEBREAH" and player:
                 player.lebreah = True
-
                 player.refresh_animation()
 
             player.name = name_obj.chara_name
             try:
                 player.true_name = os.getlogin()
             except Exception:
-                # os.getlogin() can fail with no controlling terminal (services, some
-                # sandboxes) and doesn't exist at all in the web/emscripten build.
-                player.true_name = os.environ.get("USERNAME") or os.environ.get("USER") or "Player"
+                # os.getlogin() fails without a controlling terminal and doesn't exist on web.
+                player.true_name = (
+                    os.environ.get("USERNAME") or os.environ.get("USER") or "Player"
+                )
             player.maker_name = name_obj.creator_name
 
         except Exception:
@@ -1063,39 +860,26 @@ async def main():
 
         print(error_msg)
 
-        if WEB_BUILD or tk is None:
-            # No tkinter on web/emscripten (or if it failed to import) — just log it.
-            pass
-        else:
+        if not (WEB_BUILD or tk is None):
             show_error_window(error_msg)
 
         return
 
-    #  Main loop
-
     running = True
 
     last_fps_value = -1
-
     last_fps_text = None
 
     physics_accumulator = 0.0
-
     physics_step = 1.0 / 60.0
 
     debug_warp_popup = DebugLevelWarp(screen)
 
     escape_timer = 0
-
     escape_active = False
 
     while running:
-        if not player.mouse_flag:
-            # catch_mouse(True)
-            pass
-
         dt = clock.tick(FPS) / 1000.0
-
         dt = min(dt, 1 / 30)
 
         if dt > 0.2:
@@ -1112,11 +896,9 @@ async def main():
                     and not debug_warp_popup.active
                 ):
                     debug_warp_popup.set_levels(get_available_levels())
-
                     debug_warp_popup.open()
 
         keys = pygame.key.get_pressed()
-
 
         if keys[pygame.K_ESCAPE]:
             escape_timer += dt
@@ -1127,15 +909,12 @@ async def main():
             escape_timer = 0.0
             escape_active = False
 
-        # Debug level warp popup input
-
         if debug_warp_popup.active:
             selected_level = debug_warp_popup.handle_input()
 
             if selected_level:
                 try:
                     world_loader.change_level(selected_level, player)
-
                     print(f"[DEBUG] Warped to level: {selected_level}")
 
                 except Exception as e:
@@ -1143,53 +922,42 @@ async def main():
 
                 debug_warp_popup.close()
 
-        # Clear renderer
-
         renderer.fill((0, 0, 0))
-
-        # Update player
 
         try:
             player.update(
                 world_loader, renderer, dt, 1.0, player, fight_loader=fight_loader
             )
-
         except Exception:
             traceback.print_exc()
 
         # Fixed-step physics
-
         physics_accumulator += dt
 
         while physics_accumulator >= physics_step:
             try:
                 world_loader.update_physics(physics_step)
-
             except Exception:
                 traceback.print_exc()
 
             physics_accumulator -= physics_step
-
-        # Throttled RPC update
 
         now = time.time()
 
         if rpc_connected and now - globals().get("last_rpc_update", 0) >= 1.0:
             try:
                 rpc.update(state="In the darkness")
-
             except Exception:
                 pass
 
             globals()["last_rpc_update"] = now
 
-        #  All game drawing to renderer (320x180)
-
+        # Game drawing goes to the 320x180 renderer
         cam_x, cam_y = get_cam_target(player)
 
         world_loader.draw_world(screen, renderer, cam_x, cam_y)
 
-        world_loader.draw_physic_objects(renderer, dt) #?
+        world_loader.draw_physic_objects(renderer, dt)
 
         player.draw(renderer, world_loader, screen)
 
@@ -1197,11 +965,7 @@ async def main():
 
         world_loader.draw_shadow(renderer)
 
-
-
         blit_renderer_to_screen(screen, renderer)
-
-        # Fight updates/draws
 
         if getattr(player, "active_fight", None) and getattr(
             player.active_fight, "running", False
@@ -1216,8 +980,6 @@ async def main():
             except Exception:
                 traceback.print_exc()
 
-        # FPS counter
-
         fps = int(clock.get_fps())
 
         if fps != last_fps_value:
@@ -1225,22 +987,21 @@ async def main():
 
             try:
                 last_fps_text = fps_font.render(f"FPS: {fps}", True, (255, 0, 0))
-
             except Exception:
                 last_fps_text = None
 
-
-        escape_text = loading_font.render(f"EXITING{'.'*math.ceil(escape_timer)}", True, (255,255,255))
+        escape_text = loading_font.render(
+            f"EXITING{'.' * math.ceil(escape_timer)}", True, (255, 255, 255)
+        )
         if escape_active:
-            screen.blit(escape_text, (10,10))
+            screen.blit(escape_text, (10, 10))
 
         world_loader.draw_timer(screen)
 
         if DEBUG_FORCE_RED_SQUARE:
             pygame.draw.rect(renderer, (255, 0, 0), (10, 10, 50, 50))
 
-        #  Full-res overlays drawn on top of upscaled screen
-
+        # Full-res overlays drawn on top of the upscaled screen
         if last_fps_text:
             try:
                 if options["debug"] != 0.0:
@@ -1251,7 +1012,6 @@ async def main():
         if player.active_cutscene and getattr(player.active_cutscene, "running", False):
             try:
                 player.active_cutscene.draw(screen)
-
             except Exception:
                 pass
 
@@ -1260,9 +1020,9 @@ async def main():
         ):
             try:
                 player.active_interactive.draw(screen)
-
             except Exception:
                 pass
+
         if player.midgamemenu.showing:
             player.midgamemenu.txt_engine.draw(
                 500, 100, surface=player.midgamemenu.true_screen, size=28
@@ -1270,10 +1030,6 @@ async def main():
             player.midgamemenu.txt_engine1.draw(
                 420, 300, surface=player.midgamemenu.true_screen, size=14
             )
-
-
-
-        # Draw debug level warp popup
 
         if debug_warp_popup.active:
             debug_warp_popup.draw()
@@ -1285,9 +1041,7 @@ async def main():
     if rpc is not None:
         try:
             rpc.clear()
-
             rpc.close()
-
         except Exception:
             pass
 
@@ -1301,9 +1055,7 @@ if __name__ == "__main__":
 
         print(error_text)
 
-        if WEB_BUILD:
-            pass  # already visible in the browser console via stdout
-        else:
+        if not WEB_BUILD:
             try:
                 play_error_gif(error_text)
 

@@ -3,10 +3,9 @@ import os
 class SaveOBJ:
     def __init__(self) -> None:
         self.pathname = os.path.join(os.path.expanduser("~"), "TWOSFILES", "0.save")
-        self.count = 0
         
     def save_state(self, player, world):
-        self.count+= 1
+        print('saved!')
         self.world = world
         self.player = player
         self.get_enemie_pos_from_world()
@@ -25,10 +24,13 @@ class SaveOBJ:
             'playerlightradius': self.world._player_light_radius,
             'worldcamx': self.world.cam_x,
             'worldcamy': self.world.cam_y,
-            'enemy_data': self.unpacked_sprites
+            'enemy_data': self.unpacked_sprites,
+            'player_can_move': self.player.can_move,
+            'player_can_jump': self.player.can_jump,
+            'player_can_wall_jump': self.player.can_wall_jump
         }
 
-        print(self.count)
+
 
         with open(self.pathname, "w") as file:
             file.write(str(data))
@@ -46,5 +48,5 @@ class SaveOBJ:
                 "type": obj.type
             }
             self.unpacked_sprites.append(data)
-            print(self.unpacked_sprites)
+
             

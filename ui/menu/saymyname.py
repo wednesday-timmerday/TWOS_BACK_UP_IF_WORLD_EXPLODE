@@ -65,6 +65,7 @@ class NameScreen:
 
         self.cursor_x = 0
         self.cursor_y = 0
+        self.remembered_cell = None
 
         self.selected_letters = []
         self.max_letters = 7
@@ -133,9 +134,9 @@ class NameScreen:
             return [
                 "^special^shake4WHY DO YOU KEEP QUITTING?&^endspecial",
                 "^special^shake4WHY ARE YOU THE WAY YOU ARE?&^endspecial",
-                "^special^shake4WHY ARE YOU REFUSING TO MAKE MY&QUIZ&^endspecial",
-                "^special^shake4IF YOU QUIT ONE MORE TIME,&ILL DELETE THIS GAME^endspecial",
-                "^special^shake4YOU WILL NEVER BE ABLE TO&PLAY THIS GAME AGAIN^endspecial",
+                "^special^shake4WHY ARE YOU REFUSING TO MAKE MY&TEST?&^endspecial",
+                "^special^shake4IF YOU QUIT ONE MORE TIME,&ILL DELETE THIS GAME!^endspecial",
+                "^special^shake4YOU WILL NEVER BE ABLE TO&PLAY THIS GAME AGAIN.^endspecial",
                 "...",
                 "How would you call&this ^wait1000\"thing\"?"
             ]
@@ -144,7 +145,7 @@ class NameScreen:
             "Did it^wait1000 work?",
             'Do you^wait1000 hear me?',
             "Doesn't matter.",
-            "Let's start^wait1000 the test",
+            "Let's start^wait1000 the test.",
             "How would you call&this ^wait1000\"thing\"?"
         ]
         # return [
@@ -226,53 +227,7 @@ class NameScreen:
         path = self.font_loader.load("potato.txt")
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
-            f.write(""""[Verse 1]
-            (Yu) Dokutaa kidori desu
-            Ai, bakuhattero
-            Kantan ni nareba
-            Umatta, mataa, mataa
-            Dokutaa kidori desu
-            Aisou ii kamo
-            Mourou, ooto mo
-            Umeta, meta, meta (Yu)
-            
-            [Pre-Chorus]
-            Doko ni mo nai kara neteitara
-            Kowarete naiteru yume wo mita nda yo
-            Jiki ni wa
-            Uso ni miete kuruu (Yu)
-            
-            [Chrous]
-            Kao ga donki ni nacchau yo
-            Nise ga kenri wo totta nda (Yu)
-            Nakunatte hoshii bonnou ga
-            Douyara ikinobite shimatta
-            Ikinobite shimatta nda
-            Ashi ga tagame ni nacchau yo
-            Uso ga douki ni natta nda (Yu)
-            Utagutte hoshii honnou wo
-            Douyara honshin da to omotta
-            Honshin da to omotta nda, kuchoo
-
-            [Verse 2]
-            (Yu) Dokutaa kidori desu
-            Zenbu yamero yo
-            Atichuudo ga kandou mono ni todoku moudoku
-            Sontoku no toku no hou dake
-            Mawatta, watta, watta
-            
-            [Chorus]
-            Kao ga donki ni nacchau yo (Drop it)
-            Nise ga kenri wo totta nda (Yu)
-            Nakunatte hoshii bonnou ga
-            Douyara ikinobite shimatta
-            Ikinobite shimatta nda
-            Oto ga kinou ni natte shimau
-            Hito ga itsuwari ni atsumaru (Yu)
-            Fusagatte shimae yo mimi
-            Douyara todoite inai mitai
-            Todoite inai mitai ne, kuchoo
-            """)
+            f.write("LYRICS_PLACEHOLDER")
         self.is_teto = True
 
     # --------------------------------------------------
@@ -321,14 +276,12 @@ class NameScreen:
                     'WHY DID YOU EVEN CONSIDER TO BE THAT&BLUE HAIRED CREATURE^wait750&'
                     'YOU SHOULD REALLY GET SOME TASTE'
                 )
-            elif len(name) == 1:
-                self.text_engine.start_text("Too lazy, Eh?")
             elif name in ("A", "AAAAAAA", "HUMAN", "PERSON"):
                 self.text_engine.start_text('Not very creative,^wait500 are you?')
-            elif name in ("TIGO", "JORIS", "QUINTEN", "CARPET", "JOSIAH", "EVERAN", "AMY", "ETHAN"):
-                self.text_engine.start_text('Ah yes, ^wait250my creators')
+            # elif name in ("TIGO", "JORIS", "QUINTEN", "CARPET", "JOSIAH", "EVERAN", "AMY", "ETHAN"):
+            #     self.text_engine.start_text('Ah yes, ^wait250my creators')
             else:
-                self.text_engine.start_text(f'"{name}."')
+                self.text_engine.start_text(f'"{name}".')
 
             self._dialog_started = True
 
@@ -353,7 +306,7 @@ class NameScreen:
 
         if not self._dialog_started:
             self.text_engine.start_text(
-                'And what about ^wait1000^special^color(255,0,0)^shake7you^endspecial?'
+                'And what about ^wait1000^special^color(255,0,0)^shake3you^endspecial?'
             )
             self._dialog_started = True
 
@@ -464,8 +417,8 @@ class NameScreen:
         cursor_rect = pygame.Rect(
             self.screen.get_width() // 2 - 5,
             self.screen.get_height() // 2 - 5,
-            5,
-            15
+            9,
+            26
         )
         pygame.draw.rect(self.screen, (255, 255, 255), cursor_rect)
 
@@ -489,9 +442,17 @@ class NameScreen:
         if event.key == pygame.K_RIGHT:
             self.cursor_x += 1
         if event.key == pygame.K_UP:
-            self.cursor_y -= 1
+            if self.cursor_y == self.button_row and self.remembered_cell:
+                self.cursor_x, self.cursor_y = self.remembered_cell
+            else:
+                self.cursor_y -= 1
         if event.key == pygame.K_DOWN:
-            self.cursor_y += 1
+            if self.cursor_y == self.grid_rows - 1:
+                self.remembered_cell = (self.cursor_x, self.cursor_y)
+                self.cursor_x = 0 if self.cursor_x <= 2 else 1
+                self.cursor_y = self.button_row
+            else:
+                self.cursor_y += 1
 
         if event.key == pygame.K_z:
             if self.cursor_y == self.button_row:

@@ -1,3 +1,4 @@
+
 name: Build Windows and publish to itch
 
 on:
@@ -47,9 +48,16 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_ROLE_ID: ${{ secrets.DISCORD_ROLE_ID }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
+          $commitTitle = ($env:COMMIT_MESSAGE -split "\r?\n", 2)[0]
+
+          if ([string]::IsNullOrWhiteSpace($commitTitle)) {
+            $commitTitle = "Unknown commit"
+          }
+
           $body = @{
-            content = "<@$env:DISCORD_ROLE_ID> **NEW ENTITY DETECTED!!**(twos playtest)`nhttps://twosgroup.itch.io/twos-playtestig/"
+            content = "<@$env:DISCORD_ROLE_ID> **NEW ENTITY DETECTED!!** (twos playtest)`n**Commit:** $commitTitle`nhttps://twosgroup.itch.io/twos-playtestig/"
             allowed_mentions = @{
               parse = @("roles")
             }

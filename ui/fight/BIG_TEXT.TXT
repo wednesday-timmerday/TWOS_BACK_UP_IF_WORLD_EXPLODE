@@ -8,7 +8,7 @@ test =
     (SECTION_2)
     [mrtutor]
     {(1 0)}
-    Hope you like^wait100.^wait100.^wait100.^wait100balls???
+    Hope you like my ^wait100.^wait100.^wait100.^wait100balls???
     (ENDSECTION_2)
 
 dummy =

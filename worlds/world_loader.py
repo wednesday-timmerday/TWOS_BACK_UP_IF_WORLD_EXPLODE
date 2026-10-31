@@ -3,6 +3,7 @@ import math
 import os
 import re
 from collections import OrderedDict, deque
+import ast
 
 import numpy as np
 import pygame
@@ -160,12 +161,16 @@ class World_loader:
         self.level_spec_loader = Loader("worlds")
         self.level_spec_path = self.level_spec_loader.load("level-spec.json")
         self.current_level = 0
-        if self.player.loaded:
-            print("melt")
-            print(self.current_level)
-            self._player_light_radius = self.player.loaded["playerlightradius"]
-            self.cam_x = self.player.loaded.get("worldcamx", self.cam_x)
-            self.cam_y = self.player.loaded.get("worldcamy", self.cam_y)
+        #  Load save -
+        self.save_path = os.path.join(os.path.expanduser("~"), "TWOSFILES", "0.save") #RELEASE THE FILES
+        try:
+            with open(self.save_path, "r") as save:
+                self.loaded = ast.literal_eval(save.read())
+                self.current_level = self.loaded["currlevel"]
+                self._player_light_radius = self.loaded["playerlightradius"]
+        except Exception:
+            pass
+        print("mami")
 
         if self.level_spec_path and os.path.exists(self.level_spec_path):
             with open(self.level_spec_path, "r", encoding="utf-8") as f:
@@ -247,6 +252,7 @@ class World_loader:
         if self.player.loaded:
             self.change_level(self.player.loaded["currlevel"], self.player)
             self.cam_y = max(0.0, min(float(self.max_cam_y), float(self.cam_y)))
+            
 
     def update_physics(self, dt):
         if self.is_timer_active and self.level_data.get("timer", None) is not None:
@@ -317,10 +323,8 @@ class World_loader:
                 print(meta["objects"])
             elif line.startswith("TRIGGERS"):
                 meta["triggers"] = line.split("=", 1)[1].split("#")[0].strip()
-            elif line.startswith("SPAWN_X"):
-                meta["spawn_x"] = int(line.split("=", 1)[1].split("#")[0].strip())
-            elif line.startswith("SPAWN_Y"):
-                meta["spawn_y"] = int(line.split("=", 1)[1].split("#")[0].strip())
+            elif line.startswith("SPAWN_POINTS"):
+                meta["spawn_points"] = line.split("=", 1)[1].split("#")[0].strip()
             elif line.startswith("TOP"):
                 meta["top"] = int(line.split("=", 1)[1].split("#")[0].strip())
             elif current_layer is not None:
@@ -404,9 +408,9 @@ class World_loader:
         world_h = data["world_h"]
 
         self.world_objects = json.loads(data.get("objects", "[]"))
-        print(self.world_objects)
 
         self.player.external_triggers = json.loads(data['triggers'])
+        self.player.external_points = json.loads(data["spawn_points"])
 
         tilesets = self._load_all_tilesets(tile_w, tile_h)
 
@@ -437,17 +441,21 @@ class World_loader:
         print(f"World size: {self.layer_length} x {self.layer_height}, max_cam: ({self.max_cam_x}, {self.max_cam_y})")
 
     def load_layers(self):
+        print("1")
         self.level_data = self.world_data.get(f"level_{self.current_level}", {})
         self.world_objects = []
 
         self.layer_info.clear()
         self.layers.clear()
         self.scaled_layers.clear()
-
+        print("2")
         world_file = self._find_world_file()
+        print("5")
         if world_file:
             self._load_layers_from_world_file(world_file)
             return
+
+        print("4")
 
         layer_paths = []
         loader = Loader(f"worlds/{self.current_level}")
@@ -464,6 +472,8 @@ class World_loader:
 
         for i in range(total_frames):
             layer_paths.append(f"{i}.png")
+
+        print("3")
 
         coll_layer_indices = self.level_data.get("coll_layers", [3, 4])
         coll_layer_names = {f"{i}.png" for i in coll_layer_indices}
@@ -729,6 +739,7 @@ class World_loader:
             count += 1
 
     def load_enemies(self):
+        print("1")
         self.enemies.clear()
         self.platforms.clear()
         self.all_physic_objects.clear()
@@ -738,6 +749,7 @@ class World_loader:
 
         level_enemies = list(self.level_data.get("enemies", [])) + list(self.world_objects)
         level_platform = self.level_data.get("platforms", [])
+        print("2")
 
         # save = self.save_obj._full_save
         # if save:
@@ -1155,7 +1167,7 @@ class World_loader:
         self.actually_show_timer = True
         self.current_level = level_id
         self.light_sources = []
-
+        print("changed")
         self._light_mask_cache = {}
         self._big_light_mask_dark = self._get_light_mask(self._player_light_radius)
 
@@ -1165,6 +1177,8 @@ class World_loader:
         self.Time_left_in_timer_that_times_the_time_in_a_timely_manner = 0.0
         self.is_timer_active = False
 
+        print("weather")
+
         for phys_obj in self.all_physic_objects:
             try:
                 if hasattr(self, "collision_mask"):
@@ -1173,14 +1187,16 @@ class World_loader:
                 pass
 
         self.load_enemies()
-
-        level_key = f"level_{getattr(self, 'current_level', self.current_level or 0)}"
-        self.triggers = self.player.level_spec.get(level_key, {}).get("triggers", [])
-        if self.player.level_spec.get(level_key, {}).get("top", "") == "True":
-            self.istopdown = True
-        else:
-            self.istopdown = False
-        print(self.triggers)
+        try:
+            level_key = f"level_{getattr(self, 'current_level', self.current_level or 0)}"
+            self.triggers = self.player.level_spec.get(level_key, {}).get("triggers", [])
+            if self.player.level_spec.get(level_key, {}).get("top", "") == "True":
+                self.istopdown = True
+            else:
+                self.istopdown = False
+        except Exception:
+            pass
+        # print(self.triggers)
 
         self.boxEngine.refresh()
 
