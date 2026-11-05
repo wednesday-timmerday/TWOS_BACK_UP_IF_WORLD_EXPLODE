@@ -1,4 +1,15 @@
 {
+  "level_16": {
+    "coll_layers": [2],
+    "spawn_point": [24, 120],
+    "parallex": [0.3],
+    "layers": 2,
+    "enemies": [],
+    "triggers": [],
+    "invis_walls": [[-10, -40, 10, 300, ""], [320, -40, 10, 300, ""]],
+    "platforms": [],
+    "save_points": []
+  },
   "level_3": {
     "coll_layers": [
       2

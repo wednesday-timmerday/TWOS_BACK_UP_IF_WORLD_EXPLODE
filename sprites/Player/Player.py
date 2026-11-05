@@ -13,7 +13,7 @@ from ui.menu.midgame import Menu
 from sprites.save.save import SaveOBJ
 
 import ui.fight.fight as FightModule
-
+import importlib
 
 def load_json_level_spec():
     level_spec_path = Loader("worlds").load("level-spec.json")
@@ -107,7 +107,7 @@ class Player:
         self.rect = self.image.get_rect()
 
         #  Hitbox
-        self.hit_box = pygame.Rect(5, 0, 6, 16)
+        self.hit_box = pygame.Rect(5, 0, 6, 12)
         self.hitbox_offset_x = 0
         self.hitbox_offset_y = 0
 
@@ -252,10 +252,10 @@ class Player:
                 self._triggered_once = self.loaded["triggered_idx"]
                 self.can_dash = self.loaded["player_can_dash"]
                 self.world.change_level(self.loaded["currlevel"], self)
-                
+
         except Exception: #hmm yes
             self.loaded = None
-        
+
         self.offset_x = 0
         self.offset_y = 0
         self.render_offset_x = 0
@@ -283,7 +283,7 @@ class Player:
         self.external_points = []
         self.can_jump = False
         self.can_wall_jump = False
-        
+
         try:
             self.midgamemenu = Menu(screen, player=self)
         except Exception as e:
@@ -291,28 +291,45 @@ class Player:
 
         self.mouse_flag = False
         self.btnhandeler = btnHandeler()
+        self.item_objects = {}
         if self.loaded:
             self.items = self.loaded["items"]
             self.can_jump = self.loaded["player_can_jump"]
             self.can_wall_jump = self.loaded["player_can_wall_jump"]
         else:
             self.items = [{"name": "dog", "short_name": "dog", "type": "heal", "heal_amount": 9999999999999999999999999999999999999999999999}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}, {"name": "default", "short_name": "def", "type": "heal", "heal_amount": 17}] # How do items work: {"name": "carrot", "short_name": "carr", "type": "heal", "heal_amount" etc.}
-            self.give_self_item("Chez")
-            print(self.items)
         self.name = "micheal jackson"
+        self.give_self_item("dog")
+        print(self.items)
     # -
     # Private helpers
     # -
-    #
+
+    def _get_item_object(self, itemname):
+        itemname = itemname.lower()
+        obj = self.item_objects.get(itemname)
+        if obj is None:
+            module = importlib.import_module(f"items.{itemname}")
+            obj = getattr(module, itemname)(None, self, self.world)
+            self.item_objects[itemname] = obj
+        return obj
 
     def give_self_item(self, itemname):
-        with open(Loader("sprites/Player").load("ITEMSPECS.json"), "r") as file:
-            all_items = json.load(file)
-            self.items.append(all_items[itemname])
+        itemname = itemname.lower()
+        try:
+            self._get_item_object(itemname)
+        except (ImportError, AttributeError) as e:
+            print(f"Item load failed ({itemname}): {e}")
+            return False
+        self.items.append({"name": itemname, "short_name": itemname, "type": "custom"})
+        return True
 
     def handle_item_used(self, item_name):
         for i, item in enumerate(self.items):
             if item["short_name"] == item_name:
+                if item["type"] == "custom":
+                    self._get_item_object(item_name).use()
+                    return
                 self.items.pop(i)
                 if item["type"] == "heal":
                     self.hp += item["heal_amount"]
@@ -455,7 +472,7 @@ class Player:
 
     def apply_spawn_point(self, level_target):
         print("run")
-    
+
         level_key = f"level_{level_target}"
         level_data = self.level_spec.get(level_key, {})
         came_from = str(self.last_level) if self.last_level is not None else None
@@ -464,7 +481,7 @@ class Player:
         print(f"{self.external_points} E")
 
         list = level_data.get("save_points", []) # + self.external_points
-    
+
         for sp in list:
             if sp.get("type") == "spawn" and str(sp.get("came_from")) == came_from:
                 self.world_x = float(sp.get("pos_x", 160))
@@ -472,7 +489,7 @@ class Player:
                 self.speed_y = 0.0
                 self.save_obj.save_state(self, self.world)
                 return
-    
+
         # fallback
         self.world_x = 160.0
         self.world_y = 0.0
@@ -1064,7 +1081,6 @@ class Player:
                 self._in_triggers = set()
 
             triggers = self.level_spec.get(level_key, {}).get("triggers", []) + self.external_triggers
-            print(triggers)
             player_rect = pygame.Rect(hb.x, hb.y, hb.width, hb.height)
             current_collisions = set()
 

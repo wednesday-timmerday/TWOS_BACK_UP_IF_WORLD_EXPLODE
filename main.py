@@ -878,6 +878,9 @@ async def main():
     escape_timer = 0
     escape_active = False
 
+    dark_overlay = pygame.Surface(MINI_RESOLUTION, pygame.SRCALPHA)
+    dark_overlay_big = pygame.Surface(SCREEN_RESOLUTION, pygame.SRCALPHA)
+
     while running:
         dt = clock.tick(FPS) / 1000.0
         dt = min(dt, 1 / 30)
@@ -961,11 +964,25 @@ async def main():
 
         player.draw(renderer, world_loader, screen)
 
-        world_loader.draw_black_layer(renderer, cam_x, cam_y)
-
-        world_loader.draw_shadow(renderer)
-
         blit_renderer_to_screen(screen, renderer)
+
+        if (
+            player.active_cutscene
+            and player.active_cutscene.module
+            and hasattr(player.active_cutscene.module, "draw_before_blackrect")
+        ):
+            try:
+                player.active_cutscene.module.draw_before_blackrect(
+                    player.active_cutscene, screen
+                )
+            except Exception as e:
+                print(f"[CutsceneLoader] Error in cutscene draw: {e}")
+
+        dark_overlay.fill((0, 0, 0, 0))
+        world_loader.draw_black_layer(dark_overlay, cam_x, cam_y)
+        world_loader.draw_shadow(dark_overlay)
+        pygame.transform.scale(dark_overlay, SCREEN_RESOLUTION, dark_overlay_big)
+        screen.blit(dark_overlay_big, (0, 0))
 
         if getattr(player, "active_fight", None) and getattr(
             player.active_fight, "running", False

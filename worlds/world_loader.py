@@ -800,7 +800,7 @@ class World_loader:
 
             else:
                 try:
-                    if enemy_type in ("lantern", "hammer", "shadowrock"):
+                    if enemy_type in ("lantern", "hammer", "shadowrock", "badapple"):
                         enemy = get_enemy_class(enemy_type, self)
                     elif enemy_type == "spike":
                         enemy = get_enemy_class(enemy_type, self.player, self)
@@ -1159,6 +1159,11 @@ class World_loader:
 
     def change_level(self, level_id, player):
         print("E")
+        for e in self.enemies:
+            try:
+                getattr(e, "on_unload", lambda: None)()
+            except Exception:
+                pass
         try:
             pass
         except Exception as e:

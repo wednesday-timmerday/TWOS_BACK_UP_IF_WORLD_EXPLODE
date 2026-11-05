@@ -147,7 +147,8 @@ class cutscene:
 
             return "YES"
 
-    def draw_back(self, loader, surface):
+    def draw_before_blackrect(self, loader, surface):
+        print(surface)
         if self.render_hand:
             x = 1150 + random.randint(-1, 1)
             surface.blit(self.hand, (x, self.hand_y))

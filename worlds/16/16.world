@@ -1,0 +1,12 @@
+TOTAL_LAYERS = 2
+TILE_W = 8
+TILE_H = 8
+WORLD_W = 40
+WORLD_H = 23
+OBJECTS = [{"type": "badapple", "x": 160, "y": 92, "id": "badapple-0"}]
+TRIGGERS = []
+SPAWN_POINTS = []
+LAYER1:
+$0
+LAYER2:
+$0
