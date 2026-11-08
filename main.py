@@ -557,52 +557,149 @@ def get_available_levels():
     return sorted(levels, key=lambda x: int(x))
 
 
-class DebugLevelWarp:
-    def __init__(self, screen):
+def _get_available_modules(directory):
+    """Return the importable .py module names from a game content directory."""
+    content_dir = Loader(directory).load(".")
+    if not os.path.exists(content_dir):
+        return []
+
+    ignore = {"__init__.py", "loader.py"}
+    modules = []
+    for item in os.listdir(content_dir):
+        item_path = os.path.join(content_dir, item)
+        if not os.path.isfile(item_path):
+            continue
+        if not item.endswith(".py") or item in ignore or item.startswith("_"):
+            continue
+        modules.append(item[:-3])
+
+    return sorted(modules)
+
+
+def get_available_cutscenes():
+    """Dynamically get available cutscenes from the cutscenes directory."""
+    return _get_available_modules("cutscenes")
+
+
+def get_available_interactables():
+    """Dynamically get available interactables from the interactables directory."""
+    return _get_available_modules("interactables")
+
+
+class DebugMenu:
+    """A searchable list popup used by the in-game debug tools."""
+
+    MAX_VISIBLE = 8
+
+    def __init__(self, screen, title):
         self.screen = screen
+        self.title = title
         self.active = False
         self.selected_index = 0
-        self.levels = []
+        self.items = []
+        self.search = ""
+        self.scroll_offset = 0
         self.font = pygame.font.SysFont("Arial", 20, bold=True)
         self.small_font = pygame.font.SysFont("Arial", 16)
 
+    def set_items(self, item_list):
+        """Set the selectable items."""
+        self.items = list(item_list) if item_list else []
+        self.selected_index = 0
+        self.scroll_offset = 0
+
     def set_levels(self, level_list):
-        """Set available levels."""
-        self.levels = level_list if level_list else ["test_level"]
+        """Backwards-compatible alias for set_items."""
+        self.set_items(level_list)
 
     def open(self):
         self.active = True
+        self.search = ""
         self.selected_index = 0
+        self.scroll_offset = 0
 
     def close(self):
         self.active = False
 
-    def handle_input(self):
-        """Handle keyboard input for level selection."""
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_UP]:
-            self.selected_index = (self.selected_index - 1) % len(self.levels)
-            pygame.time.delay(100)
-        elif keys[pygame.K_DOWN]:
-            self.selected_index = (self.selected_index + 1) % len(self.levels)
-            pygame.time.delay(100)
-        elif keys[pygame.K_RETURN]:
-            return self.levels[self.selected_index]
-        elif keys[pygame.K_ESCAPE]:
+    def _filtered_items(self):
+        if not self.search:
+            return self.items
+        term = self.search.lower()
+        return [item for item in self.items if term in item.lower()]
+
+    def _selected_item(self):
+        filtered = self._filtered_items()
+        if not filtered:
+            return None
+        self.selected_index %= len(filtered)
+        return filtered[self.selected_index]
+
+    def handle_event(self, event):
+        """Handle a pygame event. Returns the chosen item when selected."""
+        if not self.active or event.type != pygame.KEYDOWN:
+            return None
+
+        if event.key == pygame.K_ESCAPE:
             self.close()
+            return None
+
+        filtered = self._filtered_items()
+
+        if event.key == pygame.K_RETURN:
+            item = self._selected_item()
+            if item:
+                self.close()
+                return item
+            return None
+
+        if event.key == pygame.K_UP:
+            if filtered:
+                self.selected_index = (self.selected_index - 1) % len(filtered)
+            return None
+
+        if event.key == pygame.K_DOWN:
+            if filtered:
+                self.selected_index = (self.selected_index + 1) % len(filtered)
+            return None
+
+        if event.key == pygame.K_BACKSPACE:
+            self.search = self.search[:-1]
+            self.selected_index = 0
+            self.scroll_offset = 0
+            return None
+
+        if event.unicode and event.unicode.isprintable():
+            self.search += event.unicode
+            self.selected_index = 0
+            self.scroll_offset = 0
+
         return None
 
     def draw(self):
-        """Draw the level warp popup on screen."""
-        if not self.active or not self.levels:
+        """Draw the debug menu popup on screen."""
+        if not self.active:
             return
+
+        filtered = self._filtered_items()
+        if filtered:
+            self.selected_index %= len(filtered)
+            if self.selected_index < self.scroll_offset:
+                self.scroll_offset = self.selected_index
+            elif self.selected_index >= self.scroll_offset + self.MAX_VISIBLE:
+                self.scroll_offset = self.selected_index - self.MAX_VISIBLE + 1
+            self.scroll_offset = max(
+                0, min(self.scroll_offset, len(filtered) - self.MAX_VISIBLE)
+            )
+        else:
+            self.selected_index = 0
+            self.scroll_offset = 0
 
         overlay = pygame.Surface(self.screen.get_size())
         overlay.set_alpha(200)
         overlay.fill((0, 0, 0))
         self.screen.blit(overlay, (0, 0))
 
-        popup_width, popup_height = 500, 400
+        popup_width, popup_height = 540, 440
         popup_x = self.screen.get_width() // 2 - popup_width // 2
         popup_y = self.screen.get_height() // 2 - popup_height // 2
 
@@ -616,34 +713,127 @@ class DebugLevelWarp:
             3,
         )
 
-        title = self.font.render("DEBUG: SELECT LEVEL", True, (255, 200, 50))
+        title = self.font.render(self.title, True, (255, 200, 50))
         self.screen.blit(
-            title, (popup_x + popup_width // 2 - title.get_width() // 2, popup_y + 20)
+            title, (popup_x + popup_width // 2 - title.get_width() // 2, popup_y + 15)
         )
 
-        y_offset = popup_y + 70
-        for i, level in enumerate(self.levels):
-            if i == self.selected_index:
-                color = (255, 255, 0)
-                pygame.draw.rect(
-                    self.screen,
-                    (100, 100, 0),
-                    (popup_x + 10, y_offset - 5, popup_width - 20, 25),
-                )
-                text = self.font.render(f"> {level}", True, color)
-            else:
-                color = (200, 200, 200)
-                text = self.small_font.render(f"  {level}", True, color)
+        search_rect = (popup_x + 15, popup_y + 50, popup_width - 30, 30)
+        pygame.draw.rect(self.screen, (30, 30, 30), search_rect)
+        pygame.draw.rect(self.screen, (120, 120, 120), search_rect, 2)
 
-            self.screen.blit(text, (popup_x + 20, y_offset))
-            y_offset += 30
+        search_text = f"Search: {self.search}"
+        if not self.search:
+            search_text = "Search: (type to filter)"
+        search_color = (255, 255, 255) if self.search else (120, 120, 120)
+        search_surface = self.small_font.render(search_text, True, search_color)
+        self.screen.blit(search_surface, (search_rect[0] + 8, search_rect[1] + 6))
 
-        instructions = ["UP/DOWN: Navigate", "ENTER: Warp to level", "ESC: Cancel"]
-        inst_y = popup_y + popup_height - 80
+        count_text = self.small_font.render(
+            f"{len(filtered)}/{len(self.items)}", True, (150, 150, 150)
+        )
+        self.screen.blit(
+            count_text,
+            (
+                search_rect[0] + search_rect[2] - count_text.get_width() - 8,
+                search_rect[1] + 6,
+            ),
+        )
+
+        y_offset = popup_y + 95
+        if not filtered:
+            no_match = self.small_font.render("No matches", True, (150, 150, 150))
+            self.screen.blit(no_match, (popup_x + 20, y_offset))
+        else:
+            visible_items = filtered[
+                self.scroll_offset : self.scroll_offset + self.MAX_VISIBLE
+            ]
+            for row, item in enumerate(visible_items):
+                index = self.scroll_offset + row
+                if index == self.selected_index:
+                    color = (255, 255, 0)
+                    pygame.draw.rect(
+                        self.screen,
+                        (100, 100, 0),
+                        (popup_x + 10, y_offset - 5, popup_width - 20, 25),
+                    )
+                    text = self.font.render(f"> {item}", True, color)
+                else:
+                    color = (200, 200, 200)
+                    text = self.small_font.render(f"  {item}", True, color)
+
+                self.screen.blit(text, (popup_x + 20, y_offset))
+                y_offset += 28
+
+        instructions = [
+            "TYPE: Search",
+            "UP/DOWN: Navigate",
+            "ENTER: Select",
+            "ESC: Cancel",
+        ]
+        inst_y = popup_y + popup_height - 95
         for inst in instructions:
             inst_text = self.small_font.render(inst, True, (150, 150, 150))
             self.screen.blit(inst_text, (popup_x + 20, inst_y))
             inst_y += 20
+
+
+# Kept for backwards compatibility with any external references.
+DebugLevelWarp = DebugMenu
+
+
+def start_debug_cutscene(player, world, cutscene_id):
+    """Start a cutscene directly from the debug menu."""
+    try:
+        import cutscenes.loader as CutsceneLoaderModule
+
+        player.active_cutscene = None
+        player.active_interactive = None
+
+        player.active_cutscene = CutsceneLoaderModule.CutsceneLoader()
+        player.curr_animation = "Idle"
+        player.active_cutscene.world = world
+        player.active_cutscene.event = getattr(player, "event", None)
+        player.active_cutscene.player = player
+        player.active_cutscene.load(cutscene_id, getattr(player, "joystick", None))
+        player.active_cutscene.trigger_idx = None
+
+        if player.active_cutscene.module is None:
+            player.active_cutscene = None
+            player.incutscene = False
+            return
+
+        player.incutscene = True
+        print(f"[DEBUG] Started cutscene: {cutscene_id}")
+    except Exception as e:
+        print(f"Error starting cutscene: {e}")
+
+
+def start_debug_interactable(player, world, interactable_id):
+    """Start an interactable directly from the debug menu."""
+    try:
+        import interactables.loader as InteractableModule
+
+        player.active_cutscene = None
+        player.active_interactive = None
+
+        player.active_interactive = InteractableModule.Interactable()
+        player.curr_animation = "Idle"
+        player.active_interactive.world = world
+        player.active_interactive.event = getattr(player, "event", None)
+        player.active_interactive.player = player
+        player.active_interactive.load(
+            interactable_id, getattr(player, "joystick", None)
+        )
+        player.active_interactive.trigger_idx = None
+
+        if player.active_interactive.module is None:
+            player.active_interactive = None
+            return
+
+        print(f"[DEBUG] Started interactable: {interactable_id}")
+    except Exception as e:
+        print(f"Error starting interactable: {e}")
 
 
 async def main():
@@ -873,7 +1063,14 @@ async def main():
     physics_accumulator = 0.0
     physics_step = 1.0 / 60.0
 
-    debug_warp_popup = DebugLevelWarp(screen)
+    debug_level_menu = DebugMenu(screen, "DEBUG: SELECT LEVEL")
+    debug_cutscene_menu = DebugMenu(screen, "DEBUG: SELECT CUTSCENE")
+    debug_interactable_menu = DebugMenu(screen, "DEBUG: SELECT INTERACTABLE")
+    debug_menus = [
+        debug_level_menu,
+        debug_cutscene_menu,
+        debug_interactable_menu,
+    ]
 
     escape_timer = 0
     escape_active = False
@@ -893,17 +1090,50 @@ async def main():
                 running = False
 
             elif event.type == pygame.KEYDOWN:
-                if (
-                    event.key == pygame.K_q
-                    and options.get("debug", 0.0) > 0.0
-                    and not debug_warp_popup.active
-                ):
-                    debug_warp_popup.set_levels(get_available_levels())
-                    debug_warp_popup.open()
+                debug_menu_active = any(menu.active for menu in debug_menus)
+                debug_enabled = options.get("debug", 0.0) > 0.0
+
+                if debug_enabled and not debug_menu_active:
+                    if event.key == pygame.K_q:
+                        debug_level_menu.set_items(get_available_levels())
+                        debug_level_menu.open()
+                        continue
+                    elif event.key == pygame.K_c:
+                        debug_cutscene_menu.set_items(get_available_cutscenes())
+                        debug_cutscene_menu.open()
+                        continue
+                    elif event.key == pygame.K_i:
+                        debug_interactable_menu.set_items(
+                            get_available_interactables()
+                        )
+                        debug_interactable_menu.open()
+                        continue
+
+                for menu in debug_menus:
+                    if not menu.active:
+                        continue
+
+                    selected = menu.handle_event(event)
+                    if selected is None:
+                        break
+
+                    if menu is debug_level_menu:
+                        try:
+                            world_loader.change_level(selected, player)
+                            print(f"[DEBUG] Warped to level: {selected}")
+                        except Exception as e:
+                            print(f"Error warping to level: {e}")
+                    elif menu is debug_cutscene_menu:
+                        start_debug_cutscene(player, world_loader, selected)
+                    elif menu is debug_interactable_menu:
+                        start_debug_interactable(player, world_loader, selected)
+                    break
+
+        debug_ui_open = any(menu.active for menu in debug_menus)
 
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_ESCAPE]:
+        if keys[pygame.K_ESCAPE] and not debug_ui_open:
             escape_timer += dt
             escape_active = True
             if escape_timer >= 1.5:
@@ -912,38 +1142,28 @@ async def main():
             escape_timer = 0.0
             escape_active = False
 
-        if debug_warp_popup.active:
-            selected_level = debug_warp_popup.handle_input()
-
-            if selected_level:
-                try:
-                    world_loader.change_level(selected_level, player)
-                    print(f"[DEBUG] Warped to level: {selected_level}")
-
-                except Exception as e:
-                    print(f"Error warping to level: {e}")
-
-                debug_warp_popup.close()
-
         renderer.fill((0, 0, 0))
 
-        try:
-            player.update(
-                world_loader, renderer, dt, 1.0, player, fight_loader=fight_loader
-            )
-        except Exception:
-            traceback.print_exc()
-
-        # Fixed-step physics
-        physics_accumulator += dt
-
-        while physics_accumulator >= physics_step:
+        if not debug_ui_open:
             try:
-                world_loader.update_physics(physics_step)
+                player.update(
+                    world_loader, renderer, dt, 1.0, player, fight_loader=fight_loader
+                )
             except Exception:
                 traceback.print_exc()
 
-            physics_accumulator -= physics_step
+            # Fixed-step physics
+            physics_accumulator += dt
+
+            while physics_accumulator >= physics_step:
+                try:
+                    world_loader.update_physics(physics_step)
+                except Exception:
+                    traceback.print_exc()
+
+                physics_accumulator -= physics_step
+        else:
+            physics_accumulator = 0.0
 
         now = time.time()
 
@@ -1048,8 +1268,9 @@ async def main():
                 420, 300, surface=player.midgamemenu.true_screen, size=14
             )
 
-        if debug_warp_popup.active:
-            debug_warp_popup.draw()
+        for menu in debug_menus:
+            if menu.active:
+                menu.draw()
 
         pygame.display.flip()
 

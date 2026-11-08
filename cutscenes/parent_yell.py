@@ -1,4 +1,5 @@
 import pygame
+import sys
 import random
 from assetsLoader import Loader
 import pytweening
@@ -31,13 +32,13 @@ class cutscene:
         # [0, 1] gives the tiniest possible shake (1 pixel swing, half of [-1, 1]).
         # [0] for Y keeps the player grounded without vertical bouncing.
         self.shake_offsets_x = [0, 1]
-        self.shake_offsets_y = [0]
+        self.shake_offsets_y = [0, 1]
 
         self.show_black_screen = False
 
         self.goto_world_stage = 1
         self.goto_world_wait = 0.0
-
+        self.total_frames_elapsed = 0
         self.slide_t = 0.0
         self.slide_start_x = 0
         self.slide_distance = 50
@@ -56,6 +57,8 @@ class cutscene:
         self.fade_alpha = 0
         self.fade_t = 0.0
         self.fade_duration = 1.0
+
+        self.last_gore_image_time = 3
 
         # Start background asset loading if not already in cache
         with _CACHE_LOCK:
@@ -78,6 +81,10 @@ class cutscene:
     def clicksfx(self):
         return _ASSET_CACHE["clicksfx"]
 
+    @property
+    def shortclicksfx(self):
+        return _ASSET_CACHE["shortclicksfx"]
+
     def _load_assets_async(self):
         try:
             loader_assets = Loader("cutscenes/assets")
@@ -87,9 +94,11 @@ class cutscene:
 
             try:
                 clicksfx = pygame.mixer.Sound(loader_parent.load("horror_stinger.wav"))
+                shortclicksfx = pygame.mixer.Sound(loader_parent.load("klik_short.wav"))
             except Exception:
                 clicksfx = pygame.mixer.Sound(loader_parent.load("klik.wav"))
-
+                shortclicksfx = pygame.mixer.Sound(loader_parent.load("klik_short.wav"))
+                
             goreimgs = []
             for i in range(6):
                 img = pygame.image.load(loader_parent.load(f"gore_img_{i+1}.png")).convert_alpha()
@@ -98,6 +107,7 @@ class cutscene:
             with _CACHE_LOCK:
                 _ASSET_CACHE["hand"] = hand
                 _ASSET_CACHE["clicksfx"] = clicksfx
+                _ASSET_CACHE["shortclicksfx"] = shortclicksfx
                 _ASSET_CACHE["goreimgs"] = goreimgs
                 _ASSET_CACHE["loaded"] = True
                 _ASSET_CACHE["loading"] = False
@@ -148,7 +158,7 @@ class cutscene:
         if s == 1:
             # Shakes every single frame with the smallest possible non-zero displacement
             self.player.world_x = 303 + random.choice(self.shake_offsets_x)
-            self.player.world_y = 138 + random.choice(self.shake_offsets_y)
+            self.player.world_y = 142 + random.choice(self.shake_offsets_y)
             if self._wait("goto_world_wait", 3.5):
                 self.player.world_x = 303.0
                 self.player.world_y = 138.0
@@ -228,12 +238,19 @@ class cutscene:
                 self.gore_last_index = -1
 
         elif s == 5:
-            duration = self.gore_frame_time * len(self.goreimgs) if self.goreimgs else 0.2
+            self.total_frames_elapsed += 1
+            duration = self.gore_frame_time * len(self.goreimgs) + self.last_gore_image_time if self.goreimgs else 0.2
+            if self.gore_last_index == 5 and self.shortclicksfx is not None and self.total_frames_elapsed % 3 == 0: #Last frame
+                pygame.mixer.Sound.play(self.shortclicksfx) # Every frame
+
+                
             if self._wait("goto_world_wait", duration):
-                self.show_black_screen = False
+                # self.show_black_screen = False
                 self.goto_world_stage = 6
 
         elif s == 6:
+            pygame.quit()
+            sys.exit()
             if self._wait("goto_world_wait", 2.0):
                 self.player.curr_animation = "Idle"
                 self.goto_world_stage = 7

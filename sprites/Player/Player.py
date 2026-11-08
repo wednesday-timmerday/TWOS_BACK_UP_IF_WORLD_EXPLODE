@@ -1206,7 +1206,7 @@ class Player:
             # -- Active interactive cleanup --------------------------------
             if self.active_interactive:
                 trig = getattr(self.active_interactive, "trigger_idx", None)
-                if trig not in self._in_triggers:
+                if trig is not None and trig not in self._in_triggers:
                     self.active_interactive = None
 
             # -- Update active scenes --------------------------------------

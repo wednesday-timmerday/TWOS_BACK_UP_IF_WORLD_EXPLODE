@@ -94,7 +94,7 @@ class cutscene:
 
             self.vol_timer += 0.05 * self.dt
 
-            self.hand_y = -2000 + volume * 580
+            self.hand_y = -2000 + volume * 620
 
             if volume >= 0.95:
 
@@ -111,8 +111,8 @@ class cutscene:
             if self.vol_timer <= 1:
 
                 print(self.hand_y)
-
-                self.hand_y = -1449 + -pytweening.easeInSine((self.vol_timer) * 2) * 580 # -999999999 if frame1 dissa
+                # Magic numbers yayy
+                self.hand_y = -1411 + -pytweening.easeInSine((self.vol_timer) * 2) * 580 # -999999999 if frame1 dissa
 
                 #Somehow make this go earlier without freezing hand <- TODO
                 self.world._player_light_radius = 20 + pytweening.easeInCirc(self.vol_timer) * 120
@@ -147,8 +147,7 @@ class cutscene:
 
             return "YES"
 
-    def draw_before_blackrect(self, loader, surface):
-        print(surface)
+    def draw_front(self, loader, surface):
         if self.render_hand:
             x = 1150 + random.randint(-1, 1)
             surface.blit(self.hand, (x, self.hand_y))

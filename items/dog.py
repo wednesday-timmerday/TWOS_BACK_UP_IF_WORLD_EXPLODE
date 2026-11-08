@@ -6,6 +6,7 @@ class dog:
         
         
     def use(self):
+        # Use item and delete from player.items
         self.player.hp += self.healamount
         if self.player.hp >= self.player.max_hp:
             self.player.hp = self.player.max_hp
@@ -13,3 +14,7 @@ class dog:
         for i, item in enumerate(self.player.items):
             if item["short_name"] == self.item_name:
                 self.player.items.pop(i)
+
+    
+
+    
